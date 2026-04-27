@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Onix Messenger</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        :root { --onix-green: #008069; --onix-dark: #005c4b; --bg-chat: #efe7dd; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        html, body { height: 100%; width: 100%; background-color: #fff; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* HEADER */
+        header { padding: 15px 16px 5px 16px; background: #fff; display: flex; justify-content: space-between; align-items: center; min-height: 60px; flex-shrink: 0; position: relative; z-index: 100; }
+        header h1 { font-size: 22px; color: var(--onix-green); font-weight: 600; }
+        .header-icons { display: flex; gap: 20px; color: #000; }
+        .header-icons span { cursor: pointer; }
+
+        /* MENU SUSPENSO */
+        #menu-suspenso { display: none; position: absolute; top: 55px; right: 10px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000; width: 200px; border: 1px solid #eee; }
+        .menu-item { padding: 14px 16px; font-size: 16px; cursor: pointer; border-bottom: 1px solid #f5f5f5; color: #333; }
+        .menu-item:last-child { border: none; }
+
+        /* BUSCA */
+        #container-busca { padding: 10px 16px; background: #fff; flex-shrink: 0; }
+        .search-bar { background: #f0f2f5; display: flex; align-items: center; padding: 10px 18px; border-radius: 25px; gap: 12px; }
+        .search-bar input { background: transparent; border: none; outline: none; flex: 1; font-size: 16px; }
+
+        /* TELAS */
+        main { flex: 1; position: relative; width: 100%; overflow: hidden; background: #fff; }
+        .tela { display: none; width: 100%; height: 100%; overflow-y: auto; }
+        .active-tela { display: block !important; }
+
+        /* CONTATOS */
+        .contato-item { padding: 12px 16px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
+        .contato-item img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: #eee; }
+
+        /* PERFIL */
+        .perfil-container { display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .foto-wrapper { position: relative; width: 160px; height: 160px; margin-bottom: 25px; border-radius: 50%; background: #fff; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; }
+        #perfil-foto-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none; }
+        .cam-btn { position: absolute; bottom: 5px; right: 5px; background: var(--onix-green); color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; cursor: pointer; }
+
+        /* NAVEGAÇÃO INFERIOR */
+        nav { height: 75px; border-top: 1px solid #f0f0f0; display: flex; background: #fff; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); position: relative; z-index: 100; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #555; cursor: pointer; }
+        .nav-item .material-symbols-outlined { font-size: 24px; margin-bottom: 4px; transition: 0.2s; }
+        .active-nav { color: #000; font-weight: bold; }
+        .active-nav .material-symbols-outlined { background: #dcf8c6; border-radius: 20px; padding: 4px 20px; font-variation-settings: 'FILL' 1; }
+
+        /* JANELA DE CHAT */
+        #janela-chat { display: none; position: fixed; inset: 0; background: var(--bg-chat); z-index: 2000; flex-direction: column; }
+        .chat-h { padding: 10px 16px; background: #fff; display: flex; align-items: center; gap: 12px; height: 60px; border-bottom: 1px solid #ddd; }
+        #chat-content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .balao { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 16px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .m-env { align-self: flex-end; background: #e2ffc7; border-top-right-radius: 2px; }
+        .m-rec { align-self: flex-start; background: #fff; border-top-left-radius: 2px; }
+        .chat-f { padding: 10px; display: flex; align-items: center; gap: 10px; background: #fff; }
+    </style>
+</head>
+<body>
+
+    <header id="app-header">
+        <h1>Onix Messenger</h1>
+        <div class="header-icons">
+            <span class="material-symbols-outlined">photo_camera</span>
+            <span class="material-symbols-outlined">search</span>
+            <span class="material-symbols-outlined" id="btn-menu">more_vert</span>
+        </div>
+        <div id="menu-suspenso">
+            <div class="menu-item" onclick="switchTab('tab-config')">Configurações</div>
+            <div class="menu-item" onclick="sairApp()" style="color:red;">Sair do aplicativo</div>
+        </div>
+    </header>
+
+    <div id="container-busca">
+        <div class="search-bar">
+            <span class="material-symbols-outlined">search</span>
+            <input type="text" id="input-busca" placeholder="Pesquisar telefone...">
+        </div>
+    </div>
+
+    <main>
+        <div id="tab-conversas" class="tela active-tela">
+            <div id="lista-contatos"></div>
+        </div>
+        
+        <div id="tab-atualizacoes" class="tela" style="padding:20px;">
+            <h3>Status</h3>
+            <p style="color:gray; margin-top:10px;">Toque para adicionar atualização</p>
+        </div>
+
+        <div id="tab-ligacoes" class="tela" style="padding:20px;">
+            <h3>Ligações</h3>
+            <p style="color:gray; margin-top:10px;">Nenhuma chamada efetuada.</p>
+        </div>
+
+        <div id="tab-perfil" class="tela">
+            <div class="perfil-container">
+                <div class="foto-wrapper">
+                    <img src="" id="perfil-foto-img">
+                    <label class="cam-btn" for="file-p"><span class="material-symbols-outlined">photo_camera</span></label>
+                    <input type="file" id="file-p" hidden accept="image/*">
+                </div>
+                <div style="width:100%; padding:0 20px;">
+                    <label style="color:var(--onix-green); font-size:13px; font-weight:bold;">Nome</label>
+                    <input type="text" id="perfil-nome-in" style="width:100%; border:none; border-bottom:1px solid #eee; padding:10px 0; font-size:17px; outline:none; margin-bottom:20px;">
+                    <label style="color:var(--onix-green); font-size:13px; font-weight:bold;">Telefone</label>
+                    <div id="perfil-tel-txt" style="padding:10px 0; font-size:17px; color:#666;">...</div>
+                </div>
+                <button id="save-perfil" style="margin-top:30px; width:90%; padding:15px; background:var(--onix-green); color:white; border:none; border-radius:30px; font-weight:bold;">SALVAR</button>
+            </div>
+        </div>
+
+        <div id="tab-config" class="tela">
+            <div style="padding:20px;">
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:30px;">
+                    <span class="material-symbols-outlined" onclick="switchTab('tab-conversas')" style="cursor:pointer;">arrow_back</span>
+                    <h2>Configurações</h2>
+                </div>
+                <div class="menu-item" onclick="alert('Funcionalidade de bloqueio disponível em breve.')" style="display:flex; align-items:center; gap:15px; border-bottom:1px solid #eee;">
+                    <span class="material-symbols-outlined">block</span> Bloquear Contatos
+                </div>
+                <div class="menu-item" style="display:flex; align-items:center; gap:15px;">
+                    <span class="material-symbols-outlined">lock</span> Privacidade
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav id="barra-nav">
+        <div class="nav-item active-nav" onclick="switchTab('tab-conversas', this)"><span class="material-symbols-outlined">chat</span>Conversas</div>
+        <div class="nav-item" onclick="switchTab('tab-atualizacoes', this)"><span class="material-symbols-outlined">adjust</span>Atualizações</div>
+        <div class="nav-item" onclick="switchTab('tab-ligacoes', this)"><span class="material-symbols-outlined">call</span>Ligações</div>
+        <div class="nav-item" onclick="switchTab('tab-perfil', this)"><span class="material-symbols-outlined">person</span>Perfil</div>
+    </nav>
+
+    <div id="janela-chat">
+        <div class="chat-h">
+            <span class="material-symbols-outlined" onclick="fecharChat()" style="cursor:pointer;">arrow_back</span>
+            <img src="" id="chat-avatar" style="width:40px; height:40px; border-radius:50%; object-fit:cover; background:#eee;">
+            <strong id="chat-nome"></strong>
+        </div>
+        <div id="chat-content"></div>
+        <div class="chat-f">
+            <input type="text" id="chat-input" placeholder="Mensagem" style="flex:1; padding:12px; border-radius:25px; border:none; background:#f0f2f5; outline:none;">
+            <button id="btn-send" style="background:var(--onix-dark); color:white; border:none; width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                <span class="material-symbols-outlined">send</span>
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, onSnapshot, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const cfg = { apiKey: "AIzaSyCAJekEeE2LJFIb6IiZG8jtvMjArFXCNzM", authDomain: "onixchat-15978.firebaseapp.com", projectId: "onixchat-15978", storageBucket: "onixchat-15978.firebasestorage.app", messagingSenderId: "94179459295", appId: "1:94179459295:web:d4609ef98615afc8be696a" };
+        const app = initializeApp(cfg); const auth = getAuth(app); const db = getFirestore(app);
+
+        let chatAtivoId = null; let unsubscribeChat = null;
+
+        // NAVEGAÇÃO GLOBAL
+        window.switchTab = function(id, el) {
+            document.querySelectorAll('.tela').forEach(t => t.classList.remove('active-tela'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
+            document.getElementById(id).classList.add('active-tela');
+            if(el) el.classList.add('active-nav');
+            
+            // Controle de visibilidade do Header e Busca
+            const isConfig = (id === 'tab-config');
+            const isConversas = (id === 'tab-conversas');
+            document.getElementById('app-header').style.display = isConfig ? 'none' : 'flex';
+            document.getElementById('container-busca').style.display = isConversas ? 'block' : 'none';
+        };
+
+        // BUSCA POR CONTATO E ABRIR CHAT
+        document.getElementById('input-busca').oninput = async (e) => {
+            const tel = e.target.value.trim();
+            const list = document.getElementById('lista-contatos');
+            if(tel.length < 5) { list.innerHTML = ""; return; }
+
+            const q = query(collection(db, "usuarios"), where("telefone", "==", tel));
+            const snap = await getDocs(q);
+            list.innerHTML = "";
+            snap.forEach(d => {
+                const u = d.data();
+                if(u.uid === auth.currentUser.uid) return;
+                const item = document.createElement('div');
+                item.className = 'contato-item';
+                item.innerHTML = `<img src="${u.foto || ''}"> <strong>${u.nome}</strong>`;
+                item.onclick = () => abrirChat(u);
+                list.appendChild(item);
+            });
+        };
+
+        function abrirChat(contato) {
+            chatAtivoId = contato.uid;
+            document.getElementById('chat-nome').innerText = contato.nome;
+            document.getElementById('chat-avatar').src = contato.foto || "";
+            document.getElementById('janela-chat').style.display = 'flex';
+            
+            if(unsubscribeChat) unsubscribeChat();
+            const q = query(collection(db, "mensagens"), orderBy("timestamp", "asc"));
+            unsubscribeChat = onSnapshot(q, (s) => {
+                const box = document.getElementById('chat-content'); box.innerHTML = "";
+                s.forEach(docMsg => {
+                    const m = docMsg.data();
+                    if((m.de === auth.currentUser.uid && m.para === contato.uid) || (m.para === auth.currentUser.uid && m.de === contato.uid)) {
+                        const div = document.createElement('div');
+                        div.className = `balao ${m.de === auth.currentUser.uid ? 'm-env' : 'm-rec'}`;
+                        div.innerText = m.texto; box.appendChild(div);
+                    }
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        window.fecharChat = () => { document.getElementById('janela-chat').style.display = 'none'; if(unsubscribeChat) unsubscribeChat(); };
+
+        document.getElementById('btn-send').onclick = async () => {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if(txt && chatAtivoId) {
+                input.value = "";
+                await addDoc(collection(db, "mensagens"), { texto: txt, de: auth.currentUser.uid, para: chatAtivoId, timestamp: serverTimestamp() });
+            }
+        };
+
+        // MENU TRES PONTOS
+        const btnM = document.getElementById('btn-menu');
+        const menuS = document.getElementById('menu-suspenso');
+        btnM.onclick = (e) => { e.stopPropagation(); menuS.style.display = (menuS.style.display==='block')?'none':'block'; };
+        document.onclick = () => menuS.style.display='none';
+        window.sairApp = () => signOut(auth).then(() => location.reload());
+
+        // DADOS DO USUÁRIO
+        onAuthStateChanged(auth, async (u) => {
+            if(u) {
+                const d = await getDoc(doc(db, "usuarios", u.uid));
+                if(d.exists()) {
+                    document.getElementById('perfil-nome-in').value = d.data().nome || "";
+                    document.getElementById('perfil-tel-txt').innerText = d.data().telefone || "";
+                    if(d.data().foto) {
+                        const img = document.getElementById('perfil-foto-img');
+                        img.src = d.data().foto; img.style.display = 'block';
+                    }
+                }
+            }
+        });
+
+        document.getElementById('save-perfil').onclick = async () => {
+            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { nome: document.getElementById('perfil-nome-in').value });
+            alert("Perfil salvo!");
+        };
+
+        document.getElementById('file-p').onchange = (e) => {
+            const fr = new FileReader(); fr.onload = async () => {
+                document.getElementById('perfil-foto-img').src = fr.result;
+                document.getElementById('perfil-foto-img').style.display = 'block';
+                await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { foto: fr.result });
+            }; fr.readAsDataURL(e.target.files[0]);
+        };
+    </script>
+</body>
+</html>
