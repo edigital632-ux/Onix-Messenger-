@@ -6,146 +6,167 @@
     <title>Onix Messenger Pro</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-        :root { --onix-green: #008069; --onix-dark: #005c4b; --bg-chat: #efe7dd; --light-gray: #f0f2f5; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Helvetica, sans-serif; }
+        :root { 
+            --onix-green: #008069; 
+            --onix-dark: #005c4b; 
+            --bg-light: #f0f2f5; 
+            --white: #ffffff;
+            --text-gray: #54656f;
+        }
+
+        /* RESET E PROPORÇÃO */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         
-        body { background-color: var(--light-gray); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { 
+            background-color: #d1d7db; /* Cor de fundo externa */
+            height: 100dvh; 
+            display: flex; 
+            justify-content: center;
+            overflow: hidden;
+        }
 
-        /* --- TELAS DE LOGIN E CADASTRO --- */
-        #sessao-autenticacao { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; background: #e1e1e1; }
-        .card-auth { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .card-auth h1 { color: var(--onix-green); margin-bottom: 20px; font-size: 26px; }
-        .card-auth input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 16px; }
-        .card-auth button { width: 100%; padding: 15px; background: var(--onix-green); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 16px; }
-        .link-alternar { margin-top: 20px; display: block; color: var(--onix-green); cursor: pointer; font-weight: 500; text-decoration: underline; }
+        /* CONTAINER PRINCIPAL (SIMULA CELULAR NO PC) */
+        .app-container {
+            width: 100%;
+            max-width: 500px; /* Trava a largura para não ficar desproporcional */
+            background: var(--white);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
 
-        /* --- INTERFACE PRINCIPAL --- */
-        #tela-app { display: none; flex-direction: column; height: 100vh; background: white; }
-        header { padding: 15px 16px; background: white; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
-        header h1 { font-size: 22px; color: var(--onix-green); font-weight: bold; }
-        .header-icons { display: flex; gap: 20px; color: #54656f; }
-        .header-icons span { cursor: pointer; }
+        /* --- TELAS DE AUTH --- */
+        #sessao-autenticacao { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100%; padding: 25px; background: var(--bg-light); 
+        }
+        .card-auth { background: var(--white); padding: 30px; border-radius: 15px; width: 100%; text-align: center; }
+        .card-auth h1 { color: var(--onix-green); margin-bottom: 20px; font-size: 24px; }
+        .card-auth input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+        .card-auth button { width: 100%; padding: 14px; background: var(--onix-green); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
 
-        /* BARRA DE BUSCA */
-        #container-busca { padding: 10px 16px; background: #fff; border-bottom: 1px solid #f0f0f0; }
-        .search-bar { background: #f0f2f5; display: flex; align-items: center; padding: 10px 18px; border-radius: 25px; gap: 12px; }
-        .search-bar input { background: transparent; border: none; outline: none; flex: 1; font-size: 16px; }
+        /* --- APP HEADER --- */
+        header { 
+            padding: 12px 16px; background: var(--white); display: flex; 
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; 
+        }
+        header h1 { font-size: 20px; color: var(--onix-green); font-weight: bold; }
+        .header-icons { display: flex; gap: 18px; color: var(--text-gray); }
+        .header-icons span { font-size: 24px; cursor: pointer; }
+
+        /* BUSCA */
+        #container-busca { padding: 10px 16px; background: var(--white); }
+        .search-bar { background: var(--bg-light); display: flex; align-items: center; padding: 8px 15px; border-radius: 20px; gap: 10px; }
+        .search-bar input { background: transparent; border: none; outline: none; flex: 1; font-size: 15px; }
 
         /* MENU MAIS */
-        #menu-suspenso { display: none; position: absolute; top: 55px; right: 10px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 8px; z-index: 1000; width: 220px; }
-        .menu-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #f5f5f5; color: #3b4a54; }
-        .menu-item:hover { background: #f9f9f9; }
+        #menu-suspenso { 
+            display: none; position: absolute; top: 55px; right: 10px; 
+            background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; z-index: 100; width: 180px; 
+        }
+        .menu-item { padding: 14px 16px; border-bottom: 1px solid #f5f5f5; font-size: 15px; cursor: pointer; }
 
-        main { flex: 1; overflow-y: auto; background: #fff; }
+        /* CONTEÚDO */
+        main { flex: 1; overflow-y: auto; background: var(--white); }
         .tela-interna { display: none; }
         .active { display: block !important; }
 
-        /* LISTA DE CONTATOS */
-        .contato-item { padding: 12px 16px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
-        .avatar-contato { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #dfe5e7; }
+        /* PERFIL PROPORCIONAL */
+        #aba-perfil { padding: 25px; text-align: center; }
+        .wrapper-foto { position: relative; width: 130px; height: 130px; margin: 0 auto 20px; }
+        #perfil-img-exibicao { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--onix-green); }
+        .cam-btn { 
+            position: absolute; bottom: 5px; right: 5px; background: var(--onix-green); 
+            color: white; border-radius: 50%; padding: 8px; cursor: pointer; 
+        }
+        .campo-perfil { text-align: left; margin-bottom: 15px; }
+        .campo-perfil label { font-size: 12px; color: var(--onix-green); font-weight: bold; margin-left: 5px; }
+        .campo-perfil input { width: 100%; padding: 10px; border: none; border-bottom: 1px solid #eee; font-size: 16px; outline: none; }
 
-        /* ABA PERFIL COMPLETA */
-        #aba-perfil { padding: 30px; text-align: center; }
-        .wrapper-foto { position: relative; width: 140px; height: 140px; margin: 0 auto 25px; }
-        #perfil-img-exibicao { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 3px solid var(--onix-green); background: #eee; }
-        .cam-btn { position: absolute; bottom: 5px; right: 5px; background: var(--onix-green); color: white; border-radius: 50%; padding: 10px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-        
-        .campo-perfil { text-align: left; margin-bottom: 20px; }
-        .campo-perfil label { font-size: 13px; color: var(--onix-green); font-weight: bold; margin-left: 5px; }
-        .campo-perfil input { width: 100%; padding: 12px; border: none; border-bottom: 2px solid #eee; font-size: 16px; outline: none; }
-        .campo-perfil input:focus { border-bottom-color: var(--onix-green); }
-
-        /* NAVEGAÇÃO WHATSAPP */
-        nav { height: 75px; border-top: 1px solid #f0f0f0; display: flex; background: #fff; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #54656f; cursor: pointer; }
+        /* NAVEGAÇÃO PROPORCIONAL */
+        nav { 
+            height: 70px; border-top: 1px solid #f0f0f0; display: flex; 
+            background: var(--white); padding-bottom: env(safe-area-inset-bottom); 
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: var(--text-gray); cursor: pointer; }
         .active-nav { color: #000; font-weight: bold; }
-        .active-nav span { background: #dcf8c6; border-radius: 20px; padding: 4px 22px; font-variation-settings: 'FILL' 1; }
+        .active-nav span { background: #dcf8c6; border-radius: 20px; padding: 3px 18px; font-variation-settings: 'FILL' 1; }
+
+        /* LISTA CONTATOS */
+        .contato-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f9f9f9; }
+        .avatar-contato { width: 48px; height: 48px; border-radius: 50%; background: #dfe5e7; object-fit: cover; }
     </style>
 </head>
 <body>
 
-    <div id="sessao-autenticacao">
-        <div id="card-login" class="card-auth">
-            <h1>Onix Messenger</h1>
-            <input type="email" id="login-email" placeholder="E-mail">
-            <input type="password" id="login-senha" placeholder="Senha">
-            <button id="btn-fazer-login">ENTRAR</button>
-            <span class="link-alternar" id="btn-ir-cadastrar">Não tem conta? Criar Conta</span>
-        </div>
-
-        <div id="card-cadastro" class="card-auth" style="display:none;">
-            <h1>Criar nova conta</h1>
-            <input type="text" id="cad-nome" placeholder="Nome completo">
-            <input type="tel" id="cad-tel" placeholder="Telefone (819...)">
-            <input type="email" id="cad-email" placeholder="E-mail">
-            <input type="password" id="cad-senha" placeholder="Crie uma senha">
-            <button id="btn-fazer-cadastro">CADASTRAR E ENTRAR</button>
-            <span class="link-alternar" id="btn-ir-login">Já tenho conta? Login</span>
-        </div>
-    </div>
-
-    <div id="tela-app">
-        <header>
-            <h1>Onix Messenger</h1>
-            <div class="header-icons">
-                <span class="material-symbols-outlined">photo_camera</span>
-                <span class="material-symbols-outlined">call</span>
-                <span class="material-symbols-outlined" id="btn-menu-mais">more_vert</span>
+    <div class="app-container">
+        <div id="sessao-autenticacao">
+            <div id="card-login" class="card-auth">
+                <h1>Onix Messenger</h1>
+                <input type="email" id="login-email" placeholder="E-mail">
+                <input type="password" id="login-senha" placeholder="Senha">
+                <button id="btn-fazer-login">ENTRAR</button>
+                <span class="link-alternar" id="btn-ir-cadastrar">Criar Conta</span>
             </div>
-            <div id="menu-suspenso">
-                <div class="menu-item">Novo Grupo</div>
-                <div class="menu-item">Configurações</div>
-                <div class="menu-item" id="btn-logout" style="color:red; font-weight:bold;">Sair do Aplicativo</div>
-            </div>
-        </header>
-
-        <div id="container-busca">
-            <div class="search-bar">
-                <span class="material-symbols-outlined">search</span>
-                <input type="text" id="input-pesquisa" placeholder="Pesquisar contato por telefone...">
+            <div id="card-cadastro" class="card-auth" style="display:none;">
+                <h1>Cadastrar</h1>
+                <input type="text" id="cad-nome" placeholder="Nome">
+                <input type="tel" id="cad-tel" placeholder="Telefone">
+                <input type="email" id="cad-email" placeholder="E-mail">
+                <input type="password" id="cad-senha" placeholder="Senha">
+                <button id="btn-fazer-cadastro">CADASTRAR</button>
+                <span class="link-alternar" id="btn-ir-login">Já tenho conta</span>
             </div>
         </div>
 
-        <main>
-            <div id="aba-conversas" class="tela-interna active">
-                <div id="lista-contatos">
-                    <p style="text-align:center; padding:40px; color:#888;">Use a lupa para buscar um contato pelo telefone.</p>
+        <div id="tela-app">
+            <header>
+                <h1>Onix Messenger</h1>
+                <div class="header-icons">
+                    <span class="material-symbols-outlined">photo_camera</span>
+                    <span class="material-symbols-outlined">call</span>
+                    <span class="material-symbols-outlined" id="btn-menu-mais">more_vert</span>
+                </div>
+                <div id="menu-suspenso">
+                    <div class="menu-item" id="btn-logout" style="color:red;">Sair do Onix</div>
+                </div>
+            </header>
+
+            <div id="container-busca">
+                <div class="search-bar">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="input-pesquisa" placeholder="Pesquisar telefone...">
                 </div>
             </div>
 
-            <div id="aba-status" class="tela-interna" style="padding:20px;">
-                <h3>Status</h3>
-                <p style="margin-top:15px; color:#666;">Nenhuma atualização disponível.</p>
-            </div>
-
-            <div id="aba-perfil" class="tela-interna">
-                <div class="wrapper-foto">
-                    <img src="https://via.placeholder.com/150" id="perfil-img-exibicao">
-                    <label for="input-foto-perfil" class="cam-btn">
-                        <span class="material-symbols-outlined">photo_camera</span>
-                    </label>
-                    <input type="file" id="input-foto-perfil" accept="image/*" style="display:none;">
+            <main>
+                <div id="aba-conversas" class="tela-interna active">
+                    <div id="lista-contatos"></div>
                 </div>
-
-                <div class="campo-perfil">
-                    <label>NOME</label>
-                    <input type="text" id="perfil-nome-input" placeholder="Seu nome">
+                <div id="aba-status" class="tela-interna" style="padding:20px;">
+                    <h3>Status</h3>
+                    <p style="color:#888; margin-top:10px;">Nenhuma atualização.</p>
                 </div>
-
-                <div class="campo-perfil">
-                    <label>NÚMERO DE TELEFONE</label>
-                    <input type="text" id="perfil-tel-input" disabled style="background:#f5f5f5; color:#888;">
+                <div id="aba-perfil" class="tela-interna">
+                    <div class="wrapper-foto">
+                        <img src="https://via.placeholder.com/150" id="perfil-img-exibicao">
+                        <label for="input-foto-perfil" class="cam-btn"><span class="material-symbols-outlined">add_a_photo</span></label>
+                        <input type="file" id="input-foto-perfil" accept="image/*" style="display:none;">
+                    </div>
+                    <div class="campo-perfil"><label>NOME</label><input type="text" id="perfil-nome-input"></div>
+                    <div class="campo-perfil"><label>TELEFONE</label><input type="text" id="perfil-tel-input" disabled></div>
+                    <button id="btn-salvar-perfil">SALVAR PERFIL</button>
                 </div>
+            </main>
 
-                <button id="btn-salvar-perfil" style="background:var(--onix-green); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold;">SALVAR PERFIL</button>
-            </div>
-        </main>
-
-        <nav>
-            <div class="nav-item active-nav" id="nav-chat"><span class="material-symbols-outlined">chat</span>Conversas</div>
-            <div class="nav-item" id="nav-status"><span class="material-symbols-outlined">adjust</span>Status</div>
-            <div class="nav-item" id="nav-perfil"><span class="material-symbols-outlined">person</span>Perfil</div>
-        </nav>
+            <nav>
+                <div class="nav-item active-nav" id="nav-chat"><span class="material-symbols-outlined">chat</span>Conversas</div>
+                <div class="nav-item" id="nav-status"><span class="material-symbols-outlined">adjust</span>Status</div>
+                <div class="nav-item" id="nav-perfil"><span class="material-symbols-outlined">person</span>Perfil</div>
+            </nav>
+        </div>
     </div>
 
     <script type="module">
@@ -154,7 +175,6 @@
         import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-        // CONFIGURAÇÃO DO SEU FIREBASE
         const fbConfig = { 
             apiKey: "AIzaSyCAJekEeE2LJFIb6IiZG8jtvMjArFXCNzM", 
             authDomain: "onixchat-15978.firebaseapp.com", 
@@ -169,18 +189,15 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        // --- TRAVA DE SEGURANÇA ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
+        onAuthStateChanged(auth, async (u) => {
+            if (u) {
                 document.getElementById('sessao-autenticacao').style.display = 'none';
                 document.getElementById('tela-app').style.display = 'flex';
-                // Puxar dados do perfil
-                const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    document.getElementById('perfil-nome-input').value = data.nome;
-                    document.getElementById('perfil-tel-input').value = data.telefone;
-                    if (data.foto) document.getElementById('perfil-img-exibicao').src = data.foto;
+                const d = await getDoc(doc(db, "usuarios", u.uid));
+                if (d.exists()) {
+                    document.getElementById('perfil-nome-input').value = d.data().nome;
+                    document.getElementById('perfil-tel-input').value = d.data().telefone;
+                    if (d.data().foto) document.getElementById('perfil-img-exibicao').src = d.data().foto;
                 }
             } else {
                 document.getElementById('tela-app').style.display = 'none';
@@ -188,103 +205,68 @@
             }
         });
 
-        // --- NAVEGAÇÃO ---
-        document.getElementById('btn-ir-cadastrar').onclick = () => {
-            document.getElementById('card-login').style.display = 'none';
-            document.getElementById('card-cadastro').style.display = 'block';
-        };
-        document.getElementById('btn-ir-login').onclick = () => {
-            document.getElementById('card-cadastro').style.display = 'none';
-            document.getElementById('card-login').style.display = 'block';
-        };
+        document.getElementById('btn-ir-cadastrar').onclick = () => { document.getElementById('card-login').style.display = 'none'; document.getElementById('card-cadastro').style.display = 'block'; };
+        document.getElementById('btn-ir-login').onclick = () => { document.getElementById('card-cadastro').style.display = 'none'; document.getElementById('card-login').style.display = 'block'; };
 
-        // --- LOGIN ---
-        document.getElementById('btn-fazer-login').onclick = async () => {
-            const email = document.getElementById('login-email').value;
-            const senha = document.getElementById('login-senha').value;
-            try { await signInWithEmailAndPassword(auth, email, senha); } 
-            catch { alert("Jefferson, erro ao entrar. Verifique os dados!"); }
-        };
+        document.getElementById('btn-fazer-login').onclick = async () => { try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value); } catch { alert("Erro ao entrar!"); } };
 
-        // --- CADASTRO ---
         document.getElementById('btn-fazer-cadastro').onclick = async () => {
             const n = document.getElementById('cad-nome').value;
             const t = document.getElementById('cad-tel').value;
             const e = document.getElementById('cad-email').value;
             const s = document.getElementById('cad-senha').value;
-            if(!n || !t || !e || !s) return alert("Preencha todos os campos!");
             try {
-                const cred = await createUserWithEmailAndPassword(auth, e, s);
-                await setDoc(doc(db, "usuarios", cred.user.uid), { nome: n, telefone: t, email: e, uid: cred.user.uid, foto: "" });
-                alert("Conta criada com sucesso!");
-            } catch (err) { alert("Erro ao cadastrar: " + err.message); }
+                const c = await createUserWithEmailAndPassword(auth, e, s);
+                await setDoc(doc(db, "usuarios", c.user.uid), { nome: n, telefone: t, email: e, uid: c.user.uid, foto: "" });
+            } catch (err) { alert(err.message); }
         };
 
-        // --- UPLOAD DE FOTO (VIRA FOTO DO PERFIL) ---
         document.getElementById('input-foto-perfil').onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            try {
-                const storageRef = ref(storage, `perfis/${auth.currentUser.uid}`);
-                await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(storageRef);
-                await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { foto: url });
-                document.getElementById('perfil-img-exibicao').src = url;
-                alert("Foto de perfil atualizada!");
-            } catch (err) { alert("Erro no upload: " + err.message); }
+            const sRef = ref(storage, `perfis/${auth.currentUser.uid}`);
+            await uploadBytes(sRef, file);
+            const url = await getDownloadURL(sRef);
+            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { foto: url });
+            document.getElementById('perfil-img-exibicao').src = url;
         };
 
-        // --- SALVAR NOME ---
         document.getElementById('btn-salvar-perfil').onclick = async () => {
-            const novoNome = document.getElementById('perfil-nome-input').value;
-            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { nome: novoNome });
-            alert("Nome salvo com sucesso!");
+            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { nome: document.getElementById('perfil-nome-input').value });
+            alert("Salvo!");
         };
 
-        // --- BUSCA DE CONTATOS (LUPA) ---
         document.getElementById('input-pesquisa').oninput = async (e) => {
-            const telefone = e.target.value.trim();
-            if (telefone.length < 5) return;
-            const q = query(collection(db, "usuarios"), where("telefone", "==", telefone));
-            const querySnapshot = await getDocs(q);
-            const container = document.getElementById('lista-contatos');
-            container.innerHTML = "";
-            querySnapshot.forEach((doc) => {
-                const user = doc.data();
-                if (user.uid === auth.currentUser.uid) return;
+            const t = e.target.value.trim();
+            if (t.length < 5) return;
+            const q = query(collection(db, "usuarios"), where("telefone", "==", t));
+            const s = await getDocs(q);
+            const c = document.getElementById('lista-contatos');
+            c.innerHTML = "";
+            s.forEach((d) => {
+                const u = d.data();
+                if (u.uid === auth.currentUser.uid) return;
                 const div = document.createElement('div');
                 div.className = 'contato-item';
-                div.innerHTML = `
-                    <img src="${user.foto || 'https://via.placeholder.com/50'}" class="avatar-contato">
-                    <div><strong>${user.nome}</strong><br><small>${user.telefone}</small></div>
-                `;
-                container.appendChild(div);
+                div.innerHTML = `<img src="${u.foto || 'https://via.placeholder.com/50'}" class="avatar-contato"><div><strong>${u.nome}</strong><br><small>${u.telefone}</small></div>`;
+                c.appendChild(div);
             });
         };
 
-        // --- LOGOUT ---
-        document.getElementById('btn-logout').onclick = () => { if(confirm("Deseja sair do Onix Messenger?")) signOut(auth); };
+        document.getElementById('nav-chat').onclick = () => alternar('aba-conversas', 'nav-chat');
+        document.getElementById('nav-status').onclick = () => alternar('aba-status', 'nav-status');
+        document.getElementById('nav-perfil').onclick = () => alternar('aba-perfil', 'nav-perfil');
 
-        // --- TROCA DE ABAS ---
-        document.getElementById('nav-chat').onclick = () => alternarTab('aba-conversas', 'nav-chat');
-        document.getElementById('nav-status').onclick = () => alternarTab('aba-status', 'nav-status');
-        document.getElementById('nav-perfil').onclick = () => alternarTab('aba-perfil', 'nav-perfil');
-
-        function alternarTab(id, nav) {
+        function alternar(id, n) {
             document.querySelectorAll('.tela-interna').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active-nav'));
             document.getElementById(id).classList.add('active');
-            document.getElementById(nav).classList.add('active-nav');
+            document.getElementById(n).classList.add('active-nav');
         }
 
-        // --- MENU SUSPENSO ---
-        document.getElementById('btn-menu-mais').onclick = (e) => {
-            e.stopPropagation();
-            const m = document.getElementById('menu-suspenso');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        };
+        document.getElementById('btn-menu-mais').onclick = (e) => { e.stopPropagation(); const m = document.getElementById('menu-suspenso'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; };
+        document.getElementById('btn-logout').onclick = () => signOut(auth);
         document.onclick = () => document.getElementById('menu-suspenso').style.display = 'none';
-
     </script>
 </body>
 </html>
