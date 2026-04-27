@@ -6,56 +6,103 @@
     <title>Onix Messenger Pro</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-        :root { --onix-green: #008069; --onix-dark: #005c4b; --white: #ffffff; --bg-light: #f0f2f5; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
+        :root { 
+            --onix-green: #008069; 
+            --bg-light: #f0f2f5; 
+            --text-main: #111b21;
+            --text-secondary: #667781;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
         
         body { background-color: #d1d7db; height: 100dvh; display: flex; justify-content: center; overflow: hidden; }
 
-        /* CONTAINER ESTILO CELULAR */
-        .app-container { width: 100%; max-width: 500px; background: var(--white); height: 100%; display: flex; flex-direction: column; position: relative; }
+        .app-container { 
+            width: 100%; 
+            max-width: 500px; 
+            background: white; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+        }
 
-        /* AUTH */
-        #sessao-autenticacao { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; background: var(--bg-light); }
-        .card-auth { background: white; padding: 30px; border-radius: 12px; width: 100%; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        /* --- AUTH --- */
+        #sessao-autenticacao { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100%; padding: 25px; background: var(--bg-light); z-index: 2000;
+        }
+        .card-auth { background: white; padding: 30px; border-radius: 15px; width: 100%; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         .card-auth h1 { color: var(--onix-green); margin-bottom: 20px; }
-        .card-auth input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
-        .card-auth button { width: 100%; padding: 14px; background: var(--onix-green); color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        .card-auth input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
+        .card-auth button { width: 100%; padding: 15px; background: var(--onix-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* HEADER E NAVEGAÇÃO SUPERIOR (O QUE VOCÊ PEDIU) */
-        header { background: var(--onix-green); color: white; padding: 15px 16px 5px 16px; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .top-bar h1 { font-size: 22px; font-weight: 600; }
-        .top-icons { display: flex; gap: 20px; }
+        /* --- HEADER --- */
+        header { 
+            padding: 15px 16px; background: white; display: flex; 
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; 
+        }
+        header h1 { font-size: 22px; color: var(--onix-green); font-weight: bold; }
+        .header-icons { display: flex; gap: 20px; color: var(--text-secondary); }
+        .header-icons span { cursor: pointer; font-size: 26px; }
 
-        nav { display: flex; background: var(--onix-green); text-transform: uppercase; font-size: 14px; font-weight: bold; }
-        .nav-item { flex: 1; text-align: center; padding: 12px 0; color: rgba(255,255,255,0.7); cursor: pointer; position: relative; }
-        .active-nav { color: white; border-bottom: 3px solid white; }
-
-        /* BUSCA */
-        #container-busca { padding: 10px; background: #fff; border-bottom: 1px solid #eee; display: none; }
-        .search-bar { background: #f0f2f5; display: flex; align-items: center; padding: 8px 15px; border-radius: 20px; gap: 10px; }
+        /* BUSCA DINÂMICA */
+        #container-busca { 
+            padding: 10px 16px; background: white; border-bottom: 1px solid #f0f0f0; 
+            display: none; 
+        }
+        .search-bar { background: var(--bg-light); display: flex; align-items: center; padding: 10px 15px; border-radius: 20px; gap: 10px; }
         .search-bar input { background: transparent; border: none; outline: none; flex: 1; font-size: 16px; }
 
-        /* MENU SUSPENSO */
-        #menu-suspenso { display: none; position: absolute; top: 50px; right: 10px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 4px; z-index: 100; width: 180px; }
-        .menu-item { padding: 15px; border-bottom: 1px solid #f5f5f5; color: #333; cursor: pointer; }
+        /* MENU */
+        #menu-suspenso { 
+            display: none; position: absolute; top: 60px; right: 15px; 
+            background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000; width: 180px; 
+        }
+        .menu-item { padding: 15px 20px; border-bottom: 1px solid #f5f5f5; cursor: pointer; color: var(--text-main); }
 
-        main { flex: 1; overflow-y: auto; background: white; }
-        .tela-interna { display: none; }
+        /* CONTEÚDO PRINCIPAL */
+        main { flex: 1; overflow-y: auto; background: white; position: relative; }
+        .tela-interna { display: none; height: 100%; }
         .active { display: block !important; }
+
+        /* LISTA DE CONTATOS */
+        .contato-item { 
+            padding: 15px 16px; display: flex; align-items: center; gap: 15px; 
+            border-bottom: 1px solid #f9f9f9; cursor: pointer; 
+        }
+        .contato-item:active { background-color: #f5f5f5; }
+        .avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: #dfe5e7; }
+        .contato-info { flex: 1; }
+        .contato-info h4 { font-size: 16px; color: var(--text-main); }
+        .contato-info p { font-size: 14px; color: var(--text-secondary); }
 
         /* PERFIL */
         #aba-perfil { padding: 30px; text-align: center; }
-        .wrapper-foto { position: relative; width: 150px; height: 150px; margin: 0 auto 25px; }
-        #perfil-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #eee; }
-        .cam-icon { position: absolute; bottom: 5px; right: 5px; background: var(--onix-green); color: white; border-radius: 50%; padding: 10px; cursor: pointer; }
-        .campo { text-align: left; margin-bottom: 20px; }
-        .campo label { color: var(--onix-green); font-weight: bold; font-size: 13px; }
-        .campo input { width: 100%; padding: 10px; border: none; border-bottom: 2px solid #eee; font-size: 16px; outline: none; }
+        .foto-perfil-container { position: relative; width: 140px; height: 140px; margin: 0 auto 25px; }
+        #img-perfil { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--onix-green); }
+        .btn-camera { 
+            position: absolute; bottom: 5px; right: 5px; background: var(--onix-green); 
+            color: white; border-radius: 50%; padding: 10px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .campo-edit { text-align: left; margin-bottom: 20px; }
+        .campo-edit label { font-size: 13px; color: var(--onix-green); font-weight: bold; padding-left: 5px; }
+        .campo-edit input { width: 100%; padding: 12px; border: none; border-bottom: 2px solid #eee; font-size: 16px; outline: none; }
 
-        /* LISTA CONTATOS */
-        .contato { padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #f9f9f9; }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; background: #dfe5e7; object-fit: cover; }
+        /* --- NAVEGAÇÃO INFERIOR (CÁ EMBAIXO) --- */
+        nav { 
+            height: 75px; border-top: 1px solid #f0f0f0; display: flex; 
+            background: white; padding-bottom: env(safe-area-inset-bottom); 
+        }
+        .nav-item { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; font-size: 12px; color: var(--text-secondary); cursor: pointer; 
+        }
+        .active-nav { color: var(--text-main); font-weight: bold; }
+        .active-nav span { 
+            background: #dcf8c6; border-radius: 20px; padding: 4px 22px; 
+            margin-bottom: 4px; font-variation-settings: 'FILL' 1; 
+        }
     </style>
 </head>
 <body>
@@ -64,168 +111,44 @@
         <div id="sessao-autenticacao">
             <div id="card-login" class="card-auth">
                 <h1>Onix Messenger</h1>
-                <input type="email" id="login-email" placeholder="E-mail">
-                <input type="password" id="login-senha" placeholder="Senha">
+                <input type="email" id="l-email" placeholder="E-mail">
+                <input type="password" id="l-senha" placeholder="Senha">
                 <button id="btn-entrar">ENTRAR</button>
-                <p style="margin-top:20px; cursor:pointer; color:var(--onix-green)" id="ir-cadastrar">Criar nova conta</p>
+                <p style="margin-top:20px; color:var(--onix-green); cursor:pointer;" id="go-cad">Criar Conta</p>
             </div>
-            <div id="card-cadastro" class="card-auth" style="display:none;">
+            <div id="card-cad" class="card-auth" style="display:none;">
                 <h1>Cadastrar</h1>
-                <input type="text" id="cad-nome" placeholder="Nome">
-                <input type="tel" id="cad-tel" placeholder="Telefone">
-                <input type="email" id="cad-email" placeholder="E-mail">
-                <input type="password" id="cad-senha" placeholder="Senha">
-                <button id="btn-cadastrar">CADASTRAR</button>
-                <p style="margin-top:20px; cursor:pointer; color:var(--onix-green)" id="ir-login">Já tenho conta</p>
+                <input type="text" id="c-nome" placeholder="Nome">
+                <input type="tel" id="c-tel" placeholder="Telefone">
+                <input type="email" id="c-email" placeholder="E-mail">
+                <input type="password" id="c-senha" placeholder="Senha">
+                <button id="btn-cad">CADASTRAR</button>
+                <p style="margin-top:20px; color:var(--onix-green); cursor:pointer;" id="go-log">Já tenho conta</p>
             </div>
         </div>
 
         <div id="tela-app" style="display:none; flex-direction:column; height:100%;">
             <header>
-                <div class="top-bar">
-                    <h1>Onix Messenger</h1>
-                    <div class="top-icons">
-                        <span class="material-symbols-outlined" id="abrir-busca">search</span>
-                        <span class="material-symbols-outlined" id="btn-menu">more_vert</span>
-                    </div>
+                <h1>Onix Messenger</h1>
+                <div class="header-icons">
+                    <span class="material-symbols-outlined" id="btn-busca">search</span>
+                    <span class="material-symbols-outlined" id="btn-more">more_vert</span>
                 </div>
-                <nav>
-                    <div class="nav-item active-nav" id="tab-conversas">Conversas</div>
-                    <div class="nav-item" id="tab-status">Status</div>
-                    <div class="nav-item" id="tab-perfil">Perfil</div>
-                </nav>
                 <div id="menu-suspenso">
-                    <div class="menu-item" id="btn-sair" style="color:red;">Sair do Onix</div>
+                    <div class="menu-item" id="btn-sair" style="color:red; font-weight:bold;">Sair</div>
                 </div>
             </header>
 
             <div id="container-busca">
                 <div class="search-bar">
-                    <input type="text" id="input-busca" placeholder="Pesquisar por telefone...">
+                    <span class="material-symbols-outlined">search</span>
+                    <input type="text" id="input-busca" placeholder="Pesquisar por número...">
                 </div>
             </div>
 
             <main>
                 <div id="aba-conversas" class="tela-interna active">
-                    <div id="lista-contatos"></div>
-                </div>
-                <div id="aba-status" class="tela-interna" style="padding:20px; color:#888;">
-                    Nenhuma atualização de status.
-                </div>
-                <div id="aba-perfil" class="tela-interna">
-                    <div class="wrapper-foto">
-                        <img src="https://via.placeholder.com/150" id="perfil-img">
-                        <label for="upload-foto" class="cam-icon"><span class="material-symbols-outlined">photo_camera</span></label>
-                        <input type="file" id="upload-foto" accept="image/*" style="display:none;">
+                    <div id="render-contatos">
+                        <p style="text-align:center; padding:50px; color:#999;">Pesquise um contato para conversar.</p>
                     </div>
-                    <div class="campo"><label>NOME</label><input type="text" id="p-nome"></div>
-                    <div class="campo"><label>TELEFONE</label><input type="text" id="p-tel" disabled></div>
-                    <button id="btn-salvar" style="background:var(--onix-green); color:white; border:none; padding:15px; width:100%; border-radius:8px; font-weight:bold;">SALVAR</button>
                 </div>
-            </main>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-
-        const config = { apiKey: "AIzaSyCAJekEeE2LJFIb6IiZG8jtvMjArFXCNzM", authDomain: "onixchat-15978.firebaseapp.com", projectId: "onixchat-15978", storageBucket: "onixchat-15978.appspot.com", messagingSenderId: "94179459295", appId: "1:94179459295:web:d4609ef98615afc8be696a" };
-        const app = initializeApp(config);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-
-        // TRAVA DE LOGIN
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById('sessao-autenticacao').style.display = 'none';
-                document.getElementById('tela-app').style.display = 'flex';
-                const d = await getDoc(doc(db, "usuarios", user.uid));
-                if (d.exists()) {
-                    document.getElementById('p-nome').value = d.data().nome;
-                    document.getElementById('p-tel').value = d.data().telefone;
-                    if (d.data().foto) document.getElementById('perfil-img').src = d.data().foto;
-                }
-            } else {
-                document.getElementById('tela-app').style.display = 'none';
-                document.getElementById('sessao-autenticacao').style.display = 'flex';
-            }
-        });
-
-        // LOGIN E CADASTRO
-        document.getElementById('ir-cadastrar').onclick = () => { document.getElementById('card-login').style.display='none'; document.getElementById('card-cadastro').style.display='block'; };
-        document.getElementById('ir-login').onclick = () => { document.getElementById('card-cadastro').style.display='none'; document.getElementById('card-login').style.display='block'; };
-        
-        document.getElementById('btn-entrar').onclick = async () => {
-            try { await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value); } catch { alert("Erro ao entrar!"); }
-        };
-
-        document.getElementById('btn-cadastrar').onclick = async () => {
-            const n = document.getElementById('cad-nome').value, t = document.getElementById('cad-tel').value, e = document.getElementById('cad-email').value, s = document.getElementById('cad-senha').value;
-            try {
-                const c = await createUserWithEmailAndPassword(auth, e, s);
-                await setDoc(doc(db, "usuarios", c.user.uid), { nome: n, telefone: t, email: e, uid: c.user.uid, foto: "" });
-            } catch (err) { alert(err.message); }
-        };
-
-        // FOTO E PERFIL
-        document.getElementById('upload-foto').onchange = async (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            const sRef = ref(storage, `perfis/${auth.currentUser.uid}`);
-            await uploadBytes(sRef, file);
-            const url = await getDownloadURL(sRef);
-            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { foto: url });
-            document.getElementById('perfil-img').src = url;
-        };
-
-        document.getElementById('btn-salvar').onclick = async () => {
-            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { nome: document.getElementById('p-nome').value });
-            alert("Salvo!");
-        };
-
-        // LUPA DE BUSCA
-        document.getElementById('abrir-busca').onclick = () => {
-            const b = document.getElementById('container-busca');
-            b.style.display = b.style.display === 'block' ? 'none' : 'block';
-        };
-
-        document.getElementById('input-busca').oninput = async (e) => {
-            const t = e.target.value.trim();
-            if (t.length < 5) return;
-            const q = query(collection(db, "usuarios"), where("telefone", "==", t));
-            const s = await getDocs(q);
-            const list = document.getElementById('lista-contatos');
-            list.innerHTML = "";
-            s.forEach(doc => {
-                const u = doc.data();
-                if(u.uid === auth.currentUser.uid) return;
-                list.innerHTML += `<div class="contato"><img src="${u.foto || 'https://via.placeholder.com/50'}" class="avatar"><div><strong>${u.nome}</strong><br><small>${u.telefone}</small></div></div>`;
-            });
-        };
-
-        // NAVEGAÇÃO
-        document.getElementById('tab-conversas').onclick = () => alternar('aba-conversas', 'tab-conversas');
-        document.getElementById('tab-status').onclick = () => alternar('aba-status', 'tab-status');
-        document.getElementById('tab-perfil').onclick = () => alternar('aba-perfil', 'tab-perfil');
-
-        function alternar(aba, tab) {
-            document.querySelectorAll('.tela-interna').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active-nav'));
-            document.getElementById(aba).classList.add('active');
-            document.getElementById(tab).classList.add('active-nav');
-        }
-
-        document.getElementById('btn-menu').onclick = (e) => {
-            e.stopPropagation();
-            const m = document.getElementById('menu-suspenso');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        };
-        document.getElementById('btn-sair').onclick = () => signOut(auth);
-        document.onclick = () => document.getElementById('menu-suspenso').style.display = 'none';
-
-    </script>
-</body>
-</html>
