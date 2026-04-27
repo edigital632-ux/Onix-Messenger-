@@ -2,153 +2,243 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Onix Messenger Pro</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
-        :root { 
-            --onix-green: #008069; 
-            --bg-light: #f0f2f5; 
-            --text-main: #111b21;
-            --text-secondary: #667781;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        :root { --onix: #008069; --bg: #f0f2f5; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         
-        body { background-color: #d1d7db; height: 100dvh; display: flex; justify-content: center; overflow: hidden; }
+        html, body { height: 100dvh; width: 100%; overflow: hidden; background: #000; }
 
-        .app-container { 
-            width: 100%; 
-            max-width: 500px; 
-            background: white; 
-            height: 100%; 
-            display: flex; 
-            flex-direction: column; 
-            position: relative; 
+        .app-shell { 
+            width: 100%; max-width: 500px; height: 100%; margin: 0 auto;
+            background: #fff; display: flex; flex-direction: column; position: relative;
         }
 
-        /* --- AUTH --- */
-        #sessao-autenticacao { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100%; padding: 25px; background: var(--bg-light); z-index: 2000;
+        /* TELAS DE ACESSO */
+        #auth-screen { 
+            position: absolute; inset: 0; z-index: 9999; background: var(--bg);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
         }
-        .card-auth { background: white; padding: 30px; border-radius: 15px; width: 100%; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .card-auth h1 { color: var(--onix-green); margin-bottom: 20px; }
-        .card-auth input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-        .card-auth button { width: 100%; padding: 15px; background: var(--onix-green); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .auth-card { background: #fff; padding: 25px; border-radius: 15px; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        .auth-card h1 { color: var(--onix); margin-bottom: 20px; }
+        .auth-card input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 10px; font-size: 16px; outline: none; }
+        .auth-card button { width: 100%; padding: 16px; background: var(--onix); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
 
-        /* --- HEADER --- */
-        header { 
-            padding: 15px 16px; background: white; display: flex; 
-            justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; 
-        }
-        header h1 { font-size: 22px; color: var(--onix-green); font-weight: bold; }
-        .header-icons { display: flex; gap: 20px; color: var(--text-secondary); }
-        .header-icons span { cursor: pointer; font-size: 26px; }
+        /* CABEÇALHO */
+        header { height: 60px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid #eee; }
+        header h1 { color: var(--onix); font-size: 22px; font-weight: bold; }
+        .h-icons { display: flex; gap: 20px; color: #54656f; }
 
-        /* BUSCA DINÂMICA */
-        #container-busca { 
-            padding: 10px 16px; background: white; border-bottom: 1px solid #f0f0f0; 
-            display: none; 
-        }
-        .search-bar { background: var(--bg-light); display: flex; align-items: center; padding: 10px 15px; border-radius: 20px; gap: 10px; }
+        /* BUSCA */
+        #search-area { padding: 10px; display: none; background: #fff; border-bottom: 1px solid #eee; }
+        .search-bar { background: var(--bg); display: flex; align-items: center; padding: 10px 15px; border-radius: 25px; gap: 10px; }
         .search-bar input { background: transparent; border: none; outline: none; flex: 1; font-size: 16px; }
 
-        /* MENU */
-        #menu-suspenso { 
-            display: none; position: absolute; top: 60px; right: 15px; 
-            background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000; width: 180px; 
-        }
-        .menu-item { padding: 15px 20px; border-bottom: 1px solid #f5f5f5; cursor: pointer; color: var(--text-main); }
+        /* CORPO */
+        main { flex: 1; overflow-y: auto; background: #fff; }
+        .page { display: none; height: 100%; }
+        .active-page { display: block; }
 
-        /* CONTEÚDO PRINCIPAL */
-        main { flex: 1; overflow-y: auto; background: white; position: relative; }
-        .tela-interna { display: none; height: 100%; }
-        .active { display: block !important; }
-
-        /* LISTA DE CONTATOS */
-        .contato-item { 
-            padding: 15px 16px; display: flex; align-items: center; gap: 15px; 
-            border-bottom: 1px solid #f9f9f9; cursor: pointer; 
-        }
-        .contato-item:active { background-color: #f5f5f5; }
-        .avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: #dfe5e7; }
-        .contato-info { flex: 1; }
-        .contato-info h4 { font-size: 16px; color: var(--text-main); }
-        .contato-info p { font-size: 14px; color: var(--text-secondary); }
+        /* ITENS DA LISTA */
+        .user-item { padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+        .user-item img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; background: #eee; }
 
         /* PERFIL */
-        #aba-perfil { padding: 30px; text-align: center; }
-        .foto-perfil-container { position: relative; width: 140px; height: 140px; margin: 0 auto 25px; }
-        #img-perfil { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--onix-green); }
-        .btn-camera { 
-            position: absolute; bottom: 5px; right: 5px; background: var(--onix-green); 
-            color: white; border-radius: 50%; padding: 10px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .campo-edit { text-align: left; margin-bottom: 20px; }
-        .campo-edit label { font-size: 13px; color: var(--onix-green); font-weight: bold; padding-left: 5px; }
-        .campo-edit input { width: 100%; padding: 12px; border: none; border-bottom: 2px solid #eee; font-size: 16px; outline: none; }
+        .profile-ui { padding: 30px 20px; text-align: center; }
+        .p-photo { position: relative; width: 130px; height: 130px; margin: 0 auto 25px; }
+        #p-img-display { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--onix); }
+        .cam-btn { position: absolute; bottom: 5px; right: 5px; background: var(--onix); color: #fff; padding: 10px; border-radius: 50%; cursor: pointer; }
 
-        /* --- NAVEGAÇÃO INFERIOR (CÁ EMBAIXO) --- */
-        nav { 
-            height: 75px; border-top: 1px solid #f0f0f0; display: flex; 
-            background: white; padding-bottom: env(safe-area-inset-bottom); 
-        }
-        .nav-item { 
-            flex: 1; display: flex; flex-direction: column; align-items: center; 
-            justify-content: center; font-size: 12px; color: var(--text-secondary); cursor: pointer; 
-        }
-        .active-nav { color: var(--text-main); font-weight: bold; }
-        .active-nav span { 
-            background: #dcf8c6; border-radius: 20px; padding: 4px 22px; 
-            margin-bottom: 4px; font-variation-settings: 'FILL' 1; 
-        }
+        /* NAV BAIXO */
+        nav { height: 75px; border-top: 1px solid #eee; display: flex; background: #fff; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-link { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #54656f; font-size: 12px; cursor: pointer; }
+        .nav-link.active { color: #000; font-weight: bold; }
+        .nav-link.active span { background: #dcf8c6; border-radius: 20px; padding: 4px 22px; margin-bottom: 3px; font-variation-settings: 'FILL' 1; }
+
+        #menu-box { display: none; position: absolute; top: 55px; right: 10px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 100; min-width: 150px; }
+        .menu-btn { padding: 15px; border-bottom: 1px solid #f5f5f5; font-size: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div id="sessao-autenticacao">
-            <div id="card-login" class="card-auth">
+    <div class="app-shell">
+        <div id="auth-screen">
+            <div class="auth-card" id="box-login">
                 <h1>Onix Messenger</h1>
-                <input type="email" id="l-email" placeholder="E-mail">
-                <input type="password" id="l-senha" placeholder="Senha">
-                <button id="btn-entrar">ENTRAR</button>
-                <p style="margin-top:20px; color:var(--onix-green); cursor:pointer;" id="go-cad">Criar Conta</p>
+                <input type="email" id="email-in" placeholder="E-mail">
+                <input type="password" id="pass-in" placeholder="Senha">
+                <button id="btn-login-action">ENTRAR</button>
+                <p id="switch-to-cad" style="margin-top:20px; color:var(--onix); cursor:pointer;">Não tem conta? Criar agora</p>
             </div>
-            <div id="card-cad" class="card-auth" style="display:none;">
-                <h1>Cadastrar</h1>
-                <input type="text" id="c-nome" placeholder="Nome">
-                <input type="tel" id="c-tel" placeholder="Telefone">
-                <input type="email" id="c-email" placeholder="E-mail">
-                <input type="password" id="c-senha" placeholder="Senha">
-                <button id="btn-cad">CADASTRAR</button>
-                <p style="margin-top:20px; color:var(--onix-green); cursor:pointer;" id="go-log">Já tenho conta</p>
+            <div class="auth-card" id="box-cad" style="display:none;">
+                <h1>Criar Conta</h1>
+                <input type="text" id="cad-nome" placeholder="Nome Completo">
+                <input type="tel" id="cad-tel" placeholder="Telefone">
+                <input type="email" id="cad-email" placeholder="E-mail">
+                <input type="password" id="cad-pass" placeholder="Senha">
+                <button id="btn-cad-action">CADASTRAR</button>
+                <p id="switch-to-login" style="margin-top:20px; color:var(--onix); cursor:pointer;">Já tenho conta. Login</p>
             </div>
         </div>
 
-        <div id="tela-app" style="display:none; flex-direction:column; height:100%;">
-            <header>
-                <h1>Onix Messenger</h1>
-                <div class="header-icons">
-                    <span class="material-symbols-outlined" id="btn-busca">search</span>
-                    <span class="material-symbols-outlined" id="btn-more">more_vert</span>
-                </div>
-                <div id="menu-suspenso">
-                    <div class="menu-item" id="btn-sair" style="color:red; font-weight:bold;">Sair</div>
-                </div>
-            </header>
+        <header>
+            <h1>Onix Messenger</h1>
+            <div class="h-icons">
+                <span class="material-symbols-outlined" id="open-search">search</span>
+                <span class="material-symbols-outlined" id="open-menu">more_vert</span>
+            </div>
+            <div id="menu-box">
+                <div class="menu-btn" id="logout-action" style="color:red; font-weight:bold;">Sair do Aplicativo</div>
+            </div>
+        </header>
 
-            <div id="container-busca">
-                <div class="search-bar">
-                    <span class="material-symbols-outlined">search</span>
-                    <input type="text" id="input-busca" placeholder="Pesquisar por número...">
+        <div id="search-area">
+            <div class="search-bar">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" id="search-input" placeholder="Pesquisar telefone...">
+            </div>
+        </div>
+
+        <main>
+            <div id="page-chat" class="page active-page">
+                <div id="contacts-render">
+                    <p style="text-align:center; padding:50px; color:#999;">Busque um contato na lupa acima.</p>
                 </div>
             </div>
-
-            <main>
-                <div id="aba-conversas" class="tela-interna active">
-                    <div id="render-contatos">
-                        <p style="text-align:center; padding:50px; color:#999;">Pesquise um contato para conversar.</p>
-                    </div>
+            <div id="page-status" class="page" style="padding:20px;">
+                <h3>Status</h3>
+                <p style="color:#888; margin-top:10px;">Toque para adicionar um status.</p>
+            </div>
+            <div id="page-profile" class="page profile-ui">
+                <div class="p-photo">
+                    <img src="https://via.placeholder.com/150" id="p-img-display">
+                    <label for="img-file" class="cam-btn"><span class="material-symbols-outlined">photo_camera</span></label>
+                    <input type="file" id="img-file" accept="image/*" style="display:none;">
                 </div>
+                <div style="text-align:left;">
+                    <label style="color:var(--onix); font-size:12px; font-weight:bold; margin-left:5px;">NOME</label>
+                    <input type="text" id="p-name-in" style="width:100%; padding:12px; border:none; border-bottom:2px solid #eee; margin-bottom:20px; font-size:16px; outline:none;">
+                    <label style="color:var(--onix); font-size:12px; font-weight:bold; margin-left:5px;">TELEFONE</label>
+                    <input type="text" id="p-tel-in" disabled style="width:100%; padding:12px; border:none; background:#f9f9f9; color:#888;">
+                </div>
+                <button id="p-save-btn" style="margin-top:30px; width:100%; padding:15px; background:var(--onix); color:#fff; border:none; border-radius:10px; font-weight:bold;">SALVAR ALTERAÇÕES</button>
+            </div>
+        </main>
+
+        <nav>
+            <div class="nav-link active" id="n-chat"><span class="material-symbols-outlined">chat</span>Conversas</div>
+            <div class="nav-link" id="n-status"><span class="material-symbols-outlined">adjust</span>Status</div>
+            <div class="nav-link" id="n-profile"><span class="material-symbols-outlined">person</span>Perfil</div>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCAJekEeE2LJFIb6IiZG8jtvMjArFXCNzM", authDomain: "onixchat-15978.firebaseapp.com", projectId: "onixchat-15978", storageBucket: "onixchat-15978.appspot.com", messagingSenderId: "94179459295", appId: "1:94179459295:web:d4609ef98615afc8be696a" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // --- CONTROLE DE LOGIN ---
+        document.getElementById('btn-login-action').onclick = () => {
+            const e = document.getElementById('email-in').value;
+            const p = document.getElementById('pass-in').value;
+            signInWithEmailAndPassword(auth, e, p).catch(err => alert("Erro ao entrar: " + err.message));
+        };
+
+        document.getElementById('btn-cad-action').onclick = async () => {
+            const n = document.getElementById('cad-nome').value;
+            const t = document.getElementById('cad-tel').value;
+            const e = document.getElementById('cad-email').value;
+            const s = document.getElementById('cad-pass').value;
+            try {
+                const res = await createUserWithEmailAndPassword(auth, e, s);
+                await setDoc(doc(db, "usuarios", res.user.uid), { nome: n, telefone: t, email: e, uid: res.user.uid, foto: "" });
+            } catch (err) { alert(err.message); }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                const d = await getDoc(doc(db, "usuarios", user.uid));
+                if (d.exists()) {
+                    document.getElementById('p-name-in').value = d.data().nome;
+                    document.getElementById('p-tel-in').value = d.data().telefone;
+                    if (d.data().foto) document.getElementById('p-img-display').src = d.data().foto;
+                }
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+            }
+        });
+
+        // --- NAVEGAÇÃO ---
+        const showPage = (p, n) => {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active-page'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.getElementById(p).classList.add('active-page');
+            document.getElementById(n).classList.add('active');
+        };
+        document.getElementById('n-chat').onclick = () => showPage('page-chat', 'n-chat');
+        document.getElementById('n-status').onclick = () => showPage('page-status', 'n-status');
+        document.getElementById('n-profile').onclick = () => showPage('page-profile', 'n-profile');
+
+        // --- BUSCA ---
+        document.getElementById('open-search').onclick = () => {
+            const s = document.getElementById('search-area');
+            s.style.display = s.style.display === 'block' ? 'none' : 'block';
+        };
+
+        document.getElementById('search-input').oninput = async (e) => {
+            const val = e.target.value.trim();
+            if (val.length < 5) return;
+            const q = query(collection(db, "usuarios"), where("telefone", "==", val));
+            const snap = await getDocs(q);
+            const render = document.getElementById('contacts-render');
+            render.innerHTML = "";
+            snap.forEach(doc => {
+                const u = doc.data();
+                if (u.uid === auth.currentUser.uid) return;
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.innerHTML = `<img src="${u.foto || 'https://via.placeholder.com/50'}"><div><strong>${u.nome}</strong><br><small>${u.telefone}</small></div>`;
+                div.onclick = () => alert("Conversar com " + u.nome);
+                render.appendChild(div);
+            });
+        };
+
+        // --- PERFIL ---
+        document.getElementById('img-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            const refS = ref(storage, `perfis/${auth.currentUser.uid}`);
+            await uploadBytes(refS, file);
+            const url = await getDownloadURL(refS);
+            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { foto: url });
+            document.getElementById('p-img-display').src = url;
+        };
+
+        document.getElementById('p-save-btn').onclick = async () => {
+            await updateDoc(doc(db, "usuarios", auth.currentUser.uid), { nome: document.getElementById('p-name-in').value });
+            alert("Perfil Salvo!");
+        };
+
+        // --- MENU ---
+        document.getElementById('open-menu').onclick = (e) => {
+            e.stopPropagation();
+            const m = document.getElementById('menu-box');
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        };
+        document.getElementById('logout-action').onclick = () => signOut(auth);
+        document.getElementById('switch-to-cad').onclick = () => { document.getElementById('box-login').style.display='none'; document.getElementById('box-cad').style.display='block'; };
+        document.getElementById('switch-to-login').onclick = () => { document.getElementById('box-cad').style.display='none'; document.getElementById('box-login').style.display='block'; };
+        document.onclick = () => document.getElementById('menu-box').style.display = 'none';
+
+    </script>
+</body>
+</html>
