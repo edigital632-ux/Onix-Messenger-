@@ -13,34 +13,35 @@
 
         /* TELA DE LOGIN */
         #tela-login { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        .login-card { background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
-        .login-card input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; outline: none; }
-        .login-card button { width: 100%; padding: 14px; background: var(--onix-green); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
+        .login-card input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 16px; }
+        .login-card button { width: 100%; padding: 14px; background: var(--onix-green); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px; }
 
         /* TELA DO APP (PRINCIPAL) */
         #tela-app { display: none; flex-direction: column; height: 100vh; background: white; }
         header { padding: 15px 16px; background: #fff; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
-        header h1 { font-size: 22px; color: var(--onix-green); }
+        header h1 { font-size: 22px; color: var(--onix-green); font-weight: 600; }
         
         #menu-suspenso { display: none; position: absolute; top: 55px; right: 10px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000; width: 180px; }
-        .menu-item { padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
+        .menu-item { padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #f5f5f5; font-size: 16px; }
 
         main { flex: 1; overflow-y: auto; }
         .tela-interna { display: none; padding: 20px; }
         .active { display: block !important; }
 
-        nav { height: 70px; border-top: 1px solid #f0f0f0; display: flex; background: #fff; }
+        nav { height: 75px; border-top: 1px solid #f0f0f0; display: flex; background: #fff; padding-bottom: env(safe-area-inset-bottom); }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; color: #555; cursor: pointer; }
         .active-nav { color: #000; font-weight: bold; }
-        .active-nav .material-symbols-outlined { background: #dcf8c6; border-radius: 20px; padding: 4px 18px; font-variation-settings: 'FILL' 1; }
+        .active-nav .material-symbols-outlined { background: #dcf8c6; border-radius: 20px; padding: 4px 20px; font-variation-settings: 'FILL' 1; }
     </style>
 </head>
 <body>
 
     <div id="tela-login">
         <div class="login-card">
-            <h1 style="color: var(--onix-green); margin-bottom: 20px;">Onix Messenger</h1>
-            <input type="tel" id="login-tel" placeholder="Telefone (ex: 11999999999)">
+            <h1 style="color: var(--onix-green); margin-bottom: 10px;">Onix Messenger</h1>
+            <p style="color: #666; margin-bottom: 20px;">Entre com seu e-mail</p>
+            <input type="email" id="login-email" placeholder="Seu e-mail">
             <input type="password" id="login-senha" placeholder="Sua senha">
             <button id="btn-entrar">ENTRAR</button>
         </div>
@@ -58,7 +59,7 @@
         <main>
             <div id="aba-conversas" class="tela-interna active">
                 <h3>Conversas</h3>
-                <p style="margin-top:10px; color:#666;">Inicie uma conversa com sua família.</p>
+                <p style="margin-top:10px; color:#666;">Bem-vindo ao Onix Messenger, Jefferson!</p>
             </div>
             <div id="aba-perfil" class="tela-interna">
                 <h3>Meu Perfil</h3>
@@ -87,42 +88,52 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        
+        // Define persistência para manter o usuário logado no navegador
         setPersistence(auth, browserLocalPersistence);
 
-        // CONTROLE DE TELAS
+        // MONITOR DE ESTADO (Troca de telas)
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('tela-login').style.display = 'none';
                 document.getElementById('tela-app').style.display = 'flex';
-                document.getElementById('perfil-info').innerText = "Logado como: " + user.email.replace("@onix.com", "");
+                document.getElementById('perfil-info').innerText = "E-mail: " + user.email;
             } else {
                 document.getElementById('tela-app').style.display = 'none';
                 document.getElementById('tela-login').style.display = 'flex';
             }
         });
 
-        // BOTÃO ENTRAR
+        // FUNÇÃO DE LOGIN
         document.getElementById('btn-entrar').onclick = async () => {
-            const tel = document.getElementById('login-tel').value.trim();
+            const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value.trim();
+            
+            if (!email || !senha) {
+                alert("Jefferson, por favor preencha o e-mail e a senha.");
+                return;
+            }
+
             try {
-                await signInWithEmailAndPassword(auth, `${tel}@onix.com`, senha);
+                await signInWithEmailAndPassword(auth, email, senha);
             } catch (e) {
-                alert("Erro: Telefone ou senha inválidos.");
+                console.error(e);
+                alert("Erro ao entrar. Verifique se o e-mail e a senha estão corretos.");
             }
         };
 
-        // BOTÃO SAIR
+        // FUNÇÃO DE SAÍDA
         window.sairDoApp = () => {
-            if(confirm("Deseja realmente sair?")) {
+            if(confirm("Deseja realmente sair do Onix Messenger?")) {
                 signOut(auth).then(() => {
                     localStorage.clear();
                     sessionStorage.clear();
+                    // O onAuthStateChanged vai detectar e mostrar a tela de login
                 });
             }
         };
 
-        // TROCAR ABAS
+        // NAVEGAÇÃO ENTRE ABAS
         window.mudarAba = (id, el) => {
             document.querySelectorAll('.tela-interna').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
@@ -130,7 +141,7 @@
             el.classList.add('active-nav');
         };
 
-        // MENU
+        // CONTROLE DO MENU SUSPENSO
         document.getElementById('btn-menu').onclick = (e) => {
             e.stopPropagation();
             const m = document.getElementById('menu-suspenso');
