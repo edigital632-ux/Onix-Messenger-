@@ -253,7 +253,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
           <div class="avatar" id="profile-av">?</div>
           <div class="p-cam" id="p-cam-btn">
             <span class="ms">photo_camera</span>
-            <input type="file" id="avatar-file" accept="image/*" style="display:none;">
           </div>
         </div>
         <span class="field-label">NOME</span>
@@ -353,6 +352,8 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </nav>
 </div>
 
+<input type="file" id="avatar-file" accept="image/*" style="display:none;">
+
 <!-- Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
@@ -378,7 +379,7 @@ import { getFirestore, doc, setDoc, getDoc,
          collection, query, where, orderBy,
          onSnapshot, addDoc, updateDoc, deleteDoc,
          getDocs, serverTimestamp, arrayUnion,
-         arrayRemove, writeBatch }               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+         arrayRemove, writeBatch, increment }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes,
          getDownloadURL }                         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -578,7 +579,6 @@ async function doSearch(phone){
     if(!usnap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);">Usuário não encontrado.</div>'; return; }
     const u = usnap.data();
 
-    // Build result row using DOM (safe — no inline onclick with user data)
     res.innerHTML = '';
     const row = document.createElement('div');
     row.className = 'sr-item';
@@ -611,11 +611,14 @@ async function doSearch(phone){
 /* ─────────────────────────────── CONVERSATIONS ───────────── */
 function listenConvs(){
   unsubConvs?.();
+  
+  // CORREÇÃO: Removemos o orderBy daqui para evitar o erro de Índice Composto do Firestore.
+  // Faremos a ordenação diretamente no código JavaScript (memória) mais abaixo.
   const q = query(
     collection(db,'conversations'),
-    where('members','array-contains',ME.uid),
-    orderBy('lastAt','desc')
+    where('members','array-contains',ME.uid)
   );
+
   unsubConvs = onSnapshot(q, async snap=>{
     const list  = $('convs-list');
     const empty = $('convs-empty');
@@ -623,8 +626,15 @@ function listenConvs(){
     if(snap.empty){ empty.style.display=''; return; }
     empty.style.display='none';
 
-    for(const d of snap.docs){
-      const data   = d.data();
+    // Ordena as conversas da mais recente para a mais antiga (Suprindo a falta do orderBy)
+    const convs = snap.docs.map(d => d.data());
+    convs.sort((a, b) => {
+      const timeA = a.lastAt ? a.lastAt.toMillis() : 0;
+      const timeB = b.lastAt ? b.lastAt.toMillis() : 0;
+      return timeB - timeA;
+    });
+
+    for(const data of convs){
       const peerId = data.members.find(m=>m!==ME.uid);
       if(!peerId) continue;
       const pSnap  = await getDoc(doc(db,'users',peerId));
@@ -656,6 +666,8 @@ function listenConvs(){
       item.onclick = ()=>openChat(peer);
       list.appendChild(item);
     }
+  }, err => {
+    toast('Erro ao listar conversas: ' + err.message);
   });
 }
 
@@ -665,30 +677,29 @@ async function openChat(peer){
   const ids = [ME.uid, peer.uid].sort();
   chatId    = ids.join('_');
 
-  // Create conv doc if needed
-  const convRef  = doc(db,'conversations',chatId);
-  const convSnap = await getDoc(convRef);
-  if(!convSnap.exists()){
-    await setDoc(convRef,{
-      members:[ME.uid, peer.uid],
-      lastMsg:'',
-      lastAt: serverTimestamp(),
-      unread:{}
-    });
-  }
+  const convRef = doc(db,'conversations',chatId);
 
-  // Clear unread for me
-  await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
+  try{
+    const convSnap = await getDoc(convRef);
+    if(!convSnap.exists()){
+      await setDoc(convRef,{
+        members:[ME.uid, peer.uid],
+        lastMsg:'',
+        lastAt: serverTimestamp(),
+        unread:{ [ME.uid]:0, [peer.uid]:0 }
+      });
+    }
+    await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
+  }catch(e){
+    toast('Erro ao abrir conversa: '+e.message, 4000);
+    return;
+  }
 
   // Header
   $('chat-name').textContent = peer.name;
   $('chat-sub').textContent  = peer.phone;
   makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
-
-  // Block UI
   updateBlockUI();
-
-  // Open screen
   $('chat-screen').classList.add('open');
 
   // Listen messages
@@ -696,21 +707,21 @@ async function openChat(peer){
   const mq = query(collection(db,'conversations',chatId,'messages'), orderBy('ts','asc'));
   unsubMsgs = onSnapshot(mq, snap=>{
     const body  = $('chat-body');
-    const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 80;
+    const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100;
     body.innerHTML='';
     snap.forEach(d=>{
       const m   = d.data();
       const div = document.createElement('div');
       div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
       const time = m.ts ? fmtTime(m.ts.toDate()) : '';
-      div.innerHTML = esc(m.text) + `<span class="msg-time">${time}</span>`;
+      div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
       body.appendChild(div);
     });
-    if(atBot || snap.size<=1) body.scrollTop = body.scrollHeight;
-    // mark read
-    updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
-  });
+    if(atBot) body.scrollTop = body.scrollHeight;
+    updateDoc(convRef,{ [`unread.${ME.uid}`]:0 }).catch(()=>{});
+  }, err=>{ toast('Erro nas mensagens: '+err.message, 4000); });
 
+  $('msg-input').value='';
   $('msg-input').focus();
 }
 
