@@ -6,17 +6,19 @@
 <title>Onix Messenger</title>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
 <style>
-:root {
-  --green:#00a884; --green-dark:#008069; --green-light:#d9fdd3;
-  --bg:#111b21; --bg2:#1c2b33; --bg3:#202c33; --panel:#2a3942;
-  --text:#e9edef; --text2:#8696a0; --border:#2a3942; --red:#f15c6d;
+:root{
+  --green:#00a884;--green-dark:#008069;--green-light:#d9fdd3;
+  --bg:#111b21;--bg2:#1c2b33;--bg3:#202c33;--panel:#2a3942;
+  --text:#e9edef;--text2:#8696a0;--border:#2a3942;--red:#f15c6d;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif;}
 .ms{font-family:'Material Symbols Rounded';font-size:24px;line-height:1;user-select:none;}
+
+/* SHELL */
 .shell{width:100%;max-width:480px;height:100dvh;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;}
 
-/* ── AUTH ── */
+/* AUTH */
 #auth{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 #auth.hidden{display:none;}
 .auth-logo{font-size:52px;margin-bottom:8px;}
@@ -34,14 +36,14 @@ html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'
 .auth-err{color:var(--red);font-size:13px;margin-bottom:10px;text-align:center;display:none;}
 .auth-err.show{display:block;}
 
-/* ── SHELL CHROME ── */
+/* HEADER */
 header{height:56px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;border-bottom:1px solid var(--border);position:relative;z-index:10;}
 .brand{color:var(--green);font-size:20px;font-weight:700;}
 .hicons{display:flex;gap:14px;}
 .hicons .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
 .hicons .ms:active{background:var(--panel);}
 
-/* ── SEARCH BAR ── */
+/* SEARCH BAR */
 #search-bar{padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:none;}
 #search-bar.show{display:block;}
 .sbar-inner{background:var(--panel);border-radius:25px;display:flex;align-items:center;padding:9px 14px;gap:10px;}
@@ -49,7 +51,7 @@ header{height:56px;background:var(--bg3);display:flex;align-items:center;justify
 .sbar-inner input{background:none;border:none;outline:none;color:var(--text);font-size:15px;flex:1;}
 .sbar-inner input::placeholder{color:var(--text2);}
 
-/* ── SEARCH RESULTS ── */
+/* SEARCH RESULTS */
 #search-results{background:var(--bg);display:none;border-bottom:2px solid var(--green);position:relative;z-index:50;}
 #search-results.show{display:block;}
 .sr-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
@@ -57,7 +59,7 @@ header{height:56px;background:var(--bg3);display:flex;align-items:center;justify
 .sr-tel{color:var(--text2);font-size:13px;margin-top:2px;}
 .sr-btn{background:var(--green);border:none;border-radius:20px;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
 
-/* ── MAIN / PAGES ── */
+/* MAIN / PAGES */
 main{flex:1;overflow:hidden;position:relative;}
 .page{position:absolute;inset:0;overflow-y:auto;display:none;}
 .page.active{display:block;}
@@ -65,25 +67,25 @@ main{flex:1;overflow:hidden;position:relative;}
 .empty-state .ms{font-size:60px;color:var(--panel);}
 .empty-state p{font-size:14px;line-height:1.6;}
 
-/* ── CONVERSATIONS ── */
+/* CONVERSATIONS */
 .conv-item{padding:13px 16px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--border);cursor:pointer;}
 .conv-item:active{background:var(--bg2);}
-.avatar{width:50px;height:50px;border-radius:50%;object-fit:cover;background:var(--panel);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:20px;font-weight:700;}
-.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.avatar{width:50px;height:50px;border-radius:50%;background:var(--panel);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:20px;font-weight:700;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
 .conv-info{flex:1;min-width:0;}
 .conv-name{color:var(--text);font-size:15px;font-weight:600;}
 .conv-preview{color:var(--text2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
 .conv-time{color:var(--text2);font-size:11px;white-space:nowrap;}
 .unread-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 
-/* ── CHAT SCREEN ── */
+/* CHAT SCREEN */
 #chat-screen{position:absolute;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;}
 #chat-screen.open{display:flex;}
 .chat-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
 .chat-header .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
 .chat-header .ms:active{background:var(--panel);}
 .chat-hname{color:var(--text);font-size:15px;font-weight:600;}
-.chat-hstatus{color:var(--green);font-size:12px;}
+.chat-hstatus{color:var(--text2);font-size:12px;}
 .chat-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px;}
 .msg{max-width:78%;padding:9px 13px;border-radius:12px;font-size:14px;line-height:1.5;word-break:break-word;animation:msgIn .15s ease;}
 @keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -93,30 +95,18 @@ main{flex:1;overflow:hidden;position:relative;}
 .chat-footer{background:var(--bg3);padding:8px 10px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(8px + env(safe-area-inset-bottom));}
 .chat-footer input{flex:1;background:var(--panel);border:none;outline:none;color:var(--text);padding:11px 15px;border-radius:25px;font-size:15px;}
 .chat-footer input::placeholder{color:var(--text2);}
-.send-btn{background:var(--green);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;}
+.send-btn{background:var(--green);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .send-btn:active{background:var(--green-dark);}
 .send-btn .ms{color:#fff;font-size:20px;}
 
-/* ── CALLS ── */
+/* CALLS PAGE */
 .section-title{padding:10px 16px;color:var(--text2);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border);}
-.tool-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
-.tool-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.tool-icon .ms{font-size:20px;}
-.tool-label{color:var(--text);font-size:14px;}
-.tool-desc{color:var(--text2);font-size:12px;margin-top:2px;}
-.call-item{padding:13px 16px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--border);}
-.call-info{flex:1;}
-.call-name{color:var(--text);font-size:15px;font-weight:600;}
-.call-meta{color:var(--text2);font-size:12px;margin-top:2px;}
-.call-icon{color:var(--green);}
-.call-icon.missed{color:var(--red);}
 
-/* ── PROFILE ── */
+/* PROFILE PAGE */
 .profile-banner{height:110px;background:linear-gradient(135deg,var(--green-dark),var(--green));flex-shrink:0;}
 .profile-body{padding:0 20px 40px;}
 .p-avatar-wrap{position:relative;width:86px;height:86px;margin:-43px auto 18px;}
-.p-avatar-wrap img{width:86px;height:86px;border-radius:50%;object-fit:cover;border:3px solid var(--bg3);}
-.p-avatar-default{width:86px;height:86px;border-radius:50%;background:var(--panel);border:3px solid var(--bg3);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--text2);font-weight:700;}
+.p-avatar-wrap .avatar{width:86px;height:86px;font-size:36px;border:3px solid var(--bg3);}
 .p-cam{position:absolute;bottom:0;right:0;background:var(--green);border:2px solid var(--bg3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .p-cam .ms{font-size:14px;color:#fff;}
 .field-label{color:var(--green);font-size:11px;font-weight:700;letter-spacing:.7px;margin-bottom:5px;margin-top:16px;display:block;}
@@ -126,9 +116,9 @@ main{flex:1;overflow:hidden;position:relative;}
 .field-row input:disabled{color:var(--text2);}
 .save-btn{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:22px;transition:background .2s;}
 .save-btn:active{background:var(--green-dark);}
-.save-btn:disabled{opacity:.6;cursor:not-allowed;}
+.save-btn:disabled{opacity:.6;}
 
-/* ── SETTINGS ── */
+/* SETTINGS PAGE */
 .config-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);cursor:pointer;}
 .config-item:active{background:var(--bg2);}
 .config-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -136,19 +126,16 @@ main{flex:1;overflow:hidden;position:relative;}
 .config-label{color:var(--text);font-size:14px;flex:1;}
 .config-sub{color:var(--text2);font-size:12px;margin-top:1px;}
 
-/* ── BLOCKED USERS PANEL ── */
+/* BLOCKED PANEL */
 #blocked-panel{position:absolute;inset:0;z-index:400;background:var(--bg);display:none;flex-direction:column;}
 #blocked-panel.open{display:flex;}
 .blocked-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .blocked-header .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
 .blocked-header span{color:var(--text);font-size:16px;font-weight:600;}
 .blocked-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
-.blocked-info{flex:1;}
-.blocked-name{color:var(--text);font-size:15px;font-weight:600;}
-.blocked-tel{color:var(--text2);font-size:13px;}
 .unblock-btn{background:transparent;border:1.5px solid var(--green);border-radius:20px;padding:7px 14px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;}
 
-/* ── DROP MENUS ── */
+/* DROP MENUS */
 .drop-menu{position:absolute;background:var(--bg3);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:600;min-width:180px;overflow:hidden;display:none;}
 .drop-menu.open{display:block;}
 #drop-main{top:52px;right:10px;}
@@ -158,22 +145,22 @@ main{flex:1;overflow:hidden;position:relative;}
 .drop-item:active{background:var(--panel);}
 .drop-item.danger{color:var(--red);}
 
-/* ── NAV ── */
+/* NAV */
 nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text2);font-size:10px;}
 .nav-btn.active{color:var(--green);}
 .nav-btn .ms{font-size:22px;}
 
-/* ── TOAST ── */
+/* TOAST */
 #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);color:var(--text);padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── LOADING SPINNER ── */
-.spin{width:22px;height:22px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+/* SPINNER */
+.spin{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.open{display:flex;}
 .modal-box{background:var(--bg3);border-radius:16px;padding:24px;width:100%;max-width:380px;}
 .modal-title{color:var(--text);font-size:17px;font-weight:700;margin-bottom:10px;}
@@ -181,109 +168,93 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
 .modal-btn{padding:10px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
 .modal-btn.cancel{background:var(--panel);color:var(--text2);}
-.modal-btn.confirm{background:var(--red);color:#fff;}
-.modal-btn.green{background:var(--green);color:#fff;}
+.modal-btn.danger{background:var(--red);color:#fff;}
 
-/* ── TYPING INDICATOR ── */
-.typing-indicator{display:flex;gap:4px;padding:10px 14px;background:var(--bg3);border-radius:12px;align-self:flex-start;border-bottom-left-radius:3px;display:none;}
-.typing-indicator.show{display:flex;}
-.typing-dot{width:7px;height:7px;background:var(--text2);border-radius:50%;animation:tdot 1.2s ease infinite;}
-.typing-dot:nth-child(2){animation-delay:.2s;}
-.typing-dot:nth-child(3){animation-delay:.4s;}
-@keyframes tdot{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+/* BLOCKED NOTICE */
+#blocked-notice{display:none;padding:14px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--border);background:var(--bg3);}
 </style>
 </head>
 <body>
 
-<!-- ══════════ AUTH OVERLAY ══════════ -->
+<!-- AUTH -->
 <div id="auth">
   <div class="auth-logo">💬</div>
   <div class="auth-brand">Onix Messenger</div>
   <div class="auth-sub">Conecte-se com quem importa.<br>Número virtual, sem SIM.</div>
   <div class="auth-card">
-    <!-- LOGIN -->
-    <div id="auth-login">
+    <div id="view-login">
       <h2>Entrar na conta</h2>
       <div class="auth-err" id="login-err"></div>
-      <input class="field" id="login-phone" type="tel" placeholder="Número virtual (ex: 11912345678)" maxlength="20">
-      <input class="field" id="login-pass" type="password" placeholder="Senha" autocomplete="current-password">
-      <button class="btn-main" id="login-btn" onclick="doLogin()">Entrar</button>
-      <div class="auth-switch" onclick="toggleAuth('register')">Não tem conta? <b>Cadastrar</b></div>
+      <input class="field" id="login-phone" type="tel" placeholder="Seu número virtual" maxlength="20">
+      <input class="field" id="login-pass"  type="password" placeholder="Senha">
+      <button class="btn-main" id="btn-login">Entrar</button>
+      <div class="auth-switch" id="to-register">Não tem conta? <b>Cadastrar</b></div>
     </div>
-    <!-- REGISTER -->
-    <div id="auth-register" style="display:none;">
+    <div id="view-register" style="display:none;">
       <h2>Criar conta</h2>
       <div class="auth-err" id="reg-err"></div>
-      <input class="field" id="reg-name" type="text" placeholder="Seu nome" maxlength="40">
-      <input class="field" id="reg-phone" type="tel" placeholder="Escolha seu número (ex: 11987654321)" maxlength="20">
-      <input class="field" id="reg-pass" type="password" placeholder="Senha (mínimo 6 caracteres)" autocomplete="new-password">
-      <input class="field" id="reg-pass2" type="password" placeholder="Confirmar senha" autocomplete="new-password">
-      <button class="btn-main" id="reg-btn" onclick="doRegister()">Criar conta</button>
-      <div class="auth-switch" onclick="toggleAuth('login')">Já tem conta? <b>Entrar</b></div>
+      <input class="field" id="reg-name"  type="text"     placeholder="Seu nome" maxlength="40">
+      <input class="field" id="reg-phone" type="tel"      placeholder="Escolha um número (ex: 11987654321)" maxlength="20">
+      <input class="field" id="reg-pass"  type="password" placeholder="Senha (mínimo 6 caracteres)">
+      <button class="btn-main" id="btn-register">Criar conta</button>
+      <div class="auth-switch" id="to-login">Já tem conta? <b>Entrar</b></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ MAIN APP SHELL ══════════ -->
+<!-- APP SHELL -->
 <div class="shell">
-  <!-- Header -->
   <header>
     <span class="brand">Onix</span>
     <div class="hicons">
-      <span class="ms" onclick="toggleSearch()" id="search-icon">search</span>
-      <span class="ms" onclick="toggleDrop('drop-main')" id="menu-icon">more_vert</span>
+      <span class="ms" id="icon-search">search</span>
+      <span class="ms" id="icon-menu">more_vert</span>
     </div>
-    <!-- Drop main -->
     <div class="drop-menu" id="drop-main">
-      <div class="drop-item" onclick="navTo('profile');closeDrop()">Meu Perfil</div>
-      <div class="drop-item" onclick="navTo('settings');closeDrop()">Configurações</div>
-      <div class="drop-item danger" onclick="closeDrop();confirmLogout()">Sair</div>
+      <div class="drop-item" id="dm-profile">Meu Perfil</div>
+      <div class="drop-item" id="dm-settings">Configurações</div>
+      <div class="drop-item danger" id="dm-logout">Sair</div>
     </div>
   </header>
 
-  <!-- Search bar -->
   <div id="search-bar">
     <div class="sbar-inner">
       <span class="ms">search</span>
-      <input id="search-input" type="tel" placeholder="Buscar número..." oninput="searchUser(this.value)" maxlength="20">
-      <span class="ms" style="cursor:pointer" onclick="closeSearch()">close</span>
+      <input id="search-input" type="tel" placeholder="Buscar número...">
+      <span class="ms" id="search-close" style="cursor:pointer;">close</span>
     </div>
   </div>
 
-  <!-- Search results -->
   <div id="search-results"></div>
 
-  <!-- Pages -->
   <main>
-    <!-- Conversations -->
+    <!-- Conversas -->
     <div class="page active" id="page-chats">
       <div id="convs-list"></div>
       <div class="empty-state" id="convs-empty" style="display:none;">
         <span class="ms">chat_bubble_outline</span>
-        <p>Nenhuma conversa ainda.<br>Busque um número para começar a conversar.</p>
+        <p>Nenhuma conversa ainda.<br>Busque um número para começar.</p>
       </div>
     </div>
 
-    <!-- Calls -->
+    <!-- Chamadas -->
     <div class="page" id="page-calls">
-      <div id="calls-list">
-        <div class="empty-state">
-          <span class="ms">call</span>
-          <p>Nenhuma chamada recente.<br>Chamadas aparecerão aqui.</p>
-        </div>
+      <div class="empty-state">
+        <span class="ms">call</span>
+        <p>Nenhuma chamada recente.</p>
       </div>
     </div>
 
-    <!-- Profile -->
+    <!-- Perfil -->
     <div class="page" id="page-profile">
       <div class="profile-banner"></div>
       <div class="profile-body">
         <div class="p-avatar-wrap">
-          <div id="p-avatar-display" class="p-avatar-default">?</div>
-          <div class="p-cam" onclick="document.getElementById('avatar-upload').click()">
+          <div class="avatar" id="profile-av">?</div>
+          <div class="p-cam" id="p-cam-btn">
             <span class="ms">photo_camera</span>
+            <input type="file" id="avatar-file" accept="image/*" style="display:none;">
           </div>
-          <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
         </div>
         <span class="field-label">NOME</span>
         <div class="field-row">
@@ -300,39 +271,30 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
           <span class="ms">phone</span>
           <input id="p-phone" type="text" disabled>
         </div>
-        <button class="save-btn" id="save-profile-btn" onclick="saveProfile()">Salvar</button>
+        <button class="save-btn" id="btn-save-profile">Salvar</button>
       </div>
     </div>
 
-    <!-- Settings -->
+    <!-- Configurações -->
     <div class="page" id="page-settings">
       <div class="section-title">CONTA</div>
-      <div class="config-item" onclick="navTo('profile')">
+      <div class="config-item" id="cfg-profile">
         <div class="config-icon" style="background:rgba(0,168,132,.15)"><span class="ms" style="color:var(--green)">person</span></div>
-        <div style="flex:1">
-          <div class="config-label">Meu Perfil</div>
-          <div class="config-sub">Nome, foto, status</div>
-        </div>
+        <div style="flex:1"><div class="config-label">Meu Perfil</div><div class="config-sub">Nome, foto, status</div></div>
         <span class="ms" style="color:var(--text2);font-size:18px">chevron_right</span>
       </div>
       <div class="section-title">PRIVACIDADE</div>
-      <div class="config-item" onclick="openBlockedPanel()">
+      <div class="config-item" id="cfg-blocked">
         <div class="config-icon" style="background:rgba(241,92,109,.15)"><span class="ms" style="color:var(--red)">block</span></div>
-        <div style="flex:1">
-          <div class="config-label">Contatos Bloqueados</div>
-          <div class="config-sub" id="blocked-count-label">Nenhum contato bloqueado</div>
-        </div>
+        <div style="flex:1"><div class="config-label">Contatos Bloqueados</div><div class="config-sub" id="blocked-count-label">Nenhum contato bloqueado</div></div>
         <span class="ms" style="color:var(--text2);font-size:18px">chevron_right</span>
       </div>
       <div class="section-title">SOBRE</div>
-      <div class="config-item" style="cursor:default">
+      <div class="config-item" style="cursor:default;">
         <div class="config-icon" style="background:rgba(0,168,132,.15)"><span class="ms" style="color:var(--green)">info</span></div>
-        <div style="flex:1">
-          <div class="config-label">Onix Messenger</div>
-          <div class="config-sub">v1.0 • Mensagens seguras</div>
-        </div>
+        <div style="flex:1"><div class="config-label">Onix Messenger</div><div class="config-sub">v1.0 — Mensagens em tempo real</div></div>
       </div>
-      <div class="config-item" onclick="confirmLogout()">
+      <div class="config-item" id="cfg-logout">
         <div class="config-icon" style="background:rgba(241,92,109,.15)"><span class="ms" style="color:var(--red)">logout</span></div>
         <div class="config-label" style="color:var(--red)">Sair da conta</div>
       </div>
@@ -341,72 +303,64 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 
   <!-- Chat Screen -->
   <div id="chat-screen">
-    <div class="chat-header" id="chat-header">
-      <span class="ms" onclick="closeChat()">arrow_back</span>
-      <div id="chat-avatar" class="avatar" style="width:38px;height:38px;font-size:16px;">?</div>
+    <div class="chat-header">
+      <span class="ms" id="chat-back">arrow_back</span>
+      <div class="avatar" id="chat-av" style="width:38px;height:38px;font-size:16px;flex-shrink:0;"></div>
       <div style="flex:1;min-width:0;">
-        <div class="chat-hname" id="chat-name">...</div>
-        <div class="chat-hstatus" id="chat-status"></div>
+        <div class="chat-hname" id="chat-name"></div>
+        <div class="chat-hstatus" id="chat-sub"></div>
       </div>
-      <span class="ms" onclick="toggleDrop('drop-chat')">more_vert</span>
+      <span class="ms" id="chat-menu-btn">more_vert</span>
       <div class="drop-menu" id="drop-chat">
-        <div class="drop-item" id="block-action-btn" onclick="closeDrop();toggleBlock()">Bloquear contato</div>
-        <div class="drop-item danger" onclick="closeDrop();confirmDeleteChat()">Apagar conversa</div>
+        <div class="drop-item" id="dc-block">Bloquear contato</div>
+        <div class="drop-item danger" id="dc-delete">Apagar conversa</div>
       </div>
     </div>
-    <div class="chat-body" id="chat-body">
-      <div class="typing-indicator" id="typing-ind">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
+    <div class="chat-body" id="chat-body"></div>
+    <div class="chat-footer" id="chat-footer">
+      <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
+      <button class="send-btn" id="btn-send"><span class="ms">send</span></button>
     </div>
-    <div class="chat-footer" id="chat-footer-bar">
-      <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000"
-             onkeydown="if(event.key==='Enter')sendMessage()"
-             oninput="handleTyping()">
-      <button class="send-btn" onclick="sendMessage()"><span class="ms">send</span></button>
-    </div>
-    <div id="blocked-notice" style="display:none;padding:14px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--border);background:var(--bg3);">
-      <span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px;">block</span>Você bloqueou este contato
-      <span style="color:var(--green);cursor:pointer;margin-left:8px;" onclick="toggleBlock()">Desbloquear</span>
+    <div id="blocked-notice">
+      <span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px;">block</span>
+      Você bloqueou este contato —
+      <span id="btn-unblock-notice" style="color:var(--green);cursor:pointer;">Desbloquear</span>
     </div>
   </div>
 
-  <!-- Blocked panel -->
+  <!-- Blocked Panel -->
   <div id="blocked-panel">
     <div class="blocked-header">
-      <span class="ms" onclick="closeBlockedPanel()">arrow_back</span>
+      <span class="ms" id="blocked-back">arrow_back</span>
       <span>Contatos Bloqueados</span>
     </div>
-    <div id="blocked-list" style="overflow-y:auto;flex:1;"></div>
+    <div id="blocked-list" style="flex:1;overflow-y:auto;"></div>
   </div>
 
-  <!-- Nav -->
   <nav>
-    <div class="nav-btn active" id="nav-chats" onclick="navTo('chats')">
+    <div class="nav-btn active" id="nav-chats">
       <span class="ms">chat</span>Conversas
     </div>
-    <div class="nav-btn" id="nav-calls" onclick="navTo('calls')">
+    <div class="nav-btn" id="nav-calls">
       <span class="ms">call</span>Chamadas
     </div>
-    <div class="nav-btn" id="nav-profile" onclick="navTo('profile')">
+    <div class="nav-btn" id="nav-profile">
       <span class="ms">person</span>Perfil
     </div>
-    <div class="nav-btn" id="nav-settings" onclick="navTo('settings')">
+    <div class="nav-btn" id="nav-settings">
       <span class="ms">settings</span>Config
     </div>
   </nav>
 </div>
 
-<!-- Confirm modal -->
+<!-- Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
     <div class="modal-title" id="modal-title"></div>
-    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-body"  id="modal-body"></div>
     <div class="modal-actions">
-      <button class="modal-btn cancel" onclick="closeModal()">Cancelar</button>
-      <button class="modal-btn confirm" id="modal-confirm-btn">Confirmar</button>
+      <button class="modal-btn cancel" id="modal-cancel">Cancelar</button>
+      <button class="modal-btn danger"  id="modal-ok">Confirmar</button>
     </div>
   </div>
 </div>
@@ -414,549 +368,542 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 <!-- Toast -->
 <div id="toast"></div>
 
-<!-- ══════════ FIREBASE + APP LOGIC ══════════ -->
+<!-- ═══════════════════════ FIREBASE ═══════════════════════ -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  getFirestore, doc, setDoc, getDoc, getDocs, collection,
-  query, where, orderBy, limit, onSnapshot, addDoc, updateDoc,
-  deleteDoc, serverTimestamp, Timestamp, arrayUnion, arrayRemove,
-  writeBatch
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword,
+         signInWithEmailAndPassword, onAuthStateChanged,
+         signOut }                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc,
+         collection, query, where, orderBy,
+         onSnapshot, addDoc, updateDoc, deleteDoc,
+         getDocs, serverTimestamp, arrayUnion,
+         arrayRemove, writeBatch }               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes,
+         getDownloadURL }                         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// ── Firebase init ──────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyANAPc3ZsaGt_3QCNh0M1KskoC67ggwLEA",
-  authDomain: "bairon-89014.firebaseapp.com",
-  projectId: "bairon-89014",
-  storageBucket: "bairon-89014.firebasestorage.app",
-  messagingSenderId: "263387553023",
-  appId: "1:263387553023:web:d5402f3106b5992879c0ca"
-};
-const app     = initializeApp(firebaseConfig);
-const auth    = getAuth(app);
-const db      = getFirestore(app);
-const storage = getStorage(app);
+/* ── init ── */
+const fbApp   = initializeApp({
+  apiKey:"AIzaSyANAPc3ZsaGt_3QCNh0M1KskoC67ggwLEA",
+  authDomain:"bairon-89014.firebaseapp.com",
+  projectId:"bairon-89014",
+  storageBucket:"bairon-89014.firebasestorage.app",
+  messagingSenderId:"263387553023",
+  appId:"1:263387553023:web:d5402f3106b5992879c0ca"
+});
+const auth    = getAuth(fbApp);
+const db      = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 
-// ── App State ──────────────────────────────────────────────────
-let ME = null;           // current user profile
-let currentChatId = null;
-let currentPeer   = null;
-let msgsUnsub     = null;
-let convsUnsub    = null;
-let typingTimeout = null;
-let searchTimer   = null;
+/* ── State ── */
+let ME           = null;
+let chatId       = null;
+let peerData     = null;   // { uid, name, phone, photoURL }
+let unsubMsgs    = null;
+let unsubConvs   = null;
+let searchTimer  = null;
 
-// ── Helper: phone → fake email ─────────────────────────────────
-function phoneToEmail(phone){
-  return 'u' + phone.replace(/\D/g,'') + '@onix.app';
+/* ─────────────────────────────── HELPERS ─────────────────── */
+const $  = id => document.getElementById(id);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const phoneToEmail = p => 'u' + p.replace(/\D/g,'') + '@onix.app';
+const cleanPhone   = p => p.replace(/\D/g,'');
+
+function fmtTime(date){
+  const diff = Date.now() - date;
+  if(diff < 86400000) return date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
 }
-function cleanPhone(p){ return p.replace(/\D/g,''); }
 
-// ── Toast ──────────────────────────────────────────────────────
-window.toast = function(msg, dur=2500){
-  const t = document.getElementById('toast');
+function toast(msg, dur=2800){
+  const t = $('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), dur);
-};
-
-// ── Auth: toggle panels ────────────────────────────────────────
-window.toggleAuth = function(mode){
-  document.getElementById('auth-login').style.display    = mode==='login'    ? '' : 'none';
-  document.getElementById('auth-register').style.display = mode==='register' ? '' : 'none';
-  document.getElementById('login-err').classList.remove('show');
-  document.getElementById('reg-err').classList.remove('show');
-};
-
-function setBtn(id, loading){
-  const b = document.getElementById(id);
-  b.disabled = loading;
-  b.innerHTML = loading ? '<span class="spin"></span>' : (id==='login-btn' ? 'Entrar' : 'Criar conta');
 }
 
-function showErr(id, msg){
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.classList.add('show');
+function makeAvatar(container, name, photoURL, size=50){
+  container.style.width  = size+'px';
+  container.style.height = size+'px';
+  container.style.fontSize = Math.round(size*.38)+'px';
+  if(photoURL){
+    container.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    container.textContent = (name||'?')[0].toUpperCase();
+  }
 }
 
-// ── Register ──────────────────────────────────────────────────
-window.doRegister = async function(){
-  const name   = document.getElementById('reg-name').value.trim();
-  const phone  = cleanPhone(document.getElementById('reg-phone').value);
-  const pass   = document.getElementById('reg-pass').value;
-  const pass2  = document.getElementById('reg-pass2').value;
-  if(!name)       return showErr('reg-err','Digite seu nome.');
-  if(phone.length < 8) return showErr('reg-err','Número muito curto.');
-  if(pass.length < 6)  return showErr('reg-err','Senha mínimo 6 caracteres.');
-  if(pass !== pass2)   return showErr('reg-err','Senhas não conferem.');
+/* ─────────────────────────────── AUTH UI ─────────────────── */
+$('to-register').onclick = ()=>{ $('view-login').style.display='none'; $('view-register').style.display=''; clearErr(); };
+$('to-login').onclick    = ()=>{ $('view-register').style.display='none'; $('view-login').style.display=''; clearErr(); };
 
-  // check if phone already taken
-  const existing = await getDoc(doc(db,'phones', phone));
-  if(existing.exists()) return showErr('reg-err','Este número já está em uso.');
-
-  setBtn('reg-btn', true);
-  try {
-    const email = phoneToEmail(phone);
-    const cred  = await createUserWithEmailAndPassword(auth, email, pass);
-    const uid   = cred.user.uid;
-    const profile = { uid, name, phone, photoURL:'', status:'Hey! Estou usando o Onix.', blocked:[], createdAt: serverTimestamp() };
-    await setDoc(doc(db,'users', uid), profile);
-    await setDoc(doc(db,'phones', phone), { uid });
-  } catch(e){
-    setBtn('reg-btn', false);
-    showErr('reg-err', friendlyError(e.code));
-  }
-};
-
-// ── Login ─────────────────────────────────────────────────────
-window.doLogin = async function(){
-  const phone = cleanPhone(document.getElementById('login-phone').value);
-  const pass  = document.getElementById('login-pass').value;
-  if(!phone) return showErr('login-err','Digite o número.');
-  if(!pass)  return showErr('login-err','Digite a senha.');
-  setBtn('login-btn', true);
-  try {
-    const email = phoneToEmail(phone);
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch(e){
-    setBtn('login-btn', false);
-    showErr('login-err', friendlyError(e.code));
-  }
-};
-
-function friendlyError(code){
-  const map = {
+function clearErr(){ ['login-err','reg-err'].forEach(id=>{ $(id).textContent=''; $(id).classList.remove('show'); }); }
+function showErr(id, msg){ $(id).textContent=msg; $(id).classList.add('show'); }
+function setLoading(btnId, on){
+  const b=$(btnId); b.disabled=on;
+  const labels={'btn-login':'Entrar','btn-register':'Criar conta'};
+  b.innerHTML = on ? '<span class="spin"></span>' : labels[btnId];
+}
+function authErr(code){
+  const map={
     'auth/user-not-found':'Número não cadastrado.',
     'auth/wrong-password':'Senha incorreta.',
     'auth/invalid-credential':'Número ou senha incorretos.',
     'auth/email-already-in-use':'Número já cadastrado.',
-    'auth/too-many-requests':'Muitas tentativas. Tente mais tarde.',
-    'auth/network-request-failed':'Sem conexão com internet.',
+    'auth/too-many-requests':'Muitas tentativas. Aguarde.',
+    'auth/operation-not-allowed':'Ative Email/Senha no Firebase Console.',
+    'auth/network-request-failed':'Sem conexão.'
   };
-  return map[code] || 'Erro: ' + code;
+  return map[code]||'Erro: '+code;
 }
 
-// ── Auth state ────────────────────────────────────────────────
-onAuthStateChanged(auth, async user => {
+/* ── Register ── */
+$('btn-register').onclick = async ()=>{
+  const name  = $('reg-name').value.trim();
+  const phone = cleanPhone($('reg-phone').value);
+  const pass  = $('reg-pass').value;
+  if(!name)           return showErr('reg-err','Digite seu nome.');
+  if(phone.length<8)  return showErr('reg-err','Número muito curto.');
+  if(pass.length<6)   return showErr('reg-err','Senha mínimo 6 caracteres.');
+  setLoading('btn-register',true);
+  try{
+    const existing = await getDoc(doc(db,'phones',phone));
+    if(existing.exists()){ setLoading('btn-register',false); return showErr('reg-err','Número já em uso.'); }
+    const cred = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+    const uid  = cred.user.uid;
+    await setDoc(doc(db,'users',uid),{ uid, name, phone, photoURL:'', status:'Hey! Estou usando o Onix.', blocked:[], createdAt:serverTimestamp() });
+    await setDoc(doc(db,'phones',phone),{ uid });
+  }catch(e){ setLoading('btn-register',false); showErr('reg-err', authErr(e.code)); }
+};
+
+/* ── Login ── */
+$('btn-login').onclick = async ()=>{
+  const phone = cleanPhone($('login-phone').value);
+  const pass  = $('login-pass').value;
+  if(!phone) return showErr('login-err','Digite o número.');
+  if(!pass)  return showErr('login-err','Digite a senha.');
+  setLoading('btn-login',true);
+  try{
+    await signInWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+  }catch(e){ setLoading('btn-login',false); showErr('login-err', authErr(e.code)); }
+};
+
+$('login-pass').onkeydown = e=>{ if(e.key==='Enter') $('btn-login').click(); };
+$('reg-pass').onkeydown   = e=>{ if(e.key==='Enter') $('btn-register').click(); };
+
+/* ─────────────────────────────── AUTH STATE ──────────────── */
+onAuthStateChanged(auth, async user=>{
   if(user){
-    const snap = await getDoc(doc(db,'users', user.uid));
-    if(!snap.exists()){ await signOut(auth); return; }
-    ME = { uid: user.uid, ...snap.data() };
-    document.getElementById('auth').classList.add('hidden');
-    loadProfile();
+    const snap = await getDoc(doc(db,'users',user.uid));
+    if(!snap.exists()){ signOut(auth); return; }
+    ME = snap.data();
+    $('auth').classList.add('hidden');
+    loadProfilePage();
     listenConvs();
-    updateBlockedCount();
+    refreshBlockedLabel();
   } else {
     ME = null;
-    document.getElementById('auth').classList.remove('hidden');
-    if(convsUnsub){ convsUnsub(); convsUnsub=null; }
-    if(msgsUnsub){ msgsUnsub(); msgsUnsub=null; }
+    $('auth').classList.remove('hidden');
+    unsubConvs?.(); unsubConvs=null;
+    unsubMsgs?.();  unsubMsgs=null;
   }
 });
 
-// ── Logout ────────────────────────────────────────────────────
-window.confirmLogout = function(){
-  openModal('Sair', 'Deseja realmente sair da conta?', async ()=>{
-    await signOut(auth);
-    closeModal();
-  }, false);
-};
-
-// ── Nav ───────────────────────────────────────────────────────
-window.navTo = function(page){
+/* ─────────────────────────────── NAV ─────────────────────── */
+function navTo(page){
   ['chats','calls','profile','settings'].forEach(p=>{
-    document.getElementById('page-'+p).classList.remove('active');
-    document.getElementById('nav-'+p)?.classList.remove('active');
+    $('page-'+p).classList.remove('active');
+    $('nav-'+p)?.classList.remove('active');
   });
-  document.getElementById('page-'+page).classList.add('active');
-  document.getElementById('nav-'+page)?.classList.add('active');
-  closeDrop(); closeSearch();
-};
+  $('page-'+page).classList.add('active');
+  $('nav-'+page)?.classList.add('active');
+  closeDrops(); closeSearch();
+}
+$('nav-chats').onclick    = ()=>navTo('chats');
+$('nav-calls').onclick    = ()=>navTo('calls');
+$('nav-profile').onclick  = ()=>navTo('profile');
+$('nav-settings').onclick = ()=>navTo('settings');
 
-// ── Search ────────────────────────────────────────────────────
-window.toggleSearch = function(){
-  const bar = document.getElementById('search-bar');
-  if(bar.classList.contains('show')){
-    closeSearch();
-  } else {
-    bar.classList.add('show');
-    document.getElementById('search-input').focus();
-  }
-};
-window.closeSearch = function(){
-  document.getElementById('search-bar').classList.remove('show');
-  document.getElementById('search-results').classList.remove('show');
-  document.getElementById('search-input').value = '';
-};
+/* ─────────────────────────────── DROPS ───────────────────── */
+function closeDrops(){ document.querySelectorAll('.drop-menu').forEach(d=>d.classList.remove('open')); }
+$('icon-menu').onclick    = e=>{ e.stopPropagation(); toggleDrop('drop-main'); };
+$('chat-menu-btn').onclick= e=>{ e.stopPropagation(); toggleDrop('drop-chat'); };
+function toggleDrop(id){ const d=$(id); const was=d.classList.contains('open'); closeDrops(); if(!was) d.classList.add('open'); }
+document.addEventListener('click', ()=>closeDrops());
 
-window.searchUser = function(val){
+$('dm-profile').onclick  = ()=>{ navTo('profile'); closeDrops(); };
+$('dm-settings').onclick = ()=>{ navTo('settings'); closeDrops(); };
+$('dm-logout').onclick   = ()=>{ closeDrops(); confirmLogout(); };
+$('cfg-profile').onclick = ()=>navTo('profile');
+$('cfg-blocked').onclick = ()=>openBlockedPanel();
+$('cfg-logout').onclick  = ()=>confirmLogout();
+
+/* ─────────────────────────────── SEARCH ──────────────────── */
+$('icon-search').onclick = ()=>{
+  const bar = $('search-bar');
+  if(bar.classList.contains('show')){ closeSearch(); }
+  else { bar.classList.add('show'); $('search-input').value=''; $('search-input').focus(); }
+};
+$('search-close').onclick = ()=>closeSearch();
+
+function closeSearch(){
+  $('search-bar').classList.remove('show');
+  $('search-results').classList.remove('show');
+  $('search-input').value='';
+}
+
+$('search-input').oninput = ()=>{
   clearTimeout(searchTimer);
-  const phone = cleanPhone(val);
-  if(phone.length < 4){
-    document.getElementById('search-results').classList.remove('show');
-    return;
-  }
-  searchTimer = setTimeout(async ()=>{
-    const snap = await getDoc(doc(db,'phones', phone));
-    const res  = document.getElementById('search-results');
+  const phone = cleanPhone($('search-input').value);
+  if(phone.length < 4){ $('search-results').classList.remove('show'); return; }
+  searchTimer = setTimeout(()=>doSearch(phone), 400);
+};
+
+async function doSearch(phone){
+  const res = $('search-results');
+  res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Buscando...</div>';
+  res.classList.add('show');
+  try{
+    const snap = await getDoc(doc(db,'phones',phone));
     if(!snap.exists()){
-      res.innerHTML = '<div class="sr-item"><div style="color:var(--text2);font-size:14px;">Nenhum usuário encontrado.</div></div>';
-      res.classList.add('show');
+      res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Nenhum usuário encontrado.</div>';
       return;
     }
-    const uid   = snap.data().uid;
-    if(uid === ME.uid){
-      res.innerHTML = '<div class="sr-item"><div style="color:var(--text2);font-size:14px;">Este é seu próprio número.</div></div>';
-      res.classList.add('show');
+    const uid = snap.data().uid;
+    if(uid===ME.uid){
+      res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Este é o seu próprio número.</div>';
       return;
     }
-    const usnap = await getDoc(doc(db,'users', uid));
-    const u     = usnap.data();
-    const av    = u.photoURL
-      ? `<img src="${u.photoURL}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;">`
-      : `<div style="width:42px;height:42px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--text2);">${u.name[0].toUpperCase()}</div>`;
-    res.innerHTML = `
-      <div class="sr-item">
-        ${av}
-        <div style="flex:1;">
-          <div class="sr-name">${escHtml(u.name)}</div>
-          <div class="sr-tel">${u.phone}</div>
-        </div>
-        <button class="sr-btn" onclick="openChatWith('${uid}','${escHtml(u.name)}','${u.phone}','${u.photoURL||''}')">Mensagem</button>
-      </div>`;
-    res.classList.add('show');
-  }, 400);
-};
+    const usnap = await getDoc(doc(db,'users',uid));
+    if(!usnap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);">Usuário não encontrado.</div>'; return; }
+    const u = usnap.data();
 
-// ── Drop menus ────────────────────────────────────────────────
-window.toggleDrop = function(id){
-  const d = document.getElementById(id);
-  const wasOpen = d.classList.contains('open');
-  closeDrop();
-  if(!wasOpen) d.classList.add('open');
-};
-window.closeDrop = function(){ document.querySelectorAll('.drop-menu').forEach(d=>d.classList.remove('open')); };
-document.addEventListener('click', e=>{
-  if(!e.target.closest('.drop-menu') && !e.target.closest('.hicons') && !e.target.closest('.chat-header'))
-    closeDrop();
-});
+    // Build result row using DOM (safe — no inline onclick with user data)
+    res.innerHTML = '';
+    const row = document.createElement('div');
+    row.className = 'sr-item';
 
-// ── Conversations ─────────────────────────────────────────────
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    makeAvatar(av, u.name, u.photoURL, 42);
+
+    const info = document.createElement('div');
+    info.style.flex = '1';
+    info.innerHTML = `<div class="sr-name">${esc(u.name)}</div><div class="sr-tel">${u.phone}</div>`;
+
+    const btn = document.createElement('button');
+    btn.className = 'sr-btn';
+    btn.textContent = 'Mensagem';
+    btn.onclick = ()=>{
+      closeSearch();
+      openChat(u);
+    };
+
+    row.appendChild(av);
+    row.appendChild(info);
+    row.appendChild(btn);
+    res.appendChild(row);
+  }catch(e){
+    res.innerHTML = `<div style="padding:14px 16px;color:var(--red);font-size:13px;">Erro ao buscar: ${e.message}</div>`;
+  }
+}
+
+/* ─────────────────────────────── CONVERSATIONS ───────────── */
 function listenConvs(){
-  if(convsUnsub) convsUnsub();
-  const q = query(collection(db,'conversations'), where('members','array-contains', ME.uid), orderBy('lastAt','desc'));
-  convsUnsub = onSnapshot(q, async snap => {
-    const list = document.getElementById('convs-list');
-    const empty = document.getElementById('convs-empty');
-    if(snap.empty){ list.innerHTML=''; empty.style.display=''; return; }
+  unsubConvs?.();
+  const q = query(
+    collection(db,'conversations'),
+    where('members','array-contains',ME.uid),
+    orderBy('lastAt','desc')
+  );
+  unsubConvs = onSnapshot(q, async snap=>{
+    const list  = $('convs-list');
+    const empty = $('convs-empty');
+    list.innerHTML='';
+    if(snap.empty){ empty.style.display=''; return; }
     empty.style.display='none';
 
-    const items = [];
     for(const d of snap.docs){
-      const data = d.data();
+      const data   = d.data();
       const peerId = data.members.find(m=>m!==ME.uid);
-      const peerSnap = await getDoc(doc(db,'users', peerId));
-      if(!peerSnap.exists()) continue;
-      const peer = peerSnap.data();
-      const lastTime = data.lastAt ? formatTime(data.lastAt.toDate()) : '';
-      const unread   = (data.unread && data.unread[ME.uid]) || 0;
-      const av = peer.photoURL
-        ? `<img src="${peer.photoURL}">`
-        : `<div class="avatar" style="width:50px;height:50px;font-size:20px;">${peer.name[0].toUpperCase()}</div>`;
-      const unreadBadge = unread > 0 ? `<div class="unread-badge">${unread}</div>` : '';
-      items.push({ ts: data.lastAt?.seconds||0, html:`
-        <div class="conv-item" onclick="openChatWith('${peerId}','${escHtml(peer.name)}','${peer.phone}','${peer.photoURL||''}')">
-          <div class="avatar" style="width:50px;height:50px;">${av.includes('<img') ? av : peer.name[0].toUpperCase()}</div>
-          <div class="conv-info">
-            <div class="conv-name">${escHtml(peer.name)}</div>
-            <div class="conv-preview">${escHtml(data.lastMsg||'')}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <div class="conv-time">${lastTime}</div>
-            ${unreadBadge}
-          </div>
-        </div>` });
+      if(!peerId) continue;
+      const pSnap  = await getDoc(doc(db,'users',peerId));
+      if(!pSnap.exists()) continue;
+      const peer   = pSnap.data();
+      const unread = data.unread?.[ME.uid] || 0;
+      const lastTime = data.lastAt ? fmtTime(data.lastAt.toDate()) : '';
+
+      const item = document.createElement('div');
+      item.className = 'conv-item';
+
+      const av = document.createElement('div');
+      av.className = 'avatar';
+      makeAvatar(av, peer.name, peer.photoURL, 50);
+
+      const info = document.createElement('div');
+      info.className = 'conv-info';
+      info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
+        <div class="conv-preview">${esc(data.lastMsg||'')}</div>`;
+
+      const right = document.createElement('div');
+      right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
+      right.innerHTML = `<div class="conv-time">${lastTime}</div>`
+        + (unread>0 ? `<div class="unread-badge">${unread}</div>` : '');
+
+      item.appendChild(av);
+      item.appendChild(info);
+      item.appendChild(right);
+      item.onclick = ()=>openChat(peer);
+      list.appendChild(item);
     }
-    items.sort((a,b)=>b.ts-a.ts);
-    list.innerHTML = items.map(i=>i.html).join('');
   });
 }
 
-// ── Open chat ─────────────────────────────────────────────────
-window.openChatWith = async function(peerId, peerName, peerPhone, peerPhoto){
-  closeSearch();
-  currentPeer = { uid: peerId, name: peerName, phone: peerPhone, photoURL: peerPhoto };
+/* ─────────────────────────────── OPEN CHAT ───────────────── */
+async function openChat(peer){
+  peerData = peer;
+  const ids = [ME.uid, peer.uid].sort();
+  chatId    = ids.join('_');
 
-  // build conv ID (sorted)
-  const ids = [ME.uid, peerId].sort();
-  currentChatId = ids.join('_');
-
-  // ensure conversation doc exists
-  const convRef = doc(db,'conversations', currentChatId);
+  // Create conv doc if needed
+  const convRef  = doc(db,'conversations',chatId);
   const convSnap = await getDoc(convRef);
   if(!convSnap.exists()){
-    await setDoc(convRef,{ members:[ME.uid, peerId], lastMsg:'', lastAt: serverTimestamp(), unread:{} });
+    await setDoc(convRef,{
+      members:[ME.uid, peer.uid],
+      lastMsg:'',
+      lastAt: serverTimestamp(),
+      unread:{}
+    });
   }
 
-  // mark as read
-  await updateDoc(convRef,{ [`unread.${ME.uid}`]: 0 });
+  // Clear unread for me
+  await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
 
-  // update header
-  document.getElementById('chat-name').textContent = peerName;
-  document.getElementById('chat-status').textContent = peerPhone;
-  const av = document.getElementById('chat-avatar');
-  if(peerPhoto){ av.innerHTML = `<img src="${peerPhoto}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`; }
-  else { av.textContent = peerName[0].toUpperCase(); }
+  // Header
+  $('chat-name').textContent = peer.name;
+  $('chat-sub').textContent  = peer.phone;
+  makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
 
-  // update block button
-  refreshBlockUI();
+  // Block UI
+  updateBlockUI();
 
-  // open screen
-  document.getElementById('chat-screen').classList.add('open');
+  // Open screen
+  $('chat-screen').classList.add('open');
 
-  // listen messages
-  if(msgsUnsub){ msgsUnsub(); }
-  const msgQ = query(collection(db,'conversations', currentChatId,'messages'), orderBy('ts','asc'));
-  msgsUnsub = onSnapshot(msgQ, snap => {
-    renderMessages(snap);
+  // Listen messages
+  unsubMsgs?.();
+  const mq = query(collection(db,'conversations',chatId,'messages'), orderBy('ts','asc'));
+  unsubMsgs = onSnapshot(mq, snap=>{
+    const body  = $('chat-body');
+    const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 80;
+    body.innerHTML='';
+    snap.forEach(d=>{
+      const m   = d.data();
+      const div = document.createElement('div');
+      div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
+      const time = m.ts ? fmtTime(m.ts.toDate()) : '';
+      div.innerHTML = esc(m.text) + `<span class="msg-time">${time}</span>`;
+      body.appendChild(div);
+    });
+    if(atBot || snap.size<=1) body.scrollTop = body.scrollHeight;
     // mark read
-    updateDoc(convRef,{ [`unread.${ME.uid}`]: 0 });
+    updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
   });
-};
 
-window.closeChat = function(){
-  document.getElementById('chat-screen').classList.remove('open');
-  if(msgsUnsub){ msgsUnsub(); msgsUnsub=null; }
-  currentChatId=null; currentPeer=null;
-};
-
-// ── Render messages ───────────────────────────────────────────
-function renderMessages(snap){
-  const body = document.getElementById('chat-body');
-  const typing = document.getElementById('typing-ind');
-  // keep typing indicator at bottom
-  body.innerHTML = '';
-  body.appendChild(typing);
-
-  snap.forEach(d=>{
-    const m = d.data();
-    const div = document.createElement('div');
-    div.className = 'msg ' + (m.sender===ME.uid ? 'sent' : 'recv');
-    div.innerHTML = escHtml(m.text) + `<span class="msg-time">${m.ts ? formatTime(m.ts.toDate()) : ''}</span>`;
-    body.insertBefore(div, typing);
-  });
-  body.scrollTop = body.scrollHeight;
+  $('msg-input').focus();
 }
 
-// ── Send message ──────────────────────────────────────────────
-window.sendMessage = async function(){
-  if(!currentChatId) return;
-  const input = document.getElementById('msg-input');
-  const text = input.value.trim();
+$('chat-back').onclick = closeChat;
+function closeChat(){
+  $('chat-screen').classList.remove('open');
+  unsubMsgs?.(); unsubMsgs=null;
+  chatId=null; peerData=null;
+}
+
+/* ─────────────────────────────── SEND MESSAGE ────────────── */
+$('btn-send').onclick     = sendMessage;
+$('msg-input').onkeydown  = e=>{ if(e.key==='Enter') sendMessage(); };
+
+async function sendMessage(){
+  if(!chatId||!peerData) return;
+  const input = $('msg-input');
+  const text  = input.value.trim();
   if(!text) return;
 
-  // check if blocked
-  if(ME.blocked && ME.blocked.includes(currentPeer.uid)){ toast('Você bloqueou este contato.'); return; }
+  if(ME.blocked?.includes(peerData.uid)){ toast('Você bloqueou este contato.'); return; }
 
-  // check if peer blocked me
-  const peerSnap = await getDoc(doc(db,'users', currentPeer.uid));
-  if(peerSnap.exists() && peerSnap.data().blocked?.includes(ME.uid)){ toast('Não é possível enviar mensagem.'); return; }
+  input.value='';
+  const convRef = doc(db,'conversations',chatId);
 
-  input.value = '';
-  const convRef = doc(db,'conversations', currentChatId);
-  await addDoc(collection(db,'conversations', currentChatId,'messages'),{
-    text, sender: ME.uid, ts: serverTimestamp()
-  });
-  await updateDoc(convRef,{
-    lastMsg: text,
-    lastAt: serverTimestamp(),
-    [`unread.${currentPeer.uid}`]: (await getDoc(convRef)).data()?.unread?.[currentPeer.uid]+1 || 1
-  });
-};
+  try{
+    await addDoc(collection(db,'conversations',chatId,'messages'),{
+      text, sender:ME.uid, ts:serverTimestamp()
+    });
+    const cSnap = await getDoc(convRef);
+    const cur   = cSnap.data()?.unread?.[peerData.uid] || 0;
+    await updateDoc(convRef,{
+      lastMsg:text,
+      lastAt:serverTimestamp(),
+      [`unread.${peerData.uid}`]: cur+1
+    });
+  }catch(e){ toast('Erro ao enviar: '+e.message); input.value=text; }
+}
 
-// ── Typing ────────────────────────────────────────────────────
-window.handleTyping = function(){
-  // simple client-side only - no Firestore typing indicators to keep costs low
-};
+/* ─────────────────────────────── BLOCK ───────────────────── */
+$('dc-block').onclick = ()=>{ closeDrops(); toggleBlock(); };
+$('btn-unblock-notice').onclick = ()=>toggleBlock();
 
-// ── Block / Unblock ───────────────────────────────────────────
-window.toggleBlock = async function(){
-  if(!currentPeer) return;
-  const isBlocked = ME.blocked?.includes(currentPeer.uid);
+async function toggleBlock(){
+  if(!peerData) return;
+  const isBlocked = ME.blocked?.includes(peerData.uid);
   if(isBlocked){
-    await updateDoc(doc(db,'users', ME.uid),{ blocked: arrayRemove(currentPeer.uid) });
-    ME.blocked = ME.blocked.filter(x=>x!==currentPeer.uid);
+    await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayRemove(peerData.uid) });
+    ME.blocked = ME.blocked.filter(x=>x!==peerData.uid);
     toast('Contato desbloqueado.');
   } else {
-    await updateDoc(doc(db,'users', ME.uid),{ blocked: arrayUnion(currentPeer.uid) });
-    ME.blocked = [...(ME.blocked||[]), currentPeer.uid];
+    await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
+    ME.blocked = [...(ME.blocked||[]), peerData.uid];
     toast('Contato bloqueado.');
   }
-  refreshBlockUI();
-  updateBlockedCount();
-};
-
-function refreshBlockUI(){
-  if(!currentPeer) return;
-  const isBlocked = ME.blocked?.includes(currentPeer.uid);
-  document.getElementById('block-action-btn').textContent = isBlocked ? 'Desbloquear contato' : 'Bloquear contato';
-  document.getElementById('chat-footer-bar').style.display = isBlocked ? 'none' : '';
-  document.getElementById('blocked-notice').style.display  = isBlocked ? '' : 'none';
+  updateBlockUI();
+  refreshBlockedLabel();
 }
 
-// ── Delete chat ───────────────────────────────────────────────
-window.confirmDeleteChat = function(){
-  openModal('Apagar conversa', 'Deseja apagar toda esta conversa? Esta ação não pode ser desfeita.', async ()=>{
-    if(!currentChatId) return;
-    const msgSnap = await getDocs(collection(db,'conversations', currentChatId,'messages'));
-    const batch = writeBatch(db);
-    msgSnap.forEach(d=> batch.delete(d.ref));
-    batch.delete(doc(db,'conversations', currentChatId));
-    await batch.commit();
-    closeModal();
-    closeChat();
-    toast('Conversa apagada.');
+function updateBlockUI(){
+  if(!peerData) return;
+  const blocked = ME.blocked?.includes(peerData.uid);
+  $('dc-block').textContent      = blocked ? 'Desbloquear contato' : 'Bloquear contato';
+  $('chat-footer').style.display = blocked ? 'none' : '';
+  $('blocked-notice').style.display = blocked ? '' : 'none';
+}
+
+/* ─────────────────────────────── DELETE CHAT ─────────────── */
+$('dc-delete').onclick = ()=>{ closeDrops(); confirmDeleteChat(); };
+
+function confirmDeleteChat(){
+  openModal('Apagar conversa','Deseja apagar toda esta conversa? Esta ação não pode ser desfeita.', async()=>{
+    if(!chatId) return;
+    try{
+      const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
+      const batch = writeBatch(db);
+      msgs.forEach(d=>batch.delete(d.ref));
+      batch.delete(doc(db,'conversations',chatId));
+      await batch.commit();
+      closeModal(); closeChat();
+      toast('Conversa apagada.');
+    }catch(e){ closeModal(); toast('Erro: '+e.message); }
   });
-};
-
-// ── Profile ───────────────────────────────────────────────────
-function loadProfile(){
-  if(!ME) return;
-  document.getElementById('p-name').value   = ME.name || '';
-  document.getElementById('p-status').value = ME.status || '';
-  document.getElementById('p-phone').value  = ME.phone || '';
-  const av = document.getElementById('p-avatar-display');
-  if(ME.photoURL){
-    av.outerHTML = `<img id="p-avatar-display" src="${ME.photoURL}" style="width:86px;height:86px;border-radius:50%;object-fit:cover;border:3px solid var(--bg3);">`;
-  } else {
-    if(av.tagName==='IMG'){
-      const nd = document.createElement('div');
-      nd.id='p-avatar-display';
-      nd.className='p-avatar-default';
-      nd.textContent=(ME.name||'?')[0].toUpperCase();
-      av.replaceWith(nd);
-    } else {
-      av.textContent=(ME.name||'?')[0].toUpperCase();
-    }
-  }
 }
 
-window.saveProfile = async function(){
-  const btn  = document.getElementById('save-profile-btn');
-  const name = document.getElementById('p-name').value.trim();
-  const status = document.getElementById('p-status').value.trim();
+/* ─────────────────────────────── PROFILE ─────────────────── */
+function loadProfilePage(){
+  if(!ME) return;
+  $('p-name').value   = ME.name||'';
+  $('p-status').value = ME.status||'';
+  $('p-phone').value  = ME.phone||'';
+  makeAvatar($('profile-av'), ME.name, ME.photoURL, 86);
+}
+
+$('btn-save-profile').onclick = async()=>{
+  const name   = $('p-name').value.trim();
+  const status = $('p-status').value.trim();
   if(!name){ toast('Nome não pode ser vazio.'); return; }
+  const btn = $('btn-save-profile');
   btn.disabled=true; btn.textContent='Salvando...';
-  await updateDoc(doc(db,'users', ME.uid),{ name, status });
-  ME.name = name; ME.status = status;
+  await updateDoc(doc(db,'users',ME.uid),{ name, status });
+  ME.name=name; ME.status=status;
   toast('Perfil salvo!');
   btn.disabled=false; btn.textContent='Salvar';
 };
 
-window.uploadAvatar = async function(input){
-  const file = input.files[0];
+$('p-cam-btn').onclick = ()=>$('avatar-file').click();
+$('avatar-file').onchange = async function(){
+  const file = this.files[0];
   if(!file) return;
-  if(file.size > 3*1024*1024){ toast('Imagem muito grande. Máx 3MB.'); return; }
+  if(file.size>3*1024*1024){ toast('Imagem muito grande. Máx 3MB.'); return; }
   toast('Enviando foto...');
-  const storRef = ref(storage, `avatars/${ME.uid}`);
-  await uploadBytes(storRef, file);
-  const url = await getDownloadURL(storRef);
-  await updateDoc(doc(db,'users', ME.uid),{ photoURL: url });
-  ME.photoURL = url;
-  loadProfile();
-  toast('Foto atualizada!');
-  input.value='';
+  try{
+    const r   = ref(storage, `avatars/${ME.uid}`);
+    await uploadBytes(r, file);
+    const url = await getDownloadURL(r);
+    await updateDoc(doc(db,'users',ME.uid),{ photoURL:url });
+    ME.photoURL=url;
+    loadProfilePage();
+    toast('Foto atualizada!');
+  }catch(e){ toast('Erro ao enviar foto.'); }
+  this.value='';
 };
 
-// ── Blocked panel ─────────────────────────────────────────────
-window.openBlockedPanel = async function(){
-  document.getElementById('blocked-panel').classList.add('open');
-  await renderBlockedList();
-};
-window.closeBlockedPanel = function(){
-  document.getElementById('blocked-panel').classList.remove('open');
-};
+/* ─────────────────────────────── BLOCKED PANEL ───────────── */
+function openBlockedPanel(){ $('blocked-panel').classList.add('open'); renderBlockedList(); }
+$('blocked-back').onclick = ()=>$('blocked-panel').classList.remove('open');
 
 async function renderBlockedList(){
-  const list = document.getElementById('blocked-list');
-  if(!ME.blocked || ME.blocked.length===0){
+  const list = $('blocked-list');
+  if(!ME.blocked?.length){
     list.innerHTML='<div class="empty-state"><span class="ms">block</span><p>Nenhum contato bloqueado.</p></div>';
     return;
   }
   list.innerHTML='';
   for(const uid of ME.blocked){
-    const s = await getDoc(doc(db,'users', uid));
+    const s = await getDoc(doc(db,'users',uid));
     if(!s.exists()) continue;
     const u = s.data();
-    const item = document.createElement('div');
-    item.className='blocked-item';
-    item.innerHTML=`
-      <div class="avatar" style="width:44px;height:44px;font-size:18px;">${u.photoURL?`<img src="${u.photoURL}">`:(u.name[0]||'?').toUpperCase()}</div>
-      <div class="blocked-info">
-        <div class="blocked-name">${escHtml(u.name)}</div>
-        <div class="blocked-tel">${u.phone}</div>
-      </div>
-      <button class="unblock-btn" onclick="unblockUser('${uid}')">Desbloquear</button>`;
-    list.appendChild(item);
+    const row = document.createElement('div');
+    row.className='blocked-item';
+
+    const av=document.createElement('div');
+    av.className='avatar';
+    makeAvatar(av,u.name,u.photoURL,44);
+
+    const info=document.createElement('div');
+    info.style.flex='1';
+    info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div>
+      <div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
+
+    const btn=document.createElement('button');
+    btn.className='unblock-btn';
+    btn.textContent='Desbloquear';
+    btn.onclick=async()=>{
+      await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayRemove(uid) });
+      ME.blocked=ME.blocked.filter(x=>x!==uid);
+      refreshBlockedLabel();
+      renderBlockedList();
+      toast('Contato desbloqueado.');
+    };
+
+    row.append(av,info,btn);
+    list.appendChild(row);
   }
 }
 
-window.unblockUser = async function(uid){
-  await updateDoc(doc(db,'users', ME.uid),{ blocked: arrayRemove(uid) });
-  ME.blocked = ME.blocked.filter(x=>x!==uid);
-  updateBlockedCount();
-  await renderBlockedList();
-  toast('Contato desbloqueado.');
-};
-
-async function updateBlockedCount(){
-  const snap = await getDoc(doc(db,'users', ME.uid));
-  const cnt  = snap.data()?.blocked?.length || 0;
-  ME.blocked = snap.data()?.blocked || [];
-  document.getElementById('blocked-count-label').textContent =
-    cnt===0 ? 'Nenhum contato bloqueado' : `${cnt} contato${cnt>1?'s':''} bloqueado${cnt>1?'s':''}`;
+async function refreshBlockedLabel(){
+  const snap = await getDoc(doc(db,'users',ME.uid));
+  ME.blocked = snap.data()?.blocked||[];
+  const n = ME.blocked.length;
+  $('blocked-count-label').textContent = n===0
+    ? 'Nenhum contato bloqueado'
+    : `${n} contato${n>1?'s':''} bloqueado${n>1?'s':''}`;
 }
 
-// ── Modal ─────────────────────────────────────────────────────
-let _modalCb = null;
-window.openModal = function(title, body, cb, isGreen=false){
-  document.getElementById('modal-title').textContent=title;
-  document.getElementById('modal-body').textContent=body;
-  const btn=document.getElementById('modal-confirm-btn');
-  btn.className='modal-btn '+(isGreen?'green':'confirm');
+/* ─────────────────────────────── LOGOUT ──────────────────── */
+function confirmLogout(){
+  openModal('Sair','Deseja sair da conta?', async()=>{ await signOut(auth); closeModal(); });
+}
+
+/* ─────────────────────────────── MODAL ───────────────────── */
+let _modalCb=null;
+function openModal(title,body,cb){
+  $('modal-title').textContent=title;
+  $('modal-body').textContent=body;
   _modalCb=cb;
-  document.getElementById('modal').classList.add('open');
-};
-window.closeModal = function(){ document.getElementById('modal').classList.remove('open'); _modalCb=null; };
-document.getElementById('modal-confirm-btn').onclick=()=>{ if(_modalCb) _modalCb(); };
-document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal')) closeModal(); });
-
-// ── Utils ─────────────────────────────────────────────────────
-function formatTime(date){
-  const now = new Date();
-  const diff = now - date;
-  if(diff < 86400000){
-    return date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  }
-  return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  $('modal').classList.add('open');
 }
-
-function escHtml(str){
-  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Enter key on auth inputs ──────────────────────────────────
-document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') window.doLogin(); });
-document.getElementById('reg-pass2').addEventListener('keydown', e=>{ if(e.key==='Enter') window.doRegister(); });
+function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
+$('modal-ok').onclick     = ()=>{ _modalCb?.(); };
+$('modal-cancel').onclick = ()=>closeModal();
+$('modal').onclick        = e=>{ if(e.target===$('modal')) closeModal(); };
 </script>
 </body>
 </html>
