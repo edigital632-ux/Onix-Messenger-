@@ -78,7 +78,7 @@ main{flex:1;overflow:hidden;position:relative;}
 .conv-time{color:var(--text2);font-size:11px;white-space:nowrap;}
 .unread-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 
-/* CHAT SCREEN - FIX COMPLETO: MUDADO PARA FIXED COM SUPREMA PRIORIDADE DE TELA */
+/* CHAT SCREEN */
 #chat-screen{position:fixed;inset:0;z-index:99998;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
 #chat-screen.open{display:flex;}
 .chat-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
@@ -568,7 +568,6 @@ async function doSearch(phone){
     const usnap = await getDoc(doc(db,'users',uid));
     if(!usnap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);">Usuário não encontrado.</div>'; return; }
     
-    // FIX DE SEGURANÇA: Garante o UID diretamente do ID do documento
     const u = { uid: usnap.id, ...usnap.data() };
 
     res.innerHTML = '';
@@ -676,20 +675,17 @@ async function openChat(peer){
     const ids = [ME.uid, peer.uid].sort();
     chatId    = ids.join('_');
 
-    // Força a inserção dos dados na tela de forma ultra rápida
     $('chat-name').textContent = peer.name || "Usuário";
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
     
     updateBlockUI();
     
-    // Força exibição imediata com o estilo 'open'
     $('chat-screen').classList.add('open');
     $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
     $('msg-input').value = '';
     $('msg-input').focus();
 
-    // Processa a criação e sincronia paralela das mensagens
     const convRef = doc(db,'conversations',chatId);
     try{
       const convSnap = await getDoc(convRef);
@@ -812,7 +808,7 @@ function confirmDeleteChat(){
       const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
       const batch = writeBatch(db);
       msgs.forEach(d=>batch.delete(d.ref));
-      batch.delete(doc(db,'conversations',chatId));
+      batch.delete(doc(doc(db,'conversations',chatId)));
       await batch.commit();
       closeModal(); closeChat();
       toast('Conversa apagada.');
@@ -841,21 +837,40 @@ $('btn-save-profile').onclick = async()=>{
   btn.disabled=false; btn.textContent='Salvar';
 };
 
+/* MODO GRATUITO (OPÇÃO 2): Envio via Base64 direto no Firestore, mantendo seu código 100% seguro */
 $('p-cam-btn').onclick = ()=>$('avatar-file').click();
 $('avatar-file').onchange = async function(){
   const file = this.files[0];
   if(!file) return;
-  if(file.size>3*1024*1024){ toast('Imagem muito grande. Máx 3MB.'); return; }
-  toast('Enviando foto...');
-  try{
-    const r   = ref(storage, `avatars/${ME.uid}`);
-    await uploadBytes(r, file);
-    const url = await getDownloadURL(r);
-    await updateDoc(doc(db,'users',ME.uid),{ photoURL:url });
-    ME.photoURL=url;
-    loadProfilePage();
-    toast('Foto updated!');
-  }catch(e){ toast('Erro ao enviar foto.'); }
+  
+  // Limite estratégico de 600KB para caber na cota do banco de dados gratuito
+  if(file.size > 600 * 1024){ 
+    toast('Escolha uma foto mais leve, de até 600KB.'); 
+    this.value='';
+    return; 
+  }
+  
+  toast('Processando foto...');
+  
+  const reader = new FileReader();
+  reader.onloadend = async function() {
+    const base64String = reader.result;
+    try {
+      await updateDoc(doc(db,'users',ME.uid),{ photoURL: base64String });
+      ME.photoURL = base64String;
+      loadProfilePage();
+      toast('Foto atualizada com sucesso!');
+    } catch(e) {
+      console.error(e);
+      toast('Erro ao salvar foto: ' + e.message);
+    }
+  };
+  
+  reader.onerror = () => {
+    toast('Erro ao carregar o arquivo.');
+  };
+  
+  reader.readAsDataURL(file);
   this.value='';
 };
 
