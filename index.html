@@ -611,9 +611,6 @@ async function doSearch(phone){
 /* ─────────────────────────────── CONVERSATIONS ───────────── */
 function listenConvs(){
   unsubConvs?.();
-  
-  // CORREÇÃO: Removemos o orderBy daqui para evitar o erro de Índice Composto do Firestore.
-  // Faremos a ordenação diretamente no código JavaScript (memória) mais abaixo.
   const q = query(
     collection(db,'conversations'),
     where('members','array-contains',ME.uid)
@@ -626,7 +623,6 @@ function listenConvs(){
     if(snap.empty){ empty.style.display=''; return; }
     empty.style.display='none';
 
-    // Ordena as conversas da mais recente para a mais antiga (Suprindo a falta do orderBy)
     const convs = snap.docs.map(d => d.data());
     convs.sort((a, b) => {
       const timeA = a.lastAt ? a.lastAt.toMillis() : 0;
@@ -677,8 +673,19 @@ async function openChat(peer){
   const ids = [ME.uid, peer.uid].sort();
   chatId    = ids.join('_');
 
-  const convRef = doc(db,'conversations',chatId);
+  // CORREÇÃO: Monta os cabeçalhos e abre a tela de chat INSTANTANEAMENTE na tela!
+  // Dessa forma, o usuário já vê o campo para digitar imediatamente sem travar.
+  $('chat-name').textContent = peer.name;
+  $('chat-sub').textContent  = peer.phone;
+  makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
+  updateBlockUI();
+  $('chat-screen').classList.add('open');
+  $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando...</div>';
+  $('msg-input').value = '';
+  $('msg-input').focus();
 
+  // Processa a criação/atualização da conversa no banco em segundo plano
+  const convRef = doc(db,'conversations',chatId);
   try{
     const convSnap = await getDoc(convRef);
     if(!convSnap.exists()){
@@ -688,27 +695,27 @@ async function openChat(peer){
         lastAt: serverTimestamp(),
         unread:{ [ME.uid]:0, [peer.uid]:0 }
       });
+    } else {
+      await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
     }
-    await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
   }catch(e){
-    toast('Erro ao abrir conversa: '+e.message, 4000);
-    return;
+    console.error("Erro interno ao criar metadados do chat: ", e);
   }
 
-  // Header
-  $('chat-name').textContent = peer.name;
-  $('chat-sub').textContent  = peer.phone;
-  makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
-  updateBlockUI();
-  $('chat-screen').classList.add('open');
-
-  // Listen messages
+  // Começa a escutar as mensagens em tempo real
   unsubMsgs?.();
   const mq = query(collection(db,'conversations',chatId,'messages'), orderBy('ts','asc'));
   unsubMsgs = onSnapshot(mq, snap=>{
     const body  = $('chat-body');
-    const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100;
+    const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
     body.innerHTML='';
+    
+    // Se não tiver mensagens ainda, mostra um estado amigável
+    if(snap.empty){
+      body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;"><span class="ms" style="font-size:48px;color:var(--panel);display:block;margin-bottom:10px;">chat_bubble_outline</span>Envie uma mensagem para começar!</div>';
+      return;
+    }
+
     snap.forEach(d=>{
       const m   = d.data();
       const div = document.createElement('div');
@@ -719,10 +726,9 @@ async function openChat(peer){
     });
     if(atBot) body.scrollTop = body.scrollHeight;
     updateDoc(convRef,{ [`unread.${ME.uid}`]:0 }).catch(()=>{});
-  }, err=>{ toast('Erro nas mensagens: '+err.message, 4000); });
-
-  $('msg-input').value='';
-  $('msg-input').focus();
+  }, err=>{ 
+    toast('Erro nas mensagens: '+err.message, 4000); 
+  });
 }
 
 $('chat-back').onclick = closeChat;
