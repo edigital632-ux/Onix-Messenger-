@@ -837,41 +837,58 @@ $('btn-save-profile').onclick = async()=>{
   btn.disabled=false; btn.textContent='Salvar';
 };
 
-/* MODO GRATUITO (OPÇÃO 2): Envio via Base64 direto no Firestore, mantendo seu código 100% seguro */
+/* MODO GRATUITO COM COMPACTADOR (SÓ ESSA PARTE FOI MEXIDA): Redimensiona a foto no celular do usuário e salva em tamanho minúsculo e leve */
 $('p-cam-btn').onclick = ()=>$('avatar-file').click();
-$('avatar-file').onchange = async function(){
+$('avatar-file').onchange = function(){
   const file = this.files[0];
   if(!file) return;
   
-  // Limite estratégico de 600KB para caber na cota do banco de dados gratuito
-  if(file.size > 600 * 1024){ 
-    toast('Escolha uma foto mais leve, de até 600KB.'); 
-    this.value='';
-    return; 
-  }
-  
-  toast('Processando foto...');
+  toast('Otimizando imagem...');
   
   const reader = new FileReader();
-  reader.onloadend = async function() {
-    const base64String = reader.result;
-    try {
-      await updateDoc(doc(db,'users',ME.uid),{ photoURL: base64String });
-      ME.photoURL = base64String;
-      loadProfilePage();
-      toast('Foto atualizada com sucesso!');
-    } catch(e) {
-      console.error(e);
-      toast('Erro ao salvar foto: ' + e.message);
-    }
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = async function() {
+      const canvas = document.createElement('canvas');
+      const MAX_SIZE = 150; // Tamanho ideal e leve para avatares
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_SIZE) {
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
+        }
+      } else {
+        if (height > MAX_SIZE) {
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Converte para JPEG com qualidade otimizada (gera uma string levíssima de poucos KB)
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      
+      toast('Salvando foto...');
+      try {
+        await updateDoc(doc(db, 'users', ME.uid), { photoURL: compressedBase64 });
+        ME.photoURL = compressedBase64;
+        loadProfilePage();
+        toast('Foto atualizada com sucesso!');
+      } catch(err) {
+        console.error(err);
+        toast('Erro ao atualizar: ' + err.message);
+      }
+    };
+    img.src = e.target.result;
   };
-  
-  reader.onerror = () => {
-    toast('Erro ao carregar o arquivo.');
-  };
-  
   reader.readAsDataURL(file);
-  this.value='';
+  this.value = '';
 };
 
 /* ─────────────────────────────── BLOCKED PANEL ───────────── */
