@@ -78,8 +78,8 @@ main{flex:1;overflow:hidden;position:relative;}
 .conv-time{color:var(--text2);font-size:11px;white-space:nowrap;}
 .unread-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 
-/* CHAT SCREEN */
-#chat-screen{position:absolute;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column;}
+/* CHAT SCREEN - FIX COMPLETO: MUDADO PARA FIXED COM SUPREMA PRIORIDADE DE TELA */
+#chat-screen{position:fixed;inset:0;z-index:99998;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
 #chat-screen.open{display:flex;}
 .chat-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
 .chat-header .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
@@ -127,7 +127,7 @@ main{flex:1;overflow:hidden;position:relative;}
 .config-sub{color:var(--text2);font-size:12px;margin-top:1px;}
 
 /* BLOCKED PANEL */
-#blocked-panel{position:absolute;inset:0;z-index:400;background:var(--bg);display:none;flex-direction:column;}
+#blocked-panel{position:fixed;inset:0;z-index:99990;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
 #blocked-panel.open{display:flex;}
 .blocked-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .blocked-header .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
@@ -160,7 +160,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 @keyframes spin{to{transform:rotate(360deg);}}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.open{display:flex;}
 .modal-box{background:var(--bg3);border-radius:16px;padding:24px;width:100%;max-width:380px;}
 .modal-title{color:var(--text);font-size:17px;font-weight:700;margin-bottom:10px;}
@@ -176,7 +176,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 </head>
 <body>
 
-<!-- AUTH -->
 <div id="auth">
   <div class="auth-logo">💬</div>
   <div class="auth-brand">Onix Messenger</div>
@@ -202,7 +201,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </div>
 </div>
 
-<!-- APP SHELL -->
 <div class="shell">
   <header>
     <span class="brand">Onix</span>
@@ -228,7 +226,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div id="search-results"></div>
 
   <main>
-    <!-- Conversas -->
     <div class="page active" id="page-chats">
       <div id="convs-list"></div>
       <div class="empty-state" id="convs-empty" style="display:none;">
@@ -237,7 +234,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
       </div>
     </div>
 
-    <!-- Chamadas -->
     <div class="page" id="page-calls">
       <div class="empty-state">
         <span class="ms">call</span>
@@ -245,7 +241,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
       </div>
     </div>
 
-    <!-- Perfil -->
     <div class="page" id="page-profile">
       <div class="profile-banner"></div>
       <div class="profile-body">
@@ -274,7 +269,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
       </div>
     </div>
 
-    <!-- Configurações -->
     <div class="page" id="page-settings">
       <div class="section-title">CONTA</div>
       <div class="config-item" id="cfg-profile">
@@ -300,42 +294,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
     </div>
   </main>
 
-  <!-- Chat Screen -->
-  <div id="chat-screen">
-    <div class="chat-header">
-      <span class="ms" id="chat-back">arrow_back</span>
-      <div class="avatar" id="chat-av" style="width:38px;height:38px;font-size:16px;flex-shrink:0;"></div>
-      <div style="flex:1;min-width:0;">
-        <div class="chat-hname" id="chat-name"></div>
-        <div class="chat-hstatus" id="chat-sub"></div>
-      </div>
-      <span class="ms" id="chat-menu-btn">more_vert</span>
-      <div class="drop-menu" id="drop-chat">
-        <div class="drop-item" id="dc-block">Bloquear contato</div>
-        <div class="drop-item danger" id="dc-delete">Apagar conversa</div>
-      </div>
-    </div>
-    <div class="chat-body" id="chat-body"></div>
-    <div class="chat-footer" id="chat-footer">
-      <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
-      <button class="send-btn" id="btn-send"><span class="ms">send</span></button>
-    </div>
-    <div id="blocked-notice">
-      <span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px;">block</span>
-      Você bloqueou este contato —
-      <span id="btn-unblock-notice" style="color:var(--green);cursor:pointer;">Desbloquear</span>
-    </div>
-  </div>
-
-  <!-- Blocked Panel -->
-  <div id="blocked-panel">
-    <div class="blocked-header">
-      <span class="ms" id="blocked-back">arrow_back</span>
-      <span>Contatos Bloqueados</span>
-    </div>
-    <div id="blocked-list" style="flex:1;overflow-y:auto;"></div>
-  </div>
-
   <nav>
     <div class="nav-btn active" id="nav-chats">
       <span class="ms">chat</span>Conversas
@@ -352,9 +310,42 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </nav>
 </div>
 
+<div id="chat-screen">
+  <div class="chat-header">
+    <span class="ms" id="chat-back">arrow_back</span>
+    <div class="avatar" id="chat-av" style="width:38px;height:38px;font-size:16px;flex-shrink:0;"></div>
+    <div style="flex:1;min-width:0;">
+      <div class="chat-hname" id="chat-name"></div>
+      <div class="chat-hstatus" id="chat-sub"></div>
+    </div>
+    <span class="ms" id="chat-menu-btn">more_vert</span>
+    <div class="drop-menu" id="drop-chat">
+      <div class="drop-item" id="dc-block">Bloquear contato</div>
+      <div class="drop-item danger" id="dc-delete">Apagar conversa</div>
+    </div>
+  </div>
+  <div class="chat-body" id="chat-body"></div>
+  <div class="chat-footer" id="chat-footer">
+    <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
+    <button class="send-btn" id="btn-send"><span class="ms">send</span></button>
+  </div>
+  <div id="blocked-notice">
+    <span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px;">block</span>
+    Você bloqueou este contato —
+    <span id="btn-unblock-notice" style="color:var(--green);cursor:pointer;">Desbloquear</span>
+  </div>
+</div>
+
+<div id="blocked-panel">
+  <div class="blocked-header">
+    <span class="ms" id="blocked-back">arrow_back</span>
+    <span>Contatos Bloqueados</span>
+  </div>
+  <div id="blocked-list" style="flex:1;overflow-y:auto;"></div>
+</div>
+
 <input type="file" id="avatar-file" accept="image/*" style="display:none;">
 
-<!-- Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
     <div class="modal-title" id="modal-title"></div>
@@ -366,10 +357,8 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </div>
 </div>
 
-<!-- Toast -->
 <div id="toast"></div>
 
-<!-- ═══════════════════════ FIREBASE ═══════════════════════ -->
 <script type="module">
 import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword,
@@ -399,7 +388,7 @@ const storage = getStorage(fbApp);
 /* ── State ── */
 let ME           = null;
 let chatId       = null;
-let peerData     = null;   // { uid, name, phone, photoURL }
+let peerData     = null;
 let unsubMsgs    = null;
 let unsubConvs   = null;
 let searchTimer  = null;
@@ -498,6 +487,7 @@ onAuthStateChanged(auth, async user=>{
     const snap = await getDoc(doc(db,'users',user.uid));
     if(!snap.exists()){ signOut(auth); return; }
     ME = snap.data();
+    ME.blocked = ME.blocked || [];
     $('auth').classList.add('hidden');
     loadProfilePage();
     listenConvs();
@@ -577,7 +567,9 @@ async function doSearch(phone){
     }
     const usnap = await getDoc(doc(db,'users',uid));
     if(!usnap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);">Usuário não encontrado.</div>'; return; }
-    const u = usnap.data();
+    
+    // FIX DE SEGURANÇA: Garante o UID diretamente do ID do documento
+    const u = { uid: usnap.id, ...usnap.data() };
 
     res.innerHTML = '';
     const row = document.createElement('div');
@@ -635,7 +627,7 @@ function listenConvs(){
       if(!peerId) continue;
       const pSnap  = await getDoc(doc(db,'users',peerId));
       if(!pSnap.exists()) continue;
-      const peer   = pSnap.data();
+      const peer   = { uid: pSnap.id, ...pSnap.data() };
       const unread = data.unread?.[ME.uid] || 0;
       const lastTime = data.lastAt ? fmtTime(data.lastAt.toDate()) : '';
 
@@ -669,66 +661,81 @@ function listenConvs(){
 
 /* ─────────────────────────────── OPEN CHAT ───────────────── */
 async function openChat(peer){
-  peerData = peer;
-  const ids = [ME.uid, peer.uid].sort();
-  chatId    = ids.join('_');
-
-  // CORREÇÃO: Monta os cabeçalhos e abre a tela de chat INSTANTANEAMENTE na tela!
-  // Dessa forma, o usuário já vê o campo para digitar imediatamente sem travar.
-  $('chat-name').textContent = peer.name;
-  $('chat-sub').textContent  = peer.phone;
-  makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
-  updateBlockUI();
-  $('chat-screen').classList.add('open');
-  $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando...</div>';
-  $('msg-input').value = '';
-  $('msg-input').focus();
-
-  // Processa a criação/atualização da conversa no banco em segundo plano
-  const convRef = doc(db,'conversations',chatId);
-  try{
-    const convSnap = await getDoc(convRef);
-    if(!convSnap.exists()){
-      await setDoc(convRef,{
-        members:[ME.uid, peer.uid],
-        lastMsg:'',
-        lastAt: serverTimestamp(),
-        unread:{ [ME.uid]:0, [peer.uid]:0 }
-      });
-    } else {
-      await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
+  try {
+    if (!peer || !peer.uid) {
+      alert("Não foi possível abrir o chat: dados do contato inválidos.");
+      return;
     }
-  }catch(e){
-    console.error("Erro interno ao criar metadados do chat: ", e);
-  }
-
-  // Começa a escutar as mensagens em tempo real
-  unsubMsgs?.();
-  const mq = query(collection(db,'conversations',chatId,'messages'), orderBy('ts','asc'));
-  unsubMsgs = onSnapshot(mq, snap=>{
-    const body  = $('chat-body');
-    const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
-    body.innerHTML='';
-    
-    // Se não tiver mensagens ainda, mostra um estado amigável
-    if(snap.empty){
-      body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;"><span class="ms" style="font-size:48px;color:var(--panel);display:block;margin-bottom:10px;">chat_bubble_outline</span>Envie uma mensagem para começar!</div>';
+    if (!ME || !ME.uid) {
+      alert("Erro de sessão: Faça login novamente.");
       return;
     }
 
-    snap.forEach(d=>{
-      const m   = d.data();
-      const div = document.createElement('div');
-      div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
-      const time = m.ts ? fmtTime(m.ts.toDate()) : '';
-      div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
-      body.appendChild(div);
+    peerData = peer;
+    ME.blocked = ME.blocked || [];
+    const ids = [ME.uid, peer.uid].sort();
+    chatId    = ids.join('_');
+
+    // Força a inserção dos dados na tela de forma ultra rápida
+    $('chat-name').textContent = peer.name || "Usuário";
+    $('chat-sub').textContent  = peer.phone || "";
+    makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
+    
+    updateBlockUI();
+    
+    // Força exibição imediata com o estilo 'open'
+    $('chat-screen').classList.add('open');
+    $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
+    $('msg-input').value = '';
+    $('msg-input').focus();
+
+    // Processa a criação e sincronia paralela das mensagens
+    const convRef = doc(db,'conversations',chatId);
+    try{
+      const convSnap = await getDoc(convRef);
+      if(!convSnap.exists()){
+        await setDoc(convRef,{
+          members:[ME.uid, peer.uid],
+          lastMsg:'',
+          lastAt: serverTimestamp(),
+          unread:{ [ME.uid]:0, [peer.uid]:0 }
+        });
+      } else {
+        await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
+      }
+    } catch(dbErr) {
+      console.warn("Aviso de sincronização inicial:", dbErr);
+    }
+
+    unsubMsgs?.();
+    const mq = query(collection(db,'conversations',chatId,'messages'), orderBy('ts','asc'));
+    unsubMsgs = onSnapshot(mq, snap=>{
+      const body  = $('chat-body');
+      const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
+      body.innerHTML='';
+      
+      if(snap.empty){
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;"><span class="ms" style="font-size:48px;color:var(--panel);display:block;margin-bottom:10px;">chat_bubble_outline</span>Envie uma mensagem para começar!</div>';
+        return;
+      }
+
+      snap.forEach(d=>{
+        const m   = d.data();
+        const div = document.createElement('div');
+        div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
+        const time = m.ts ? fmtTime(m.ts.toDate()) : '';
+        div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
+        body.appendChild(div);
+      });
+      if(atBot) body.scrollTop = body.scrollHeight;
+      updateDoc(convRef,{ [`unread.${ME.uid}`]:0 }).catch(()=>{});
+    }, err=>{ 
+      toast('Erro ao buscar atualizações: '+err.message); 
     });
-    if(atBot) body.scrollTop = body.scrollHeight;
-    updateDoc(convRef,{ [`unread.${ME.uid}`]:0 }).catch(()=>{});
-  }, err=>{ 
-    toast('Erro nas mensagens: '+err.message, 4000); 
-  });
+
+  } catch (error) {
+    alert("Falha fatal ao abrir tela de chat: " + error.message);
+  }
 }
 
 $('chat-back').onclick = closeChat;
@@ -781,7 +788,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato bloqueado.');
+    toast('Contato conhecido bloqueado.');
   }
   updateBlockUI();
   refreshBlockedLabel();
@@ -791,8 +798,8 @@ function updateBlockUI(){
   if(!peerData) return;
   const blocked = ME.blocked?.includes(peerData.uid);
   $('dc-block').textContent      = blocked ? 'Desbloquear contato' : 'Bloquear contato';
-  $('chat-footer').style.display = blocked ? 'none' : '';
-  $('blocked-notice').style.display = blocked ? '' : 'none';
+  $('chat-footer').style.display = blocked ? 'none' : 'flex';
+  $('blocked-notice').style.display = blocked ? 'block' : 'none';
 }
 
 /* ─────────────────────────────── DELETE CHAT ─────────────── */
@@ -847,7 +854,7 @@ $('avatar-file').onchange = async function(){
     await updateDoc(doc(db,'users',ME.uid),{ photoURL:url });
     ME.photoURL=url;
     loadProfilePage();
-    toast('Foto atualizada!');
+    toast('Foto updated!');
   }catch(e){ toast('Erro ao enviar foto.'); }
   this.value='';
 };
@@ -866,7 +873,7 @@ async function renderBlockedList(){
   for(const uid of ME.blocked){
     const s = await getDoc(doc(db,'users',uid));
     if(!s.exists()) continue;
-    const u = s.data();
+    const u = { uid: s.id, ...s.data() };
     const row = document.createElement('div');
     row.className='blocked-item';
 
