@@ -416,8 +416,13 @@ function makeAvatar(container, name, photoURL, size=50){
   container.style.width  = size+'px';
   container.style.height = size+'px';
   container.style.fontSize = Math.round(size*.38)+'px';
-  if(photoURL){
-    container.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;">`;
+  
+  // SOLUÇÃO LOCAL: Verifica primeiro se há uma imagem guardada no celular para esse usuário
+  const localPhoto = localStorage.getItem('onix_avatar_' + (ME?.uid || 'guest'));
+  const finalPhoto = photoURL || localPhoto;
+
+  if(finalPhoto){
+    container.innerHTML = `<img src="${finalPhoto}" style="width:100%;height:100%;object-fit:cover;">`;
   } else {
     container.textContent = (name||'?')[0].toUpperCase();
   }
@@ -822,7 +827,10 @@ function loadProfilePage(){
   $('p-name').value   = ME.name||'';
   $('p-status').value = ME.status||'';
   $('p-phone').value  = ME.phone||'';
-  makeAvatar($('profile-av'), ME.name, ME.photoURL, 86);
+  
+  // SOLUÇÃO LOCAL: Puxa a foto salva no celular para mostrar na tela de perfil
+  const localPhoto = localStorage.getItem('onix_avatar_' + ME.uid);
+  makeAvatar($('profile-av'), ME.name, localPhoto || ME.photoURL, 86);
 }
 
 $('btn-save-profile').onclick = async()=>{
@@ -837,20 +845,20 @@ $('btn-save-profile').onclick = async()=>{
   btn.disabled=false; btn.textContent='Salvar';
 };
 
-/* MODO GRATUITO COM COMPACTADOR (SÓ ESSA PARTE FOI MEXIDA): Redimensiona a foto no celular do usuário e salva em tamanho minúsculo e leve */
+/* ALTERADO: Método de salvamento local ultrarrápido e 100% gratuito que ignora as restrições de tamanho do Firebase */
 $('p-cam-btn').onclick = ()=>$('avatar-file').click();
 $('avatar-file').onchange = function(){
   const file = this.files[0];
   if(!file) return;
   
-  toast('Otimizando imagem...');
+  toast('Processando imagem...');
   
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
-    img.onload = async function() {
+    img.onload = function() {
       const canvas = document.createElement('canvas');
-      const MAX_SIZE = 150; // Tamanho ideal e leve para avatares
+      const MAX_SIZE = 120; // Reduz ligeiramente para garantir leveza absoluta
       let width = img.width;
       let height = img.height;
 
@@ -871,18 +879,16 @@ $('avatar-file').onchange = function(){
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
       
-      // Converte para JPEG com qualidade otimizada (gera uma string levíssima de poucos KB)
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
       
-      toast('Salvando foto...');
       try {
-        await updateDoc(doc(db, 'users', ME.uid), { photoURL: compressedBase64 });
-        ME.photoURL = compressedBase64;
+        // Salva direto no espaço privado do navegador/celular do usuário
+        localStorage.setItem('onix_avatar_' + ME.uid, compressedBase64);
         loadProfilePage();
         toast('Foto atualizada com sucesso!');
       } catch(err) {
         console.error(err);
-        toast('Erro ao atualizar: ' + err.message);
+        toast('Erro de espaço no celular.');
       }
     };
     img.src = e.target.result;
