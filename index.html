@@ -331,7 +331,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </div>
   <div id="blocked-notice">
     <span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px;">block</span>
-    Você bloqueou este contato —
+    <span id="blocked-text-notice">Você bloqueou este contato</span> —
     <span id="btn-unblock-notice" style="color:var(--green);cursor:pointer;">Desbloquear</span>
   </div>
 </div>
@@ -417,7 +417,6 @@ function makeAvatar(container, name, photoURL, size=50){
   container.style.height = size+'px';
   container.style.fontSize = Math.round(size*.38)+'px';
   
-  // SOLUÇÃO LOCAL: Verifica primeiro se há uma imagem guardada no celular para esse usuário
   const localPhoto = localStorage.getItem('onix_avatar_' + (ME?.uid || 'guest'));
   const finalPhoto = photoURL || localPhoto;
 
@@ -616,10 +615,15 @@ function listenConvs(){
     const list  = $('convs-list');
     const empty = $('convs-empty');
     list.innerHTML='';
-    if(snap.empty){ empty.style.display=''; return; }
+    
+    // Filtra conversas válidas (que possuem mensagens ou não foram deletadas)
+    const convs = snap.docs
+      .map(d => d.data())
+      .filter(data => data.lastMsg !== undefined && data.lastMsg !== '');
+
+    if(convs.length === 0){ empty.style.display=''; return; }
     empty.style.display='none';
 
-    const convs = snap.docs.map(d => d.data());
     convs.sort((a, b) => {
       const timeA = a.lastAt ? a.lastAt.toMillis() : 0;
       const timeB = b.lastAt ? b.lastAt.toMillis() : 0;
@@ -756,7 +760,12 @@ async function sendMessage(){
   const text  = input.value.trim();
   if(!text) return;
 
-  if(ME.blocked?.includes(peerData.uid)){ toast('Você bloqueou este contato.'); return; }
+  // CORREÇÃO: Verifica de forma bidirecional se existe bloqueio ativo antes de enviar
+  const amIBlocked = peerData.blocked?.includes(ME.uid);
+  const didIBlock  = ME.blocked?.includes(peerData.uid);
+
+  if(didIBlock){ toast('Você bloqueou este contato.'); return; }
+  if(amIBlocked){ toast('Você não pode enviar mensagens para este contato.'); return; }
 
   input.value='';
   const convRef = doc(db,'conversations',chatId);
@@ -789,7 +798,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato conhecido bloqueado.');
+    toast('Contato bloqueado.');
   }
   updateBlockUI();
   refreshBlockedLabel();
@@ -797,10 +806,27 @@ async function toggleBlock(){
 
 function updateBlockUI(){
   if(!peerData) return;
-  const blocked = ME.blocked?.includes(peerData.uid);
-  $('dc-block').textContent      = blocked ? 'Desbloquear contato' : 'Bloquear contato';
-  $('chat-footer').style.display = blocked ? 'none' : 'flex';
-  $('blocked-notice').style.display = blocked ? 'block' : 'none';
+  
+  const amIBlocked = peerData.blocked?.includes(ME.uid);
+  const didIBlock  = ME.blocked?.includes(peerData.uid);
+  
+  if (didIBlock) {
+    $('dc-block').textContent      = 'Desbloquear contato';
+    $('chat-footer').style.display = 'none';
+    $('blocked-text-notice').textContent = 'Você bloqueou este contato';
+    $('btn-unblock-notice').style.display = 'inline';
+    $('blocked-notice').style.display = 'block';
+  } else if (amIBlocked) {
+    $('dc-block').textContent      = 'Bloquear contato';
+    $('chat-footer').style.display = 'none';
+    $('blocked-text-notice').textContent = 'Você foi bloqueado por este contato';
+    $('btn-unblock-notice').style.display = 'none';
+    $('blocked-notice').style.display = 'block';
+  } else {
+    $('dc-block').textContent      = 'Bloquear contato';
+    $('chat-footer').style.display = 'flex';
+    $('blocked-notice').style.display = 'none';
+  }
 }
 
 /* ─────────────────────────────── DELETE CHAT ─────────────── */
@@ -813,7 +839,13 @@ function confirmDeleteChat(){
       const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
       const batch = writeBatch(db);
       msgs.forEach(d=>batch.delete(d.ref));
-      batch.delete(doc(doc(db,'conversations',chatId)));
+      
+      // CORREÇÃO: Zera a conversa principal para ela sumir da listagem imediatamente
+      batch.update(doc(db,'conversations',chatId), {
+        lastMsg: '',
+        unread: { [ME.uid]: 0, [peerData.uid]: 0 }
+      });
+      
       await batch.commit();
       closeModal(); closeChat();
       toast('Conversa apagada.');
@@ -828,7 +860,6 @@ function loadProfilePage(){
   $('p-status').value = ME.status||'';
   $('p-phone').value  = ME.phone||'';
   
-  // SOLUÇÃO LOCAL: Puxa a foto salva no celular para mostrar na tela de perfil
   const localPhoto = localStorage.getItem('onix_avatar_' + ME.uid);
   makeAvatar($('profile-av'), ME.name, localPhoto || ME.photoURL, 86);
 }
@@ -845,7 +876,6 @@ $('btn-save-profile').onclick = async()=>{
   btn.disabled=false; btn.textContent='Salvar';
 };
 
-/* ALTERADO: Método de salvamento local ultrarrápido e 100% gratuito que ignora as restrições de tamanho do Firebase */
 $('p-cam-btn').onclick = ()=>$('avatar-file').click();
 $('avatar-file').onchange = function(){
   const file = this.files[0];
@@ -858,7 +888,7 @@ $('avatar-file').onchange = function(){
     const img = new Image();
     img.onload = function() {
       const canvas = document.createElement('canvas');
-      const MAX_SIZE = 120; // Reduz ligeiramente para garantir leveza absoluta
+      const MAX_SIZE = 120;
       let width = img.width;
       let height = img.height;
 
@@ -882,10 +912,9 @@ $('avatar-file').onchange = function(){
       const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
       
       try {
-        // Salva direto no espaço privado do navegador/celular do usuário
         localStorage.setItem('onix_avatar_' + ME.uid, compressedBase64);
         loadProfilePage();
-        toast('Foto atualizada com sucesso!');
+        toast('Foto updated com sucesso!');
       } catch(err) {
         console.error(err);
         toast('Erro de espaço no celular.');
