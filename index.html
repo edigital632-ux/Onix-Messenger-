@@ -483,6 +483,7 @@ let isRecording = false;
 let localStream  = null;
 let pc           = null;
 let currentCallId = null;
+let callTimerInterval = null; // Guardar id do cronômetro da chamada
 const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
 
 /* ─────────────────────────────── HELPERS ─────────────────── */
@@ -1221,7 +1222,7 @@ $('chat-file-input').onchange = async function() {
   }
 };
 
-/* ─────────────────────────────── BLOCK ───────────────────── */
+/* ── BLOCK ───────────────────── */
 $('dc-block').onclick = ()=>{ closeDrops(); toggleBlock(); };
 $('btn-unblock-notice').onclick = ()=>toggleBlock();
 
@@ -1265,7 +1266,7 @@ function updateBlockUI(){
   }
 }
 
-/* ─────────────────────────────── DELETE CHAT ─────────────── */
+/* ── DELETE CHAT ─────────────── */
 $('dc-delete').onclick = ()=>{ closeDrops(); confirmDeleteChat(); };
 
 function confirmDeleteChat(){
@@ -1409,6 +1410,24 @@ function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
 $('modal-ok').onclick     = ()=>{ _modalCb?.(); };
 $('modal-cancel').onclick = ()=>closeModal();
 
+/* ── EXTERNAL TIMER UTILITY ── */
+function startCallTimer() {
+  if (callTimerInterval) clearInterval(callTimerInterval);
+  let totalSeconds = 0;
+  
+  callTimerInterval = setInterval(() => {
+    totalSeconds++;
+    let minutes = Math.floor(totalSeconds / 60);
+    let seconds = totalSeconds % 60;
+    
+    // Formata strings adicionando um 0 à esquerda caso seja menor que 10
+    let displayMin = minutes < 10 ? '0' + minutes : minutes;
+    let displaySec = seconds < 10 ? '0' + seconds : seconds;
+    
+    $('call-status-label').textContent = displayMin + ':' + displaySec;
+  }, 1000);
+}
+
 /* ─────────────────────────────── SYSTEM CALL LOGIC (WebRTC) ───────────────── */
 $('chat-btn-voice').onclick = () => startCall('voice');
 $('chat-btn-video').onclick = () => startCall('video');
@@ -1470,9 +1489,9 @@ async function startCall(type) {
       const data = snap.data();
       if (!data) return;
       if (data.status === 'answered' && data.answer && !pc.currentRemoteDescription) {
-        $('call-status-label').textContent = "Em chamada";
         const answerDesc = new RTCSessionDescription(data.answer);
         pc.setRemoteDescription(answerDesc);
+        startCallTimer(); // Inicia o contador de minutos/segundos dinâmico
       }
       if (data.status === 'ended') {
         cleanCallState();
@@ -1517,7 +1536,13 @@ function listenIncomingCalls() {
         }
 
         onSnapshot(doc(db, 'calls', currentCallId), s => {
-          if (s.data()?.status === 'ended') cleanCallState();
+          const data = s.data();
+          if (data?.status === 'answered') {
+            startCallTimer(); // Inicia o contador de minutos/segundos dinâmico para quem recebe
+          }
+          if (data?.status === 'ended') {
+            cleanCallState();
+          }
         });
       }
     });
@@ -1584,6 +1609,10 @@ async function hangupCall() {
 
 function cleanCallState() {
   $('call-screen').classList.remove('open');
+  if (callTimerInterval) {
+    clearInterval(callTimerInterval);
+    callTimerInterval = null;
+  }
   if (localStream) {
     localStream.getTracks().forEach(track => track.stop());
     localStream = null;
