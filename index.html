@@ -802,7 +802,7 @@ function listenConvs(){
     });
     isFirstLoad = false;
 
-    /* ── Render Call Page Contacts ── */
+    /* ── Render Call Page Contacts Sincronizado Instantaneamente ── */
     renderCallsPage(finalConvsList);
 
     list.innerHTML='';
@@ -855,10 +855,13 @@ async function renderCallsPage(finalConvsList) {
   const empty = $('calls-empty');
   
   list.innerHTML = '';
+  
   if (!finalConvsList || finalConvsList.length === 0) {
     empty.style.display = 'flex';
     return;
   }
+  
+  // Força a remoção do estado vazio para ambos os dispositivos de forma independente
   empty.style.display = 'none';
 
   for (const itemData of finalConvsList) {
@@ -1023,7 +1026,7 @@ function closeChat(){
   chatId=null; peerData=null;
 }
 
-/* ─────────────────────────────── AUDIO & SEND LOGIC ──────── */
+/* ── AUDIO & SEND LOGIC ──────── */
 function updateSendIcon() {
   const icon = $('send-icon');
   if ($('msg-input').value.trim() === '') {
