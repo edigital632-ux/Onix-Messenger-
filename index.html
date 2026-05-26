@@ -22,7 +22,7 @@ html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'
 #auth{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 #auth.hidden{display:none;}
 .auth-logo{font-size:52px;margin-bottom:8px;}
-.auth-brand{color:var(--green);font-size:26px;font-weight:700;margin-bottom:4px;}
+.auth-brand(color:var(--green);font-size:26px;font-weight:700;margin-bottom:4px;}
 .auth-sub{color:var(--text2);font-size:13px;margin-bottom:28px;text-align:center;line-height:1.5;}
 .auth-card{background:var(--bg3);border-radius:18px;padding:22px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
 .auth-card h2{color:var(--text);font-size:17px;margin-bottom:18px;}
@@ -98,6 +98,11 @@ main{flex:1;overflow:hidden;position:relative;}
 .send-btn{background:var(--green);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .send-btn:active{background:var(--green-dark);}
 .send-btn .ms{color:#fff;font-size:20px;}
+
+/* FILE CHAT GRAPHICS */
+.file-link{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px;margin-top:4px;}
+.file-link .ms{font-size:28px;}
+.msg-img{max-width:100%;max-height:200px;border-radius:8px;margin-top:4px;display:block;cursor:pointer;}
 
 /* CALLS PAGE */
 .section-title{padding:10px 16px;color:var(--text2);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border);}
@@ -326,6 +331,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </div>
   <div class="chat-body" id="chat-body"></div>
   <div class="chat-footer" id="chat-footer">
+    <span class="ms" id="chat-attach-btn" style="color:var(--text2);cursor:pointer;padding:6px;">attach_file</span>
     <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
     <button class="send-btn" id="btn-send"><span class="ms">send</span></button>
   </div>
@@ -345,6 +351,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 </div>
 
 <input type="file" id="avatar-file" accept="image/*" style="display:none;">
+<input type="file" id="chat-file-input" style="display:none;">
 
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
@@ -616,7 +623,6 @@ function listenConvs(){
     const empty = $('convs-empty');
     list.innerHTML='';
     
-    // CORREÇÃO: Filtra se você não tiver ocultado/deletado a conversa de forma privada
     const convs = snap.docs
       .map(d => d.data())
       .filter(data => data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid)));
@@ -680,7 +686,6 @@ async function openChat(peer){
     }
 
     peerData = peer;
-    ME.blocked = ME.blocked || [];
     const ids = [ME.uid, peer.uid].sort();
     chatId    = ids.join('_');
 
@@ -688,7 +693,13 @@ async function openChat(peer){
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
     
-    updateBlockUI();
+    // Sincroniza dinamicamente o status de bloqueio em tempo real
+    onSnapshot(doc(db,'users',peer.uid), snapshot => {
+      if(snapshot.exists()) {
+        peerData = { uid: snapshot.id, ...snapshot.data() };
+        updateBlockUI();
+      }
+    });
     
     $('chat-screen').classList.add('open');
     $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
@@ -720,7 +731,6 @@ async function openChat(peer){
       const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
       body.innerHTML='';
       
-      // Filtra mensagens ocultadas privadamente por você
       const visibleMsgs = [];
       snap.forEach(d => {
         const m = d.data();
@@ -738,7 +748,18 @@ async function openChat(peer){
         const div = document.createElement('div');
         div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
         const time = m.ts ? fmtTime(m.ts.toDate()) : '';
-        div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
+        
+        // Renderização inteligente baseada no tipo de dados enviado
+        if(m.fileUrl) {
+          if(m.fileType?.startsWith('image/')) {
+            div.innerHTML = esc(m.text) + `<br><img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
+          } else {
+            div.innerHTML = esc(m.text) + `<br><a href="${m.fileUrl}" target="_blank" class="file-link"><span class="ms">description</span><div><b>Arquivo/Documento</b><br><small style="opacity:0.7">Clique para abrir</small></div></a><span class="msg-time">${time}</span>`;
+          }
+        } else {
+          div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
+        }
+        
         body.appendChild(div);
       });
       if(atBot) body.scrollTop = body.scrollHeight;
@@ -759,41 +780,81 @@ function closeChat(){
   chatId=null; peerData=null;
 }
 
-/* ─────────────────────────────── SEND MESSAGE ────────────── */
-$('btn-send').onclick     = sendMessage;
+/* ─────────────────────────────── SEND MESSAGE & FILES ────── */
+$('btn-send').onclick     = ()=>sendMessage();
 $('msg-input').onkeydown  = e=>{ if(e.key==='Enter') sendMessage(); };
+$('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
 
-async function sendMessage(){
+async function sendMessage(fileData = null){
   if(!chatId||!peerData) return;
-  const input = $('msg-input');
-  const text  = input.value.trim();
-  if(!text) return;
-
+  
+  // CORREÇÃO CIRÚRGICA: Impede o fluxo se um dos dois estiver bloqueado na base
   const amIBlocked = peerData.blocked?.includes(ME.uid);
   const didIBlock  = ME.blocked?.includes(peerData.uid);
 
   if(didIBlock){ toast('Você bloqueou este contato.'); return; }
-  if(amIBlocked){ toast('Você não pode enviar mensagens para este contato.'); return; }
+  if(amIBlocked){ toast('Você está bloqueado por este contato. Mensagem não enviada.'); return; }
+
+  const input = $('msg-input');
+  let text  = input.value.trim();
+  
+  if(!text && !fileData) return;
+  if(fileData && !text) text = "📁 Arquivo enviado";
 
   input.value='';
   const convRef = doc(db,'conversations',chatId);
 
+  const payload = {
+    text,
+    sender: ME.uid,
+    ts: serverTimestamp(),
+    hideFrom: []
+  };
+
+  if(fileData) {
+    payload.fileUrl  = fileData.url;
+    payload.fileType = fileData.type;
+  }
+
   try{
-    await addDoc(collection(db,'conversations',chatId,'messages'),{
-      text, sender:ME.uid, ts:serverTimestamp(), hideFrom: []
-    });
+    await addDoc(collection(db,'conversations',chatId,'messages'), payload);
     const cSnap = await getDoc(convRef);
     const cur   = cSnap.data()?.unread?.[peerData.uid] || 0;
     
-    // Quando você envia uma mensagem nova, a conversa volta a ficar visível para ambos caso estivesse oculta
     await updateDoc(convRef,{
-      lastMsg:text,
-      lastAt:serverTimestamp(),
+      lastMsg: text,
+      lastAt: serverTimestamp(),
       [`unread.${peerData.uid}`]: cur+1,
       deletedBy: []
     });
   }catch(e){ toast('Erro ao enviar: '+e.message); input.value=text; }
 }
+
+// Upload de Arquivos
+$('chat-file-input').onchange = async function() {
+  const file = this.files[0];
+  if(!file || !chatId) return;
+
+  // Checagem imediata de bloqueio pré-upload
+  if(ME.blocked?.includes(peerData.uid) || peerData.blocked?.includes(ME.uid)){
+    toast('Operação cancelada: Bloqueio ativo.');
+    this.value = '';
+    return;
+  }
+
+  toast('Enviando arquivo...');
+  try {
+    const fileRef = ref(storage, `chats/${chatId}/${Date.now()}_${file.name}`);
+    const snap = await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(snap.ref);
+    
+    sendMessage({ url, type: file.type });
+    toast('Arquivo enviado com sucesso!');
+  } catch(e) {
+    toast('Erro no upload: ' + e.message);
+  }
+  this.value = '';
+};
 
 /* ─────────────────────────────── BLOCK ───────────────────── */
 $('dc-block').onclick = ()=>{ closeDrops(); toggleBlock(); };
@@ -823,19 +884,19 @@ function updateBlockUI(){
   
   if (didIBlock) {
     $('dc-block').textContent      = 'Desbloquear contato';
-    $('chat-footer').style.display = 'none';
+    $('chat-footer').style.visibility = 'hidden';
     $('blocked-text-notice').textContent = 'Você bloqueou este contato';
     $('btn-unblock-notice').style.display = 'inline';
     $('blocked-notice').style.display = 'block';
   } else if (amIBlocked) {
     $('dc-block').textContent      = 'Bloquear contato';
-    $('chat-footer').style.display = 'none';
+    $('chat-footer').style.visibility = 'hidden';
     $('blocked-text-notice').textContent = 'Você foi bloqueado por este contato';
     $('btn-unblock-notice').style.display = 'none';
     $('blocked-notice').style.display = 'block';
   } else {
     $('dc-block').textContent      = 'Bloquear contato';
-    $('chat-footer').style.display = 'flex';
+    $('chat-footer').style.visibility = 'visible';
     $('blocked-notice').style.display = 'none';
   }
 }
@@ -850,12 +911,10 @@ function confirmDeleteChat(){
       const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
       const batch = writeBatch(db);
       
-      // CORREÇÃO EXCLUSIVA: Em vez de explodir a mensagem do servidor, oculta apenas da sua visão
       msgs.forEach(d => {
         batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) });
       });
       
-      // Registra que você ocultou essa conversa da listagem inicial
       batch.update(doc(db,'conversations',chatId), {
         deletedBy: arrayUnion(ME.uid),
         [`unread.${ME.uid}`]: 0
@@ -863,7 +922,7 @@ function confirmDeleteChat(){
       
       await batch.commit();
       closeModal(); closeChat();
-      toast('Conversa apagada localmente.');
+      toast('Conversa apagada.');
     }catch(e){ closeModal(); toast('Erro: '+e.message); }
   });
 }
