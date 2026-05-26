@@ -21,7 +21,7 @@ html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'
 /* AUTH */
 #auth{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 #auth.hidden{display:none;}
-.auth-logo{font-size:52px;margin-bottom:8px;}
+.auth-logo Dino{font-size:52px;margin-bottom:8px;}
 .auth-brand{color:var(--green);font-size:26px;font-weight:700;margin-bottom:4px;}
 .auth-sub{color:var(--text2);font-size:13px;margin-bottom:28px;text-align:center;line-height:1.5;}
 .auth-card{background:var(--bg3);border-radius:18px;padding:22px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
@@ -483,7 +483,7 @@ let isRecording = false;
 let localStream  = null;
 let pc           = null;
 let currentCallId = null;
-let callTimerInterval = null; // Guardar id do cronômetro da chamada
+let callTimerInterval = null; 
 const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
 
 /* ─────────────────────────────── HELPERS ─────────────────── */
@@ -803,7 +803,6 @@ function listenConvs(){
     });
     isFirstLoad = false;
 
-    /* ── Render Call Page Contacts Sincronizado Instantaneamente ── */
     renderCallsPage(finalConvsList);
 
     list.innerHTML='';
@@ -862,7 +861,6 @@ async function renderCallsPage(finalConvsList) {
     return;
   }
   
-  // Força a remoção do estado vazio para ambos os dispositivos de forma independente
   empty.style.display = 'none';
 
   for (const itemData of finalConvsList) {
@@ -1420,7 +1418,6 @@ function startCallTimer() {
     let minutes = Math.floor(totalSeconds / 60);
     let seconds = totalSeconds % 60;
     
-    // Formata strings adicionando um 0 à esquerda caso seja menor que 10
     let displayMin = minutes < 10 ? '0' + minutes : minutes;
     let displaySec = seconds < 10 ? '0' + seconds : seconds;
     
@@ -1491,7 +1488,7 @@ async function startCall(type) {
       if (data.status === 'answered' && data.answer && !pc.currentRemoteDescription) {
         const answerDesc = new RTCSessionDescription(data.answer);
         pc.setRemoteDescription(answerDesc);
-        startCallTimer(); // Inicia o contador de minutos/segundos dinâmico
+        startCallTimer(); 
       }
       if (data.status === 'ended') {
         cleanCallState();
@@ -1537,9 +1534,6 @@ function listenIncomingCalls() {
 
         onSnapshot(doc(db, 'calls', currentCallId), s => {
           const data = s.data();
-          if (data?.status === 'answered') {
-            startCallTimer(); // Inicia o contador de minutos/segundos dinâmico para quem recebe
-          }
           if (data?.status === 'ended') {
             cleanCallState();
           }
@@ -1585,6 +1579,8 @@ async function acceptCall() {
       answer: { type: answerDescription.type, sdp: answerDescription.sdp },
       status: 'answered'
     });
+
+    startCallTimer(); 
 
     onSnapshot(collection(db, 'calls', currentCallId, 'candidates'), snap => {
       snap.docChanges().forEach(change => {
