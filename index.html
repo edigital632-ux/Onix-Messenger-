@@ -81,7 +81,7 @@ main{flex:1;overflow:hidden;position:relative;}
 /* CHAT SCREEN */
 #chat-screen{position:fixed;inset:0;z-index:99998;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
 #chat-screen.open{display:flex;}
-.chat-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
+.chat-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);position:relative;}
 .chat-header .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
 .chat-header .ms:active{background:var(--panel);}
 .chat-hname{color:var(--text);font-size:15px;font-weight:600;}
@@ -98,12 +98,15 @@ main{flex:1;overflow:hidden;position:relative;}
 .send-btn{background:var(--green);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .send-btn:active{background:var(--green-dark);}
 .send-btn .ms{color:#fff;font-size:20px;}
+.send-btn.recording { background: var(--red); animation: pulse 1s infinite; }
+@keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
 
 /* FILE CHAT GRAPHICS */
 .file-link{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px;margin-top:4px;}
 .file-link .ms{font-size:28px;}
 .msg-img{max-width:100%;max-height:200px;border-radius:8px;margin-top:4px;display:block;cursor:pointer;}
 .msg-video{max-width:100%;max-height:240px;border-radius:8px;margin-top:4px;display:block;outline:none;background:#000;}
+.msg-audio{max-width:100%;margin-top:4px;outline:none;display:block;}
 
 /* PROFILE PAGE */
 .profile-banner{height:110px;background:linear-gradient(135deg,var(--green-dark),var(--green));flex-shrink:0;}
@@ -176,7 +179,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 /* BLOCKED NOTICE */
 #blocked-notice{display:none;padding:14px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--border);background:var(--bg3);}
 
-/* HEADS-UP NOTIFICATION (WHATSAPP APP STYLE - NO TOPO DO CELULAR/MONITOR) */
+/* HEADS-UP NOTIFICATION */
 .push-banner{
   position:fixed;
   top:0;
@@ -189,7 +192,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   display:flex;
   align-items:center;
   gap:14px;
-  z-index:1000000; /* Fica acima de absolutamente tudo */
+  z-index:1000000;
   transform:translateY(-100%);
   transition:transform .3s cubic-bezier(0.1, 1, 0.1, 1);
   cursor:pointer;
@@ -198,6 +201,24 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .push-body{flex:1;min-width:0;}
 .push-title{color:#00a884;font-size:14px;font-weight:700;margin-bottom:2px;}
 .push-text{color:#e9edef;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* CALL INTERFACE (ESTILO WHATSAPP APP) */
+#call-screen {
+  position: fixed; inset: 0; z-index: 1000005; background: #0b141a;
+  display: none; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 40px 20px; color: #fff; width: 100%; max-width: 480px; margin: 0 auto;
+}
+#call-screen.open { display: flex; }
+.call-profile { text-align: center; margin-top: 40px; }
+.call-name { font-size: 24px; font-weight: 600; margin-top: 15px; }
+.call-status { font-size: 14px; color: #8696a0; margin-top: 5px; }
+.video-container { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; display: none; }
+#remote-video { width: 100%; height: 100%; object-fit: cover; }
+#local-video { position: absolute; top: 20px; right: 20px; width: 110px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #202c33; z-index: 2; transform: scaleX(-1); }
+.call-actions { display: flex; gap: 30px; margin-bottom: 30px; z-index: 10; }
+.call-btn { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
+.call-btn.hangup { background: var(--red); }
+.call-btn.accept { background: var(--green); }
 </style>
 </head>
 <body>
@@ -207,6 +228,22 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div class="push-body">
     <div class="push-title" id="push-title">Nome do Contato</div>
     <div class="push-text" id="push-msg">Mensagem recebida</div>
+  </div>
+</div>
+
+<div id="call-screen">
+  <div class="video-container" id="video-wrap">
+    <video id="remote-video" autoplay playsinline></video>
+    <video id="local-video" autoplay playsinline muted></video>
+  </div>
+  <div class="call-profile" id="call-info-wrap">
+    <div class="avatar" id="call-av" style="width:110px;height:110px;font-size:44px;margin:0 auto;"></div>
+    <div class="call-name" id="call-name-label">Nome do Contato</div>
+    <div class="call-status" id="call-status-label">Chamando...</div>
+  </div>
+  <div class="call-actions">
+    <button class="call-btn accept" id="btn-call-accept" style="display:none;"><span class="ms">call</span></button>
+    <button class="call-btn hangup" id="btn-call-hangup"><span class="ms">call_end</span></button>
   </div>
 </div>
 
@@ -348,10 +385,12 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div class="chat-header">
     <span class="ms" id="chat-back">arrow_back</span>
     <div class="avatar" id="chat-av" style="width:38px;height:38px;font-size:16px;flex-shrink:0;"></div>
-    <div style="flex:1;min-width:0;">
+    <div style="flex:1;min-width:0;margin-left:2px;">
       <div class="chat-hname" id="chat-name"></div>
       <div class="chat-hstatus" id="chat-sub"></div>
     </div>
+    <span class="ms" id="chat-btn-voice" style="color:var(--text2);cursor:pointer;padding:6px;margin-right:4px;">call</span>
+    <span class="ms" id="chat-btn-video" style="color:var(--text2);cursor:pointer;padding:6px;margin-right:4px;">videocam</span>
     <span class="ms" id="chat-menu-btn">more_vert</span>
     <div class="drop-menu" id="drop-chat">
       <div class="drop-item" id="dc-block">Bloquear contato</div>
@@ -362,7 +401,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div class="chat-footer" id="chat-footer">
     <span class="ms" id="chat-attach-btn" style="color:var(--text2);cursor:pointer;padding:6px;">attach_file</span>
     <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
-    <button class="send-btn" id="btn-send"><span class="ms">send</span></button>
+    <button class="send-btn" id="btn-send"><span class="ms" id="send-icon">mic</span></button>
   </div>
   <div id="blocked-notice">
     <span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px;">block</span>
@@ -424,9 +463,21 @@ let chatId       = null;
 let peerData     = null;
 let unsubMsgs    = null;
 let unsubConvs   = null;
+let unsubCall    = null;
 let searchTimer  = null;
 let knownPreviews = {}; 
 let isFirstLoad  = true;
+
+/* ── Audio Recording State ── */
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+/* ── WebRTC State ── */
+let localStream  = null;
+let pc           = null;
+let currentCallId = null;
+const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
 
 /* ─────────────────────────────── HELPERS ─────────────────── */
 const $  = id => document.getElementById(id);
@@ -561,6 +612,7 @@ onAuthStateChanged(auth, async user=>{
       
       if(wasNull) {
          listenConvs();
+         listenIncomingCalls();
       }
     });
   } else {
@@ -568,6 +620,7 @@ onAuthStateChanged(auth, async user=>{
     $('auth').classList.remove('hidden');
     unsubConvs?.(); unsubConvs=null;
     unsubMsgs?.();  unsubMsgs=null;
+    unsubCall?.();  unsubCall=null;
   }
 });
 
@@ -801,7 +854,6 @@ async function openChat(peer){
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
     
-    // CORREÇÃO CRÍTICA: Salva na nuvem global vinculada à sua conta
     if(!ME.savedChats?.includes(peer.uid)){
       await updateDoc(doc(db,'users',ME.uid), { savedChats: arrayUnion(peer.uid) });
     }
@@ -818,7 +870,7 @@ async function openChat(peer){
     $('chat-screen').classList.add('open');
     $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
     $('msg-input').value = '';
-    $('msg-input').focus();
+    updateSendIcon();
 
     const convRef = doc(db,'conversations',chatId);
     try{
@@ -870,6 +922,8 @@ async function openChat(peer){
           } else if(m.fileType?.startsWith('video/')) {
             let vidCaption = m.text !== "📁 Vídeo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
             div.innerHTML = vidCaption + `<video src="${m.fileUrl}" class="msg-video" controls playsinline></video><span class="msg-time">${time}</span>`;
+          } else if(m.fileType?.startsWith('audio/')) {
+            div.innerHTML = `<audio src="${m.fileUrl}" class="msg-audio" controls></audio><span class="msg-time">${time}</span>`;
           } else {
             let docCaption = m.text !== "📁 Arquivo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
             div.innerHTML = docCaption + `<a href="${m.fileUrl}" download="${esc(m.fileName || 'arquivo')}" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName || 'Arquivo')}</b></div></a><span class="msg-time">${time}</span>`;
@@ -897,9 +951,84 @@ function closeChat(){
   chatId=null; peerData=null;
 }
 
-/* ─────────────────────────────── SEND MESSAGE & FILES ────── */
-$('btn-send').onclick     = ()=>sendMessage();
-$('msg-input').onkeydown  = e=>{ if(e.key==='Enter') sendMessage(); };
+/* ─────────────────────────────── AUDIO & SEND LOGIC ──────── */
+function updateSendIcon() {
+  const icon = $('send-icon');
+  if ($('msg-input').value.trim() === '') {
+    icon.textContent = isRecording ? 'stop' : 'mic';
+  } else {
+    icon.textContent = 'send';
+  }
+}
+
+$('msg-input').oninput = updateSendIcon;
+
+$('btn-send').onclick = async () => {
+  const text = $('msg-input').value.trim();
+  if (text !== '') {
+    sendMessage();
+  } else {
+    toggleAudioRecording();
+  }
+};
+
+async function toggleAudioRecording() {
+  if (!isRecording) {
+    // Iniciar Gravação
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast("Seu navegador não suporta gravação de áudio.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+        toast('Enviando áudio...');
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          sendMessage({
+            url: e.target.result,
+            type: 'audio/mp3',
+            name: 'Audio_' + Date.now() + '.mp3'
+          });
+        };
+        reader.readAsDataURL(audioBlob);
+        
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      $('btn-send').classList.add('recording');
+      $('msg-input').placeholder = "Gravando áudio...";
+      $('msg-input').disabled = true;
+      updateSendIcon();
+      toast("Gravando áudio...");
+    } catch (err) {
+      toast("Permissão de microfone negada.");
+    }
+  } else {
+    // Parar Gravação
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    isRecording = false;
+    $('btn-send').classList.remove('recording');
+    $('msg-input').placeholder = "Mensagem";
+    $('msg-input').disabled = false;
+    updateSendIcon();
+  }
+}
+
+$('msg-input').onkeydown  = e=>{ if(e.key==='Enter' && !isRecording) sendMessage(); };
 $('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
 
 async function sendMessage(fileData = null){
@@ -913,10 +1042,12 @@ async function sendMessage(fileData = null){
   if(fileData && !text) {
     if(fileData.type.startsWith('image/')) text = "📁 Foto enviada";
     else if(fileData.type.startsWith('video/')) text = "📁 Vídeo enviado";
+    else if(fileData.type.startsWith('audio/')) text = "🎙️ Áudio enviado";
     else text = "📁 Arquivo enviado";
   }
 
   input.value='';
+  updateSendIcon();
   const convRef = doc(db,'conversations',chatId);
 
   const payload = {
@@ -1031,7 +1162,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato bloqueado.');
+    toast('Contato blocked.');
   }
   updateBlockUI();
   refreshBlockedLabel();
@@ -1204,6 +1335,195 @@ function openModal(title,body,cb){
 function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
 $('modal-ok').onclick     = ()=>{ _modalCb?.(); };
 $('modal-cancel').onclick = ()=>closeModal();
+
+/* ─────────────────────────────── SYSTEM CALL LOGIC (WebRTC) ───────────────── */
+$('chat-btn-voice').onclick = () => startCall('voice');
+$('chat-btn-video').onclick = () => startCall('video');
+$('btn-call-hangup').onclick = () => hangupCall();
+$('btn-call-accept').onclick = () => acceptCall();
+
+async function startCall(type) {
+  if (!peerData) return;
+  currentCallId = ME.uid + '_' + Date.now();
+  
+  $('call-name-label').textContent = peerData.name;
+  makeAvatar($('call-av'), peerData.name, peerData.photoURL, 110);
+  $('call-status-label').textContent = "Chamando...";
+  $('btn-call-accept').style.display = 'none';
+  $('call-screen').classList.add('open');
+  
+  if(type === 'video') {
+    $('video-wrap').style.display = 'block';
+    $('call-info-wrap').style.visibility = 'hidden';
+  } else {
+    $('video-wrap').style.display = 'none';
+    $('call-info-wrap').style.visibility = 'visible';
+  }
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: type === 'video',
+      audio: true
+    });
+    $('local-video').srcObject = localStream;
+    
+    pc = new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    
+    pc.ontrack = event => {
+      $('remote-video').srcObject = event.streams[0];
+    };
+    
+    pc.onicecandidate = event => {
+      if (event.candidate) {
+        addDoc(collection(db, 'calls', currentCallId, 'candidates'), event.candidate.toJSON());
+      }
+    };
+
+    const offerDescription = await pc.createOffer();
+    await pc.setLocalDescription(offerDescription);
+
+    await setDoc(doc(db, 'calls', currentCallId), {
+      offer: { type: offerDescription.type, sdp: offerDescription.sdp },
+      caller: ME.uid,
+      callerName: ME.name,
+      callerPhoto: ME.photoURL || '',
+      receiver: peerData.uid,
+      type: type,
+      status: 'ringing'
+    });
+
+    // Monitora se o destino atendeu ou recusou
+    onSnapshot(doc(db, 'calls', currentCallId), snap => {
+      const data = snap.data();
+      if (!data) return;
+      if (data.status === 'answered' && data.answer && !pc.currentRemoteDescription) {
+        $('call-status-label').textContent = "Em chamada";
+        const answerDesc = new RTCSessionDescription(data.answer);
+        pc.setRemoteDescription(answerDesc);
+      }
+      if (data.status === 'ended') {
+        cleanCallState();
+      }
+    });
+
+    // Escuta os candidatos ICE do destino
+    onSnapshot(collection(db, 'calls', currentCallId, 'answerCandidates'), snap => {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+        }
+      });
+    });
+
+  } catch (err) {
+    toast("Sem permissão de câmera/microfone.");
+    hangupCall();
+  }
+}
+
+function listenIncomingCalls() {
+  const q = query(collection(db, 'calls'), where('receiver', '==', ME.uid), where('status', '==', 'ringing'));
+  unsubCall = onSnapshot(q, snap => {
+    snap.docChanges().forEach(async change => {
+      if (change.type === 'added') {
+        const callData = change.doc.data();
+        currentCallId = change.doc.id;
+
+        $('call-name-label').textContent = callData.callerName;
+        makeAvatar($('call-av'), callData.callerName, callData.callerPhoto, 110);
+        $('call-status-label').textContent = `Chamada de ${callData.type === 'video' ? 'vídeo' : 'voz'} recebida...`;
+        
+        $('btn-call-accept').style.display = 'flex';
+        $('call-screen').classList.add('open');
+
+        if(callData.type === 'video') {
+          $('video-wrap').style.display = 'block';
+          $('call-info-wrap').style.visibility = 'hidden';
+        } else {
+          $('video-wrap').style.display = 'none';
+          $('call-info-wrap').style.visibility = 'visible';
+        }
+
+        // Monitora se quem ligou desistiu
+        onSnapshot(doc(db, 'calls', currentCallId), s => {
+          if (s.data()?.status === 'ended') cleanCallState();
+        });
+      }
+    });
+  });
+}
+
+async function acceptCall() {
+  const callSnap = await getDoc(doc(db, 'calls', currentCallId));
+  if (!callSnap.exists()) return;
+  const callData = callSnap.data();
+
+  $('btn-call-accept').style.display = 'none';
+  $('call-status-label').textContent = "Conectando...";
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: callData.type === 'video',
+      audio: true
+    });
+    $('local-video').srcObject = localStream;
+
+    pc = new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+    pc.ontrack = event => {
+      $('remote-video').srcObject = event.streams[0];
+    };
+
+    pc.onicecandidate = event => {
+      if (event.candidate) {
+        addDoc(collection(db, 'calls', currentCallId, 'answerCandidates'), event.candidate.toJSON());
+      }
+    };
+
+    await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+    const answerDescription = await pc.createAnswer();
+    await pc.setLocalDescription(answerDescription);
+
+    await updateDoc(doc(db, 'calls', currentCallId), {
+      answer: { type: answerDescription.type, sdp: answerDescription.sdp },
+      status: 'answered'
+    });
+
+    onSnapshot(collection(db, 'calls', currentCallId, 'candidates'), snap => {
+      snap.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+        }
+      });
+    });
+
+  } catch (err) {
+    console.error(err);
+    hangupCall();
+  }
+}
+
+async function hangupCall() {
+  if (currentCallId) {
+    await updateDoc(doc(db, 'calls', currentCallId), { status: 'ended' });
+  }
+  cleanCallState();
+}
+
+function cleanCallState() {
+  $('call-screen').classList.remove('open');
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+  }
+  if (pc) {
+    pc.close();
+    pc = null;
+  }
+  currentCallId = null;
+}
 </script>
 </body>
 </html>
