@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -466,7 +467,7 @@ $('btn-register').onclick = async ()=>{
     if(existing.exists()){ setLoading('btn-register',false); return showErr('reg-err','Número já em uso.'); }
     const cred = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), pass);
     const uid  = cred.user.uid;
-    await setDoc(doc(db,'users',uid),{ uid, name, phone, photoURL:'', status:'Hey! Estou usando o Onix.', blocked:[], createdAt:serverTimestamp() });
+    await setDoc(doc(db,'users',uid),{ uid, name, phone, photoURL:'', status:'Hey! Estou usando o Onix.', blocked:[], savedChats:[], createdAt:serverTimestamp() });
     await setDoc(doc(db,'phones',phone),{ uid });
   }catch(e){ setLoading('btn-register',false); showErr('reg-err', authErr(e.code)); }
 };
@@ -489,11 +490,11 @@ $('reg-pass').onkeydown   = e=>{ if(e.key==='Enter') $('btn-register').click(); 
 /* ─────────────────────────────── AUTH STATE ──────────────── */
 onAuthStateChanged(auth, async user=>{
   if(user){
-    // Escuta em tempo real o próprio documento para pegar atualizações da própria foto de perfil
     onSnapshot(doc(db,'users',user.uid), snap => {
       if(!snap.exists()) return;
       ME = snap.data();
       ME.blocked = ME.blocked || [];
+      ME.savedChats = ME.savedChats || [];
       $('auth').classList.add('hidden');
       loadProfilePage();
       refreshBlockedLabel();
@@ -619,11 +620,17 @@ function listenConvs(){
     const empty = $('convs-empty');
     list.innerHTML='';
     
+    // Filtro unificado: Traz chats ativos com mensagens OU fixados nos Contatos Salvos do usuário
     const convs = snap.docs
       .map(d => d.data())
-      .filter(data => data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid)));
+      .filter(data => {
+        const peerId = data.members.find(m=>m!==ME.uid);
+        const isSaved = ME?.savedChats?.includes(peerId);
+        const hasMessages = data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid));
+        return hasMessages || isSaved;
+      });
 
-    if(convs.length === 0){ empty.style.display=''; return; }
+    if(convs.length === 0 && (!ME?.savedChats || ME.savedChats.length === 0)){ empty.style.display=''; return; }
     empty.style.display='none';
 
     convs.sort((a, b) => {
@@ -640,6 +647,9 @@ function listenConvs(){
       const peer   = { uid: pSnap.id, ...pSnap.data() };
       const unread = data.unread?.[ME.uid] || 0;
       const lastTime = data.lastAt && data.lastAt.toDate ? fmtTime(data.lastAt.toDate()) : '';
+      
+      // Se as mensagens foram apagadas para este usuário, exibe a prévia vazia para manter o contato ativo na grade
+      const txtPreview = data.deletedBy?.includes(ME.uid) ? '' : (data.lastMsg||'');
 
       const item = document.createElement('div');
       item.className = 'conv-item';
@@ -651,12 +661,12 @@ function listenConvs(){
       const info = document.createElement('div');
       info.className = 'conv-info';
       info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
-        <div class="conv-preview">${esc(data.lastMsg||'')}</div>`;
+        <div class="conv-preview">${esc(txtPreview)}</div>`;
 
       const right = document.createElement('div');
       right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
-      right.innerHTML = `<div class="conv-time">${lastTime}</div>`
-        + (unread>0 ? `<div class="unread-badge">${unread}</div>` : '');
+      right.innerHTML = (lastTime && txtPreview ? `<div class="conv-time">${lastTime}</div>` : '')
+        + (unread>0 && !data.deletedBy?.includes(ME.uid) ? `<div class="unread-badge">${unread}</div>` : '');
 
       item.appendChild(av);
       item.appendChild(info);
@@ -683,7 +693,11 @@ async function openChat(peer){
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
     
-    // Escuta em tempo real o contato para o cabeçalho do chat atualizar a foto se ele mudar!
+    // Adiciona instantaneamente o contato na lista de preservação contínua da nuvem
+    if(!ME.savedChats?.includes(peer.uid)){
+      await updateDoc(doc(db,'users',ME.uid), { savedChats: arrayUnion(peer.uid) });
+    }
+    
     onSnapshot(doc(db,'users',peer.uid), snapshot => {
       if(snapshot.exists()) {
         peerData = { uid: snapshot.id, ...snapshot.data() };
@@ -812,6 +826,8 @@ async function sendMessage(fileData = null){
 
   try{
     await addDoc(collection(db,'conversations',chatId,'messages'), payload);
+    
+    // Remove do barramento de exclusão se novas mensagens forem mandadas
     await setDoc(convRef, {
       lastMsg: text,
       lastAt: serverTimestamp(),
@@ -829,7 +845,6 @@ $('chat-file-input').onchange = async function() {
   const file = this.files[0];
   if(!file || !chatId) return;
 
-  // Imagens: Compressão local ultra-rápida via Canvas
   if(file.type.startsWith('image/')) {
     toast('Processando imagem...');
     const reader = new FileReader();
@@ -865,7 +880,6 @@ $('chat-file-input').onchange = async function() {
     return;
   }
 
-  // Vídeos e PDFs: Convertidos de modo seguro para evitar as rejeições binárias do Imgur
   if(file.type.startsWith('video/') || file.type === 'application/pdf') {
     if (file.size > 15 * 1024 * 1024) {
       alert('Arquivo muito grande! Limite de até 15MB para transferência.');
@@ -946,6 +960,8 @@ function confirmDeleteChat(){
       const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
       const batch = writeBatch(db);
       msgs.forEach(d => { batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) }); });
+      
+      // Limpa as mensagens locais inserindo no deletedBy, mas NÃO remove dos savedChats para o contato continuar salvo na lista fixa!
       batch.update(doc(db,'conversations',chatId), {
         deletedBy: arrayUnion(ME.uid),
         [`unread.${ME.uid}`]: 0
@@ -988,7 +1004,7 @@ $('avatar-file').onchange = function(){
     const img = new Image();
     img.onload = async function() {
       const canvas = document.createElement('canvas');
-      const MAX_SIZE = 150; // Tamanho compacto ideal para banco NoSQL
+      const MAX_SIZE = 150; 
       let width = img.width;
       let height = img.height;
 
@@ -1004,9 +1020,8 @@ $('avatar-file').onchange = function(){
       const compressedBase64 = canvas.toDataURL('image/jpeg', 0.55);
       
       try {
-        // Envia a foto direto para o Firestore na conta do usuário ativo
         await updateDoc(doc(db,'users', ME.uid), { photoURL: compressedBase64 });
-        toast('Foto de perfil atualizada com sucesso!');
+        toast('Foto de perfil updated!');
       } catch(err) {
         toast('Erro ao salvar foto no banco de dados.');
       }
