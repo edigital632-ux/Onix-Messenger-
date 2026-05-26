@@ -22,7 +22,7 @@ html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'
 #auth{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
 #auth.hidden{display:none;}
 .auth-logo{font-size:52px;margin-bottom:8px;}
-.auth-brand(color:var(--green);font-size:26px;font-weight:700;margin-bottom:4px;}
+.auth-brand{color:var(--green);font-size:26px;font-weight:700;margin-bottom:4px;}
 .auth-sub{color:var(--text2);font-size:13px;margin-bottom:28px;text-align:center;line-height:1.5;}
 .auth-card{background:var(--bg3);border-radius:18px;padding:22px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
 .auth-card h2{color:var(--text);font-size:17px;margin-bottom:18px;}
@@ -376,8 +376,6 @@ import { getFirestore, doc, setDoc, getDoc,
          onSnapshot, addDoc, updateDoc, deleteDoc,
          getDocs, serverTimestamp, arrayUnion,
          arrayRemove, writeBatch, increment }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes,
-         getDownloadURL }                         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 /* ── init ── */
 const fbApp   = initializeApp({
@@ -390,7 +388,6 @@ const fbApp   = initializeApp({
 });
 const auth    = getAuth(fbApp);
 const db      = getFirestore(fbApp);
-const storage = getStorage(fbApp);
 
 /* ── State ── */
 let ME           = null;
@@ -693,7 +690,6 @@ async function openChat(peer){
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
     
-    // Sincroniza dinamicamente o status de bloqueio em tempo real
     onSnapshot(doc(db,'users',peer.uid), snapshot => {
       if(snapshot.exists()) {
         peerData = { uid: snapshot.id, ...snapshot.data() };
@@ -749,12 +745,13 @@ async function openChat(peer){
         div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
         const time = m.ts ? fmtTime(m.ts.toDate()) : '';
         
-        // Renderização inteligente baseada no tipo de dados enviado
         if(m.fileUrl) {
           if(m.fileType?.startsWith('image/')) {
-            div.innerHTML = esc(m.text) + `<br><img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
+            let imgCaption = m.text !== "📁 Foto enviada" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
+            div.innerHTML = imgCaption + `<img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
           } else {
-            div.innerHTML = esc(m.text) + `<br><a href="${m.fileUrl}" target="_blank" class="file-link"><span class="ms">description</span><div><b>Arquivo/Documento</b><br><small style="opacity:0.7">Clique para abrir</small></div></a><span class="msg-time">${time}</span>`;
+            let docCaption = m.text !== "📁 Arquivo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
+            div.innerHTML = docCaption + `<a href="${m.fileUrl}" target="_blank" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName || 'Arquivo/Documento')}</b><br><small style="opacity:0.7">Clique para abrir / Baixar</small></div></a><span class="msg-time">${time}</span>`;
           }
         } else {
           div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
@@ -788,18 +785,27 @@ $('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
 async function sendMessage(fileData = null){
   if(!chatId||!peerData) return;
   
-  // CORREÇÃO CIRÚRGICA: Impede o fluxo se um dos dois estiver bloqueado na base
-  const amIBlocked = peerData.blocked?.includes(ME.uid);
-  const didIBlock  = ME.blocked?.includes(peerData.uid);
+  // VERIFICAÇÃO EM TEMPO REAL ANTES DE QUALQUER ENVIO
+  const myUserSnap = await getDoc(doc(db,'users',ME.uid));
+  const peerSnap   = await getDoc(doc(db,'users',peerData.uid));
+  
+  const currentMeData   = myUserSnap.data();
+  const currentPeerData = peerSnap.data();
+
+  const didIBlock  = currentMeData?.blocked?.includes(peerData.uid);
+  const amIBlocked = currentPeerData?.blocked?.includes(ME.uid);
 
   if(didIBlock){ toast('Você bloqueou este contato.'); return; }
-  if(amIBlocked){ toast('Você está bloqueado por este contato. Mensagem não enviada.'); return; }
+  if(amIBlocked){ toast('Você foi bloqueado. Não é possível enviar mensagens.'); return; }
 
   const input = $('msg-input');
   let text  = input.value.trim();
   
   if(!text && !fileData) return;
-  if(fileData && !text) text = "📁 Arquivo enviado";
+  
+  if(fileData && !text) {
+    text = fileData.type.startsWith('image/') ? "📁 Foto enviada" : "📁 Arquivo enviado";
+  }
 
   input.value='';
   const convRef = doc(db,'conversations',chatId);
@@ -814,6 +820,7 @@ async function sendMessage(fileData = null){
   if(fileData) {
     payload.fileUrl  = fileData.url;
     payload.fileType = fileData.type;
+    payload.fileName = fileData.name;
   }
 
   try{
@@ -830,29 +837,40 @@ async function sendMessage(fileData = null){
   }catch(e){ toast('Erro ao enviar: '+e.message); input.value=text; }
 }
 
-// Upload de Arquivos
+// Upload/Conversão de Fotos e Arquivos sem usar Storage (Utilizando Base64 puro)
 $('chat-file-input').onchange = async function() {
   const file = this.files[0];
   if(!file || !chatId) return;
 
-  // Checagem imediata de bloqueio pré-upload
-  if(ME.blocked?.includes(peerData.uid) || peerData.blocked?.includes(ME.uid)){
+  // Proteção contra bloqueios
+  const myUserSnap = await getDoc(doc(db,'users',ME.uid));
+  const peerSnap   = await getDoc(doc(db,'users',peerData.uid));
+  if(myUserSnap.data()?.blocked?.includes(peerData.uid) || peerSnap.data()?.blocked?.includes(ME.uid)){
     toast('Operação cancelada: Bloqueio ativo.');
     this.value = '';
     return;
   }
 
-  toast('Enviando arquivo...');
-  try {
-    const fileRef = ref(storage, `chats/${chatId}/${Date.now()}_${file.name}`);
-    const snap = await uploadBytes(fileRef, file);
-    const url = await getDownloadURL(snap.ref);
+  toast('Processando arquivo...');
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64Data = e.target.result;
     
-    sendMessage({ url, type: file.type });
-    toast('Arquivo enviado com sucesso!');
-  } catch(e) {
-    toast('Erro no upload: ' + e.message);
-  }
+    // Envia o arquivo acoplando a legenda do input se houver
+    sendMessage({
+      url: base64Data,
+      type: file.type,
+      name: file.name
+    });
+    toast('Enviado com sucesso!');
+  };
+  
+  reader.onerror = function() {
+    toast('Erro ao ler o arquivo.');
+  };
+
+  reader.readAsDataURL(file);
   this.value = '';
 };
 
@@ -870,7 +888,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato bloqueado.');
+    toast('Contato ❤️ bloqueado.');
   }
   updateBlockUI();
   refreshBlockedLabel();
