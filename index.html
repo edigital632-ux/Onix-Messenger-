@@ -857,16 +857,15 @@ $('chat-file-input').onchange = async function() {
     return;
   }
 
-  toast('Processando arquivo...');
-  
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    // Se for uma imagem, vamos comprimir para evitar estourar o limite do Firestore (Fotos de Câmera)
-    if(file.type.startsWith('image/')) {
+  // 1. SE FOR FOTO: Mantém intocável sua lógica de Base64 com Canvas que deu certo!
+  if(file.type.startsWith('image/')) {
+    toast('Processando imagem...');
+    const reader = new FileReader();
+    reader.onload = function(e) {
       const img = new Image();
       img.onload = function() {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; // Resolução ideal e leve para o chat
+        const MAX_WIDTH = 800; 
         let width = img.width;
         let height = img.height;
 
@@ -880,7 +879,6 @@ $('chat-file-input').onchange = async function() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Transforma em JPEG leve (qualidade 0.6)
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
         
         sendMessage({
@@ -891,23 +889,58 @@ $('chat-file-input').onchange = async function() {
         toast('Enviado com sucesso!');
       };
       img.src = e.target.result;
-    } else {
-      // Se for vídeo ou PDF, segue o fluxo normal
-      sendMessage({
-        url: e.target.result,
-        type: file.type,
-        name: file.name
-      });
-      toast('Enviado com sucesso!');
-    }
-  };
-  
-  reader.onerror = function() {
-    toast('Erro ao processar arquivo.');
-  };
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+    return;
+  }
 
-  reader.readAsDataURL(file);
-  this.value = '';
+  // 2. SE FOR VÍDEO (OU OUTRO ARQUIVO): Alternativa online e gratuita de nuvem (Sem Base64)
+  if(file.type.startsWith('video/') || file.type === 'application/pdf') {
+    // Limite de segurança de 25MB para não dar estouro de upload lento
+    if (file.size > 25 * 1024 * 1024) {
+      alert('O vídeo é muito grande! Escolha um arquivo de até 25MB.');
+      this.value = '';
+      return;
+    }
+
+    toast('Enviando vídeo para o servidor gratuito...');
+
+    const formData = new FormData();
+    formData.append('reqtype', 'fileupload');
+    formData.append('fileToUpload', file);
+
+    try {
+      // Faz o upload de streaming para a API pública via proxy CORS seguro
+      const response = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://catbox.moe/user/api.php'), {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Servidor remoto respondeu com erro.');
+
+      const fileUrl = await response.text();
+
+      if (fileUrl && fileUrl.startsWith('http')) {
+        // Envia a URL gerada direta ao seu banco Firestore
+        sendMessage({
+          url: fileUrl.trim(),
+          type: file.type,
+          name: file.name
+        });
+        toast('Vídeo enviado com sucesso!');
+      } else {
+        throw new Error('Retorno inválido de link.');
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao carregar o vídeo na nuvem gratuita. Tente novamente.');
+    }
+
+    this.value = '';
+    return;
+  }
 };
 
 /* ─────────────────────────────── BLOCK ───────────────────── */
