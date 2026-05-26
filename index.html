@@ -103,6 +103,7 @@ main{flex:1;overflow:hidden;position:relative;}
 .file-link{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px;margin-top:4px;}
 .file-link .ms{font-size:28px;}
 .msg-img{max-width:100%;max-height:200px;border-radius:8px;margin-top:4px;display:block;cursor:pointer;}
+.msg-video{max-width:100%;max-height:240px;border-radius:8px;margin-top:4px;display:block;outline:none;background:#000;}
 
 /* CALLS PAGE */
 .section-title{padding:10px 16px;color:var(--text2);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border);}
@@ -351,7 +352,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 </div>
 
 <input type="file" id="avatar-file" accept="image/*" style="display:none;">
-<input type="file" id="chat-file-input" style="display:none;">
+<input type="file" id="chat-file-input" accept="image/*,video/*,application/pdf" style="display:none;">
 
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
@@ -749,9 +750,12 @@ async function openChat(peer){
           if(m.fileType?.startsWith('image/')) {
             let imgCaption = m.text !== "📁 Foto enviada" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
             div.innerHTML = imgCaption + `<img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
+          } else if(m.fileType?.startsWith('video/')) {
+            let vidCaption = m.text !== "📁 Vídeo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
+            div.innerHTML = vidCaption + `<video src="${m.fileUrl}" class="msg-video" controls playsinline></video><span class="msg-time">${time}</span>`;
           } else {
             let docCaption = m.text !== "📁 Arquivo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
-            div.innerHTML = docCaption + `<a href="${m.fileUrl}" target="_blank" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName || 'Arquivo/Documento')}</b><br><small style="opacity:0.7">Clique para abrir / Baixar</small></div></a><span class="msg-time">${time}</span>`;
+            div.innerHTML = docCaption + `<a href="${m.fileUrl}" download="${esc(m.fileName || 'arquivo')}" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName || 'Arquivo/Documento')}</b><br><small style="opacity:0.7">Clique para Baixar</small></div></a><span class="msg-time">${time}</span>`;
           }
         } else {
           div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
@@ -762,7 +766,7 @@ async function openChat(peer){
       if(atBot) body.scrollTop = body.scrollHeight;
       updateDoc(convRef,{ [`unread.${ME.uid}`]:0 }).catch(()=>{});
     }, err=>{ 
-      toast('Erro ao buscar atualizações: '+err.message); 
+      toast('Erro de permissão ou sincronização.'); 
     });
 
   } catch (error) {
@@ -785,7 +789,6 @@ $('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
 async function sendMessage(fileData = null){
   if(!chatId||!peerData) return;
   
-  // VERIFICAÇÃO EM TEMPO REAL ANTES DE QUALQUER ENVIO
   const myUserSnap = await getDoc(doc(db,'users',ME.uid));
   const peerSnap   = await getDoc(doc(db,'users',peerData.uid));
   
@@ -796,7 +799,7 @@ async function sendMessage(fileData = null){
   const amIBlocked = currentPeerData?.blocked?.includes(ME.uid);
 
   if(didIBlock){ toast('Você bloqueou este contato.'); return; }
-  if(amIBlocked){ toast('Você foi bloqueado. Não é possível enviar mensagens.'); return; }
+  if(amIBlocked){ toast('Você foi bloqueado por este contato.'); return; }
 
   const input = $('msg-input');
   let text  = input.value.trim();
@@ -804,7 +807,9 @@ async function sendMessage(fileData = null){
   if(!text && !fileData) return;
   
   if(fileData && !text) {
-    text = fileData.type.startsWith('image/') ? "📁 Foto enviada" : "📁 Arquivo enviado";
+    if(fileData.type.startsWith('image/')) text = "📁 Foto enviada";
+    else if(fileData.type.startsWith('video/')) text = "📁 Vídeo enviado";
+    else text = "📁 Arquivo enviado";
   }
 
   input.value='';
@@ -834,15 +839,16 @@ async function sendMessage(fileData = null){
       [`unread.${peerData.uid}`]: cur+1,
       deletedBy: []
     });
-  }catch(e){ toast('Erro ao enviar: '+e.message); input.value=text; }
+  }catch(e){ 
+    toast('Erro de envio. Verifique as regras do Firebase.'); 
+    input.value=text; 
+  }
 }
 
-// Upload/Conversão de Fotos e Arquivos sem usar Storage (Utilizando Base64 puro)
 $('chat-file-input').onchange = async function() {
   const file = this.files[0];
   if(!file || !chatId) return;
 
-  // Proteção contra bloqueios
   const myUserSnap = await getDoc(doc(db,'users',ME.uid));
   const peerSnap   = await getDoc(doc(db,'users',peerData.uid));
   if(myUserSnap.data()?.blocked?.includes(peerData.uid) || peerSnap.data()?.blocked?.includes(ME.uid)){
@@ -851,15 +857,12 @@ $('chat-file-input').onchange = async function() {
     return;
   }
 
-  toast('Processando arquivo...');
+  toast('Carregando vídeo/arquivo...');
   
   const reader = new FileReader();
   reader.onload = function(e) {
-    const base64Data = e.target.result;
-    
-    // Envia o arquivo acoplando a legenda do input se houver
     sendMessage({
-      url: base64Data,
+      url: e.target.result,
       type: file.type,
       name: file.name
     });
@@ -867,7 +870,7 @@ $('chat-file-input').onchange = async function() {
   };
   
   reader.onerror = function() {
-    toast('Erro ao ler o arquivo.');
+    toast('Erro ao processar arquivo.');
   };
 
   reader.readAsDataURL(file);
@@ -888,7 +891,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato ❤️ bloqueado.');
+    toast('Contato bloqueado.');
   }
   updateBlockUI();
   refreshBlockedLabel();
