@@ -1243,7 +1243,7 @@ async function toggleBlock(){
   refreshBlockedLabel();
 }
 
-function updateBlockUI(){
+ function updateBlockUI(){
   if(!peerData) return;
   const amIBlocked = peerData.blocked?.includes(ME.uid);
   const didIBlock  = ME.blocked?.includes(peerData.uid);
@@ -1610,41 +1610,45 @@ async function acceptCall() {
   }
 }
 
-/* ── ALTERNAR CÂMERA (FRONTAL / TRASEIRA) ── */
+/* ── ALTERNAR CÂMERA (FRONTAL / TRASEIRA) CORRIGIDO ── */
 async function switchCamera() {
   if (!localStream) return;
   
   const videoTrack = localStream.getVideoTracks()[0];
   if (!videoTrack) return;
 
-  // Inverte o estado da câmera atual
+  // Inverte o estado do facingMode
   currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-  updateLocalVideoMirror();
 
   try {
-    // Solicita o novo fluxo com a câmera invertida
+    // CRUCIAL: Para completamente a câmera anterior antes de solicitar a nova
+    videoTrack.stop();
+    localStream.removeTrack(videoTrack);
+
+    // Solicita o novo fluxo apenas com a câmera selecionada atualizada
     const newStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: currentFacingMode },
-      audio: false // Mantém o áudio atual intocado
+      audio: false // O áudio continua intacto na track original do localStream
     });
     
     const newVideoTrack = newStream.getVideoTracks()[0];
     
-    // Substitui a track antiga no RTCPeerConnection para o outro usuário ver a mudança em tempo real
+    // Substitui a track de vídeo diretamente no WebRTC para o outro lado ver na hora
     if (pc) {
       const senders = pc.getSenders();
       const sender = senders.find(s => s.track && s.track.kind === 'video');
       if (sender) {
-        sender.replaceTrack(newVideoTrack);
+        await sender.replaceTrack(newVideoTrack);
       }
     }
 
-    // Para a track antiga local e adiciona a nova
-    videoTrack.stop();
-    localStream.removeTrack(videoTrack);
+    // Vincula a nova track ao nosso stream local
     localStream.addTrack(newVideoTrack);
     
-    // Atualiza o elemento de vídeo local
+    // Atualiza o espelhamento dependendo do lado da câmera
+    updateLocalVideoMirror();
+
+    // Atualiza a tela de exibição local
     $('local-video').srcObject = localStream;
     
   } catch (err) {
