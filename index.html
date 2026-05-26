@@ -207,7 +207,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .push-title{color:#00a884;font-size:14px;font-weight:700;margin-bottom:2px;}
 .push-text{color:#e9edef;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
-/* CALL INTERFACE (ESTILO WHATSAPP APP) */
+/* CALL INTERFACE */
 #call-screen {
   position: fixed; inset: 0; z-index: 1000005; background: #0b141a;
   display: none; flex-direction: column; align-items: center; justify-content: space-between;
@@ -225,6 +225,9 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .call-btn.hangup { background: var(--red); }
 .call-btn.accept { background: var(--green); }
 .call-btn.switch-cam { background: #2a3942; }
+
+/* AUDIO TIMER */
+.rec-timer{color:var(--red);font-size:13px;font-weight:700;min-width:36px;text-align:center;}
 </style>
 </head>
 <body>
@@ -409,6 +412,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div class="chat-footer" id="chat-footer">
     <span class="ms" id="chat-attach-btn" style="color:var(--text2);cursor:pointer;padding:6px;">attach_file</span>
     <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
+    <span class="rec-timer" id="rec-timer" style="display:none;">0:00</span>
     <button class="send-btn" id="btn-send"><span class="ms" id="send-icon">mic</span></button>
   </div>
   <div id="blocked-notice">
@@ -426,8 +430,10 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div id="blocked-list" style="flex:1;overflow-y:auto;"></div>
 </div>
 
+<!-- Foto de perfil: apenas imagens -->
 <input type="file" id="avatar-file" accept="image/*" style="display:none;">
-<input type="file" id="chat-file-input" accept="image/*,video/*,application/pdf" style="display:none;">
+<!-- Anexo no chat: apenas imagens -->
+<input type="file" id="chat-file-input" accept="image/*" style="display:none;">
 
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
@@ -477,9 +483,12 @@ let knownPreviews = {};
 let isFirstLoad  = true;
 
 /* ── Audio Recording State ── */
-let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
+let mediaRecorder    = null;
+let audioChunks      = [];
+let isRecording      = false;
+let recTimerInterval = null;   // ← timer para exibir segundos
+let recSeconds       = 0;
+const MAX_REC_SECS   = 60;     // ← limite: 60 segundos
 
 /* ── WebRTC State ── */
 let localStream  = null;
@@ -488,6 +497,9 @@ let currentCallId = null;
 let callTimerInterval = null; 
 let currentFacingMode = 'user'; 
 const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
+
+/* ── Firestore safe limit: ~700 KB em base64 (1 MB doc - overhead) ── */
+const MAX_BASE64_BYTES = 700 * 1024;
 
 /* ─────────────────────────────── HELPERS ─────────────────── */
 const $  = id => document.getElementById(id);
@@ -515,12 +527,57 @@ function makeAvatar(container, name, photoURL, size=50){
   container.style.width  = size+'px';
   container.style.height = size+'px';
   container.style.fontSize = Math.round(size*.38)+'px';
-  
   if(photoURL){
     container.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;">`;
   } else {
     container.textContent = (name||'?')[0].toUpperCase();
   }
+}
+
+/* ── Comprime imagem e retorna base64 dentro do limite seguro ── */
+function compressImage(file, cb) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+
+      // Tenta compressões progressivamente mais agressivas
+      const attempts = [
+        { maxPx: 640, q: 0.5 },
+        { maxPx: 480, q: 0.4 },
+        { maxPx: 360, q: 0.3 },
+        { maxPx: 280, q: 0.25 },
+        { maxPx: 200, q: 0.2 },
+      ];
+
+      function tryCompress(index) {
+        if (index >= attempts.length) {
+          cb(null, 'Foto muito pesada mesmo após compressão máxima. Tente uma foto menor.');
+          return;
+        }
+        const { maxPx, q } = attempts[index];
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > maxPx) { h = Math.round(h * maxPx / w); w = maxPx; } }
+        else        { if (h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; } }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const b64 = canvas.toDataURL('image/jpeg', q);
+
+        // Verifica tamanho real em bytes
+        const byteLen = Math.round((b64.length - b64.indexOf(',') - 1) * 0.75);
+        if (byteLen <= MAX_BASE64_BYTES) {
+          cb(b64, null);
+        } else {
+          tryCompress(index + 1);
+        }
+      }
+      tryCompress(0);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 /* ── System Top Notification ── */
@@ -530,17 +587,11 @@ function showWhatsAppNotification(peerName, photoURL, messageText, peerObj) {
   const title = $('push-title');
   const text = $('push-msg');
   const avContainer = $('push-av');
-
   if(!banner) return;
   title.textContent = peerName;
   text.textContent = messageText;
   makeAvatar(avContainer, peerName, photoURL, 42);
-
-  banner.onclick = () => {
-    banner.classList.remove('show');
-    openChat(peerObj);
-  };
-
+  banner.onclick = () => { banner.classList.remove('show'); openChat(peerObj); };
   banner.classList.add('show');
   clearTimeout(bannerTimeout);
   bannerTimeout = setTimeout(() => { banner.classList.remove('show'); }, 3500);
@@ -604,7 +655,7 @@ $('btn-login').onclick = async ()=>{
   }catch(e){ setLoading('btn-login',false); showErr('login-err', authErr(e.code)); }
 };
 
-/* ─────────────────────────────── AUTH STATE (CORRIGIDO PARA MÚLTIPLOS DISPOSITIVOS) ──────────────── */
+/* ─────────────────────────────── AUTH STATE ──────────────── */
 onAuthStateChanged(auth, async user=>{
   if(user){
     isFirstLoad = true;
@@ -615,29 +666,20 @@ onAuthStateChanged(auth, async user=>{
       ME = snap.data();
       ME.blocked = ME.blocked || [];
       ME.savedChats = ME.savedChats || [];
-      
-      // Correção crucial: Esconde a tela de login imediatamente e limpa qualquer trava de clique antiga
       $('auth').classList.add('hidden');
       setLoading('btn-login', false);
       setLoading('btn-register', false);
-      
       loadProfilePage();
       refreshBlockedLabel();
-      
-      if(wasNull) {
-         listenConvs();
-         listenIncomingCalls();
-      }
+      if(wasNull) { listenConvs(); listenIncomingCalls(); }
     });
   } else {
     ME = null;
-    // Se saiu, limpa os campos e exibe a tela de login liberando interações normais
     $('auth').classList.remove('hidden');
     setLoading('btn-login', false);
     setLoading('btn-register', false);
     $('login-phone').value = '';
     $('login-pass').value = '';
-    
     unsubConvs?.(); unsubConvs=null;
     unsubMsgs?.();  unsubMsgs=null;
     unsubCall?.();  unsubCall=null;
@@ -711,28 +753,21 @@ async function doSearch(phone){
     }
     const usnap = await getDoc(doc(db,'users',uid));
     if(!usnap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);">Usuário não encontrado.</div>'; return; }
-    
     const u = { uid: usnap.id, ...usnap.data() };
     res.innerHTML = '';
     const row = document.createElement('div');
     row.className = 'sr-item';
-
     const av = document.createElement('div');
     av.className = 'avatar';
     makeAvatar(av, u.name, u.photoURL, 42);
-
     const info = document.createElement('div');
     info.style.flex = '1';
     info.innerHTML = `<div class="sr-name">${esc(u.name)}</div><div class="sr-tel">${u.phone}</div>`;
-
     const btn = document.createElement('button');
     btn.className = 'sr-btn';
     btn.textContent = 'Mensagem';
     btn.onclick = ()=>{ closeSearch(); openChat(u); };
-
-    row.appendChild(av);
-    row.appendChild(info);
-    row.appendChild(btn);
+    row.appendChild(av); row.appendChild(info); row.appendChild(btn);
     res.appendChild(row);
   }catch(e){
     res.innerHTML = `<div style="padding:14px 16px;color:var(--red);font-size:13px;">Erro ao buscar: ${e.message}</div>`;
@@ -743,7 +778,6 @@ async function doSearch(phone){
 function listenConvs(){
   unsubConvs?.();
   const q = query(collection(db,'conversations'), where('members','array-contains',ME.uid));
-
   unsubConvs = onSnapshot(q, async snap=>{
     const list  = $('convs-list');
     const empty = $('convs-empty');
@@ -754,15 +788,12 @@ function listenConvs(){
     for(const data of activeConvs) {
       const peerId = data.members.find(m=>m!==ME.uid);
       if(!peerId) continue;
-      
       const isSaved = ME?.savedChats?.includes(peerId);
       const hasMessages = data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid));
-      
       if (hasMessages || isSaved) {
         matchedPeerIds.add(peerId);
         finalConvsList.push({
-          peerId: peerId,
-          lastAt: data.lastAt,
+          peerId, lastAt: data.lastAt,
           lastMsg: data.deletedBy?.includes(ME.uid) ? '' : (data.lastMsg || ''),
           unread: data.unread?.[ME.uid] || 0,
           isDeleted: data.deletedBy?.includes(ME.uid),
@@ -775,11 +806,7 @@ function listenConvs(){
       for(const savedId of ME.savedChats) {
         if(!matchedPeerIds.has(savedId)) {
           finalConvsList.push({
-            peerId: savedId,
-            lastAt: null,
-            lastMsg: '',
-            unread: 0,
-            isDeleted: true,
+            peerId: savedId, lastAt: null, lastMsg: '', unread: 0, isDeleted: true,
             cid: [ME.uid, savedId].sort().join('_')
           });
         }
@@ -791,13 +818,13 @@ function listenConvs(){
         if(activeItem.lastMsg && activeItem.cid !== chatId) {
           const stringKey = activeItem.cid;
           if(knownPreviews[stringKey] !== undefined && knownPreviews[stringKey] !== activeItem.lastMsg) {
-             const userLeaf = await getDoc(doc(db,'users',activeItem.peerId));
-             if(userLeaf.exists()) {
-               const parsedPeer = { uid: userLeaf.id, ...userLeaf.data() };
-               if(!ME.blocked?.includes(parsedPeer.uid)) {
-                 showWhatsAppNotification(parsedPeer.name, parsedPeer.photoURL, activeItem.lastMsg, parsedPeer);
-               }
-             }
+            const userLeaf = await getDoc(doc(db,'users',activeItem.peerId));
+            if(userLeaf.exists()) {
+              const parsedPeer = { uid: userLeaf.id, ...userLeaf.data() };
+              if(!ME.blocked?.includes(parsedPeer.uid)) {
+                showWhatsAppNotification(parsedPeer.name, parsedPeer.photoURL, activeItem.lastMsg, parsedPeer);
+              }
+            }
           }
         }
       }
@@ -822,27 +849,20 @@ function listenConvs(){
       if(!pSnap.exists()) continue;
       const peer   = { uid: pSnap.id, ...pSnap.data() };
       const lastTime = itemData.lastAt && itemData.lastAt.toDate ? fmtTime(itemData.lastAt.toDate()) : '';
-
       const item = document.createElement('div');
       item.className = 'conv-item';
-
       const av = document.createElement('div');
       av.className = 'avatar';
       makeAvatar(av, peer.name, peer.photoURL, 50);
-
       const info = document.createElement('div');
       info.className = 'conv-info';
       info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
         <div class="conv-preview">${esc(itemData.lastMsg || 'Nenhuma mensagem')}</div>`;
-
       const right = document.createElement('div');
       right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
       right.innerHTML = (lastTime && itemData.lastMsg ? `<div class="conv-time">${lastTime}</div>` : '')
         + (itemData.unread>0 && !itemData.isDeleted ? `<div class="unread-badge">${itemData.unread}</div>` : '');
-
-      item.appendChild(av);
-      item.appendChild(info);
-      item.appendChild(right);
+      item.appendChild(av); item.appendChild(info); item.appendChild(right);
       item.onclick = ()=>openChat(peer);
       list.appendChild(item);
     }
@@ -855,47 +875,32 @@ async function renderCallsPage(finalConvsList) {
   const empty = $('calls-empty');
   if(!list) return;
   list.innerHTML = '';
-  
   if (!finalConvsList || finalConvsList.length === 0) {
-    if(empty) empty.style.display = 'flex';
-    return;
+    if(empty) empty.style.display = 'flex'; return;
   }
   if(empty) empty.style.display = 'none';
-
   for (const itemData of finalConvsList) {
     const pSnap = await getDoc(doc(db, 'users', itemData.peerId));
     if (!pSnap.exists()) continue;
     const peer = { uid: pSnap.id, ...pSnap.data() };
-
     const item = document.createElement('div');
-    item.className = 'conv-item';
-    item.style.cursor = 'default'; 
-
+    item.className = 'conv-item'; item.style.cursor = 'default';
     const av = document.createElement('div');
-    av.className = 'avatar';
-    makeAvatar(av, peer.name, peer.photoURL, 50);
-
+    av.className = 'avatar'; makeAvatar(av, peer.name, peer.photoURL, 50);
     const info = document.createElement('div');
     info.className = 'conv-info';
     info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
       <div class="conv-preview">${esc(peer.phone || 'Sem número')}</div>`;
-
     const rightActions = document.createElement('div');
     rightActions.className = 'call-list-actions';
-    
     const voiceBtn = document.createElement('span');
     voiceBtn.className = 'ms'; voiceBtn.textContent = 'call'; voiceBtn.style.cursor = 'pointer';
     voiceBtn.onclick = (e) => { e.stopPropagation(); peerData = peer; startCall('voice'); };
-
     const videoBtn = document.createElement('span');
     videoBtn.className = 'ms'; videoBtn.textContent = 'videocam'; videoBtn.style.cursor = 'pointer';
     videoBtn.onclick = (e) => { e.stopPropagation(); peerData = peer; startCall('video'); };
-
-    rightActions.appendChild(voiceBtn);
-    rightActions.appendChild(videoBtn);
-    item.appendChild(av);
-    item.appendChild(info);
-    item.appendChild(rightActions);
+    rightActions.appendChild(voiceBtn); rightActions.appendChild(videoBtn);
+    item.appendChild(av); item.appendChild(info); item.appendChild(rightActions);
     list.appendChild(item);
   }
 }
@@ -904,19 +909,15 @@ async function renderCallsPage(finalConvsList) {
 async function openChat(peer){
   try {
     if (!peer || !peer.uid || !ME || !ME.uid) return;
-
     peerData = peer;
     const ids = [ME.uid, peer.uid].sort();
     chatId    = ids.join('_');
-
     $('chat-name').textContent = peer.name || "Usuário";
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
-    
     if(!ME.savedChats?.includes(peer.uid)){
       await updateDoc(doc(db,'users',ME.uid), { savedChats: arrayUnion(peer.uid) });
     }
-    
     onSnapshot(doc(db,'users',peer.uid), snapshot => {
       if(snapshot.exists()) {
         peerData = { uid: snapshot.id, ...snapshot.data() };
@@ -925,20 +926,15 @@ async function openChat(peer){
         updateBlockUI();
       }
     });
-    
     $('chat-screen').classList.add('open');
     $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
     $('msg-input').value = '';
     updateSendIcon();
-
     const convRef = doc(db,'conversations',chatId);
     try{
       const convSnap = await getDoc(convRef);
       if(!convSnap.exists()){
-        await setDoc(convRef,{
-          members:[ME.uid, peer.uid], lastMsg:'', lastAt: serverTimestamp(),
-          unread:{ [ME.uid]:0, [peer.uid]:0 }, deletedBy: []
-        });
+        await setDoc(convRef,{ members:[ME.uid, peer.uid], lastMsg:'', lastAt: serverTimestamp(), unread:{ [ME.uid]:0, [peer.uid]:0 }, deletedBy: [] });
       } else {
         await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
       }
@@ -950,35 +946,24 @@ async function openChat(peer){
       const body  = $('chat-body');
       const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
       body.innerHTML='';
-      
       const visibleMsgs = [];
-      snap.forEach(d => {
-        const m = d.data();
-        if (!(m.hideFrom?.includes(ME.uid))) { visibleMsgs.push(m); }
-      });
-
+      snap.forEach(d => { const m = d.data(); if (!(m.hideFrom?.includes(ME.uid))) { visibleMsgs.push(m); } });
       if(visibleMsgs.length === 0){
         body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Envie uma mensagem para começar!</div>';
         return;
       }
-
       visibleMsgs.forEach(m=>{
         const div = document.createElement('div');
         div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
         const time = m.ts && m.ts.toDate ? fmtTime(m.ts.toDate()) : '';
-        
         if(m.fileUrl) {
           if(m.fileType?.startsWith('image/')) {
-            let imgCaption = m.text !== "📁 Foto enviada" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
-            div.innerHTML = imgCaption + `<img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
-          } else if(m.fileType?.startsWith('video/')) {
-            let vidCaption = m.text !== "📁 Vídeo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
-            div.innerHTML = vidCaption + `<video src="${m.fileUrl}" class="msg-video" controls playsinline></video><span class="msg-time">${time}</span>`;
+            let cap = m.text !== "📁 Foto enviada" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
+            div.innerHTML = cap + `<img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
           } else if(m.fileType?.startsWith('audio/')) {
             div.innerHTML = `<audio src="${m.fileUrl}" class="msg-audio" controls></audio><span class="msg-time">${time}</span>`;
           } else {
-            let docCaption = m.text !== "📁 Arquivo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
-            div.innerHTML = docCaption + `<a href="${m.fileUrl}" download="${esc(m.fileName || 'arquivo')}" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName || 'Arquivo')}</b></div></a><span class="msg-time">${time}</span>`;
+            div.innerHTML = `<span class="msg-time">${time}</span>`;
           }
         } else {
           div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
@@ -987,7 +972,6 @@ async function openChat(peer){
       });
       if(atBot) body.scrollTop = body.scrollHeight;
     }, err=>{ console.error(err); });
-
   } catch (error) { console.error(error); }
 }
 
@@ -998,158 +982,142 @@ function closeChat(){
   chatId=null; peerData=null;
 }
 
-/* ── AUDIO & SEND LOGIC ── */
+/* ─────────────────────────────── AUDIO RECORDING ─────────────────── */
 function updateSendIcon() {
-  const icon = $('send-icon');
-  if(!icon) return;
-  if ($('msg-input').value.trim() === '') {
-    icon.textContent = isRecording ? 'stop' : 'mic';
-  } else {
-    icon.textContent = 'send';
-  }
+  const icon = $('send-icon'); if(!icon) return;
+  icon.textContent = ($('msg-input').value.trim() !== '') ? 'send' : (isRecording ? 'stop' : 'mic');
 }
-
 $('msg-input').oninput = updateSendIcon;
+
 $('btn-send').onclick = async () => {
   const text = $('msg-input').value.trim();
   if (text !== '') { sendMessage(); } else { toggleAudioRecording(); }
 };
 
+function startRecTimer() {
+  recSeconds = 0;
+  const timerEl = $('rec-timer');
+  timerEl.style.display = 'inline';
+  timerEl.textContent = '0:00';
+  recTimerInterval = setInterval(() => {
+    recSeconds++;
+    const m = Math.floor(recSeconds / 60);
+    const s = recSeconds % 60;
+    timerEl.textContent = m + ':' + (s < 10 ? '0' + s : s);
+    // Para automaticamente no limite
+    if (recSeconds >= MAX_REC_SECS) { stopRecording(); }
+  }, 1000);
+}
+
+function stopRecTimer() {
+  clearInterval(recTimerInterval);
+  recTimerInterval = null;
+  $('rec-timer').style.display = 'none';
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); }
+  isRecording = false;
+  $('btn-send').classList.remove('recording');
+  $('msg-input').placeholder = 'Mensagem';
+  $('msg-input').disabled = false;
+  stopRecTimer();
+  updateSendIcon();
+}
+
 async function toggleAudioRecording() {
   if (!isRecording) {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast("Seu navegador não suporta gravação de áudio."); return;
-    }
+    if (!navigator.mediaDevices?.getUserMedia) { toast('Seu navegador não suporta gravação de áudio.'); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder = new MediaRecorder(stream);
       audioChunks = [];
       mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+
+        // Verifica tamanho antes de enviar
+        const approxBase64 = audioBlob.size * 1.37; // estimativa base64
+        if (approxBase64 > MAX_BASE64_BYTES) {
+          toast('Áudio muito longo. Máximo ' + MAX_REC_SECS + ' segundos.');
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+
         toast('Enviando áudio...');
         const reader = new FileReader();
         reader.onload = function(e) {
           sendMessage({ url: e.target.result, type: 'audio/mp3', name: 'Audio_' + Date.now() + '.mp3' });
         };
         reader.readAsDataURL(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(t => t.stop());
       };
-
       mediaRecorder.start();
       isRecording = true;
       $('btn-send').classList.add('recording');
-      $('msg-input').placeholder = "Gravando áudio...";
+      $('msg-input').placeholder = 'Gravando... (máx ' + MAX_REC_SECS + 's)';
       $('msg-input').disabled = true;
+      startRecTimer();
       updateSendIcon();
-      toast("Gravando áudio...");
-    } catch (err) { toast("Permissão de microfone negada."); }
+    } catch (err) { toast('Permissão de microfone negada.'); }
   } else {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); }
-    isRecording = false;
-    $('btn-send').classList.remove('recording');
-    $('msg-input').placeholder = "Mensagem";
-    $('msg-input').disabled = false;
-    updateSendIcon();
+    stopRecording();
   }
 }
 
 $('msg-input').onkeydown  = e=>{ if(e.key==='Enter' && !isRecording) sendMessage(); };
+
+/* ─────────────────────────────── ANEXO (APENAS FOTOS) ──────── */
 $('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
 
+$('chat-file-input').onchange = async function() {
+  const file = this.files[0];
+  if (!file || !chatId) { this.value = ''; return; }
+
+  // Só aceita imagens
+  if (!file.type.startsWith('image/')) {
+    toast('Apenas fotos são suportadas no momento.');
+    this.value = '';
+    return;
+  }
+
+  toast('Compactando foto...');
+  compressImage(file, (b64, err) => {
+    if (err) { toast(err); return; }
+    sendMessage({ url: b64, type: 'image/jpeg', name: file.name.replace(/\.[^/.]+$/, '') + '.jpg' });
+  });
+
+  this.value = '';
+};
+
+/* ── SEND MESSAGE ── */
 async function sendMessage(fileData = null){
   if(!chatId||!peerData) return;
   const input = $('msg-input');
   let text  = input.value.trim();
   if(!text && !fileData) return;
-  
   if(fileData && !text) {
-    if(fileData.type.startsWith('image/')) text = "📁 Foto enviada";
-    else if(fileData.type.startsWith('video/')) text = "📁 Vídeo enviado";
-    else if(fileData.type.startsWith('audio/')) text = "🎙️ Áudio enviado";
-    else text = "📁 Arquivo enviado";
+    if(fileData.type.startsWith('image/'))      text = '📁 Foto enviada';
+    else if(fileData.type.startsWith('audio/')) text = '🎙️ Áudio enviado';
+    else                                         text = '📁 Arquivo enviado';
   }
-
   input.value='';
   updateSendIcon();
   const convRef = doc(db,'conversations',chatId);
   const payload = { text, sender: ME.uid, ts: serverTimestamp(), hideFrom: [] };
-
-  if(fileData) {
-    payload.fileUrl  = fileData.url;
-    payload.fileType = fileData.type;
-    payload.fileName = fileData.name;
-  }
-
+  if(fileData) { payload.fileUrl = fileData.url; payload.fileType = fileData.type; payload.fileName = fileData.name; }
   try{
     await addDoc(collection(db,'conversations',chatId,'messages'), payload);
     const snapCount = await getDoc(convRef);
     let currentUnread = 0;
     if(snapCount.exists()){ currentUnread = snapCount.data().unread?.[peerData.uid] || 0; }
-
-    await setDoc(convRef, {
-      lastMsg: text, lastAt: serverTimestamp(), deletedBy: [],
-      unread: { [peerData.uid]: currentUnread + 1 }
-    }, { merge: true });
-  }catch(e) { 
-    toast('Erro de envio (Arquivo muito pesado).'); 
+    await setDoc(convRef, { lastMsg: text, lastAt: serverTimestamp(), deletedBy: [], unread: { [peerData.uid]: currentUnread + 1 } }, { merge: true });
+  }catch(e){
+    toast('Erro ao enviar. Foto ainda muito pesada?');
     console.error(e);
-    if(!fileData) input.value=text; 
+    if(!fileData) input.value=text;
   }
 }
-
-/* ── COMPRESSÃO DE ARQUIVOS (FOTOS DA CÂMERA E VÍDEOS LEVES) ── */
-$('chat-file-input').onchange = async function() {
-  const file = this.files[0];
-  if(!file || !chatId) return;
-
-  if(file.type.startsWith('image/')) {
-    toast('Compactando foto...');
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600; 
-        let width = img.width;
-        let height = img.height;
-
-        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.45);
-        sendMessage({ url: compressedBase64, type: 'image/jpeg', name: file.name.replace(/\.[^/.]+$/, "") + ".jpg" });
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-    this.value = '';
-    return;
-  }
-
-  if(file.type.startsWith('video/')) {
-    if (file.size > 2 * 1024 * 1024) { alert('Vídeo muito grande! Suporta vídeos curtos de até 2MB.'); this.value = ''; return; }
-    toast('Enviando vídeo curto...');
-    const reader = new FileReader();
-    reader.onload = function(e) { sendMessage({ url: e.target.result, type: file.type, name: file.name }); };
-    reader.readAsDataURL(file);
-    this.value = '';
-    return;
-  }
-
-  if(file.type === 'application/pdf') {
-    if (file.size > 3 * 1024 * 1024) { alert('Arquivo muito grande! Limite de até 3MB.'); this.value = ''; return; }
-    toast('Enviando documento...');
-    const reader = new FileReader();
-    reader.onload = function(e) { sendMessage({ url: e.target.result, type: file.type, name: file.name }); };
-    reader.readAsDataURL(file);
-    this.value = '';
-    return;
-  }
-};
 
 /* ── BLOCK ── */
 $('dc-block').onclick = ()=>{ closeDrops(); toggleBlock(); };
@@ -1167,29 +1135,27 @@ async function toggleBlock(){
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
     toast('Contato bloqueado.');
   }
-  updateBlockUI();
-  refreshBlockedLabel();
+  updateBlockUI(); refreshBlockedLabel();
 }
 
- function updateBlockUI(){
+function updateBlockUI(){
   if(!peerData) return;
   const amIBlocked = peerData.blocked?.includes(ME.uid);
   const didIBlock  = ME.blocked?.includes(peerData.uid);
-  
   if (didIBlock) {
-    $('dc-block').textContent      = 'Desbloquear contato';
+    $('dc-block').textContent = 'Desbloquear contato';
     $('chat-footer').style.visibility = 'hidden';
     $('blocked-text-notice').textContent = 'Você bloqueou este contato';
     $('btn-unblock-notice').style.display = 'inline';
     $('blocked-notice').style.display = 'block';
   } else if (amIBlocked) {
-    $('dc-block').textContent      = 'Bloquear contato';
+    $('dc-block').textContent = 'Bloquear contato';
     $('chat-footer').style.visibility = 'hidden';
     $('blocked-text-notice').textContent = 'Você foi bloqueado por este contato';
     $('btn-unblock-notice').style.display = 'none';
     $('blocked-notice').style.display = 'block';
   } else {
-    $('dc-block').textContent      = 'Bloquear contato';
+    $('dc-block').textContent = 'Bloquear contato';
     $('chat-footer').style.visibility = 'visible';
     $('blocked-notice').style.display = 'none';
   }
@@ -1236,33 +1202,14 @@ $('p-cam-btn').onclick = ()=>$('avatar-file').click();
 $('avatar-file').onchange = function(){
   const file = this.files[0];
   if(!file) return;
-  
   toast('Processando foto de perfil...');
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const img = new Image();
-    img.onload = async function() {
-      const canvas = document.createElement('canvas');
-      const MAX_SIZE = 150; 
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
-      else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-      
-      canvas.width = width; canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.55);
-      
-      try {
-        await updateDoc(doc(db,'users', ME.uid), { photoURL: compressedBase64 });
-        toast('Foto de perfil salva!');
-      } catch(err) { toast('Erro ao salvar foto.'); }
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  compressImage(file, async (b64, err) => {
+    if(err){ toast(err); return; }
+    try {
+      await updateDoc(doc(db,'users', ME.uid), { photoURL: b64 });
+      toast('Foto de perfil salva!');
+    } catch(e) { toast('Erro ao salvar foto.'); }
+  });
   this.value = '';
 };
 
@@ -1280,28 +1227,17 @@ async function renderBlockedList(){
     const s = await getDoc(doc(db,'users',uid));
     if(!s.exists()) continue;
     const u = { uid: s.id, ...s.data() };
-    const row = document.createElement('div');
-    row.className='blocked-item';
-
-    const av=document.createElement('div');
-    av.className='avatar';
-    makeAvatar(av,u.name,u.photoURL,44);
-
-    const info=document.createElement('div');
-    info.style.flex='1';
+    const row = document.createElement('div'); row.className='blocked-item';
+    const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,u.name,u.photoURL,44);
+    const info=document.createElement('div'); info.style.flex='1';
     info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div><div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
-
-    const btn=document.createElement('button');
-    btn.className='unblock-btn';
-    btn.textContent='Desbloquear';
+    const btn=document.createElement('button'); btn.className='unblock-btn'; btn.textContent='Desbloquear';
     btn.onclick=async()=>{
       await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayRemove(uid) });
       ME.blocked=ME.blocked.filter(x=>x!==uid);
       refreshBlockedLabel(); renderBlockedList();
     };
-
-    row.append(av,info,btn);
-    list.appendChild(row);
+    row.append(av,info,btn); list.appendChild(row);
   }
 }
 
@@ -1317,29 +1253,23 @@ function confirmLogout(){ openModal('Sair','Deseja sair da conta?', async()=>{ a
 
 /* ── MODAL ── */
 let _modalCb=null;
-function openModal(title,body,cb){
-  $('modal-title').textContent=title;
-  $('modal-body').textContent=body;
-  _modalCb=cb;
-  $('modal').classList.add('open');
-}
+function openModal(title,body,cb){ $('modal-title').textContent=title; $('modal-body').textContent=body; _modalCb=cb; $('modal').classList.add('open'); }
 function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
 $('modal-ok').onclick     = ()=>{ _modalCb?.(); };
 $('modal-cancel').onclick = ()=>closeModal();
 
-/* ── EXTERNAL TIMER UTILITY ── */
+/* ─────────────────────────────── CALL LOGIC (WebRTC) ─────── */
 function startCallTimer() {
   if (callTimerInterval) clearInterval(callTimerInterval);
   let totalSeconds = 0;
   callTimerInterval = setInterval(() => {
     totalSeconds++;
-    let minutes = Math.floor(totalSeconds / 60);
-    let seconds = totalSeconds % 60;
-    $('call-status-label').textContent = (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    $('call-status-label').textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
   }, 1000);
 }
 
-/* ─────────────────────────────── CALL LOGIC (WebRTC) ───────────────── */
 $('chat-btn-voice').onclick = () => startCall('voice');
 $('chat-btn-video').onclick = () => startCall('video');
 $('btn-call-hangup').onclick = () => hangupCall();
@@ -1349,53 +1279,39 @@ $('btn-call-switch').onclick = () => switchCamera();
 async function startCall(type) {
   if (!peerData) return;
   currentCallId = ME.uid + '_' + Date.now();
-  currentFacingMode = 'user'; 
+  currentFacingMode = 'user';
   updateLocalVideoMirror();
-  
   $('call-name-label').textContent = peerData.name;
   makeAvatar($('call-av'), peerData.name, peerData.photoURL, 110);
   $('call-status-label').textContent = "Chamando...";
   $('btn-call-accept').style.display = 'none';
-  
   if(type === 'video') {
-    $('btn-call-switch').style.display = 'flex';
-    $('video-wrap').style.display = 'block';
-    $('call-info-wrap').style.visibility = 'hidden';
+    $('btn-call-switch').style.display = 'flex'; $('video-wrap').style.display = 'block'; $('call-info-wrap').style.visibility = 'hidden';
   } else {
-    $('btn-call-switch').style.display = 'none';
-    $('video-wrap').style.display = 'none';
-    $('call-info-wrap').style.visibility = 'visible';
+    $('btn-call-switch').style.display = 'none'; $('video-wrap').style.display = 'none'; $('call-info-wrap').style.visibility = 'visible';
   }
   $('call-screen').classList.add('open');
-
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: type === 'video' ? { facingMode: currentFacingMode } : false, audio: true
-    });
+    localStream = await navigator.mediaDevices.getUserMedia({ video: type === 'video' ? { facingMode: currentFacingMode } : false, audio: true });
     $('local-video').srcObject = localStream;
     pc = new RTCPeerConnection(rtcConfig);
     localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    
     pc.ontrack = event => { $('remote-video').srcObject = event.streams[0]; };
     pc.onicecandidate = event => { if (event.candidate) { addDoc(collection(db, 'calls', currentCallId, 'candidates'), event.candidate.toJSON()); } };
-
     const offerDescription = await pc.createOffer();
     await pc.setLocalDescription(offerDescription);
-
     await setDoc(doc(db, 'calls', currentCallId), {
       offer: { type: offerDescription.type, sdp: offerDescription.sdp },
       caller: ME.uid, callerName: ME.name, callerPhoto: ME.photoURL || '',
       receiver: peerData.uid, type: type, status: 'ringing'
     });
-
     onSnapshot(doc(db, 'calls', currentCallId), snap => {
       const data = snap.data(); if (!data) return;
       if (data.status === 'answered' && data.answer && !pc.currentRemoteDescription) {
-        pc.setRemoteDescription(new RTCSessionDescription(data.answer)); startCallTimer(); 
+        pc.setRemoteDescription(new RTCSessionDescription(data.answer)); startCallTimer();
       }
       if (data.status === 'ended') { cleanCallState(); }
     });
-
     onSnapshot(collection(db, 'calls', currentCallId, 'answerCandidates'), snap => {
       snap.docChanges().forEach(change => { if (change.type === 'added') { pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); } });
     });
@@ -1409,21 +1325,17 @@ function listenIncomingCalls() {
       if (change.type === 'added') {
         const callData = change.doc.data();
         currentCallId = change.doc.id;
-        currentFacingMode = 'user'; 
-        updateLocalVideoMirror();
-
+        currentFacingMode = 'user'; updateLocalVideoMirror();
         $('call-name-label').textContent = callData.callerName;
         makeAvatar($('call-av'), callData.callerName, callData.callerPhoto, 110);
         $('call-status-label').textContent = `Chamada de ${callData.type === 'video' ? 'vídeo' : 'voz'} recebida...`;
         $('btn-call-accept').style.display = 'flex';
-        
         if(callData.type === 'video') {
           $('btn-call-switch').style.display = 'flex'; $('video-wrap').style.display = 'block'; $('call-info-wrap').style.visibility = 'hidden';
         } else {
           $('btn-call-switch').style.display = 'none'; $('video-wrap').style.display = 'none'; $('call-info-wrap').style.visibility = 'visible';
         }
         $('call-screen').classList.add('open');
-
         onSnapshot(doc(db, 'calls', currentCallId), s => { if (s.data()?.status === 'ended') { cleanCallState(); } });
       }
     });
@@ -1434,27 +1346,20 @@ async function acceptCall() {
   const callSnap = await getDoc(doc(db, 'calls', currentCallId));
   if (!callSnap.exists()) return;
   const callData = callSnap.data();
-
   $('btn-call-accept').style.display = 'none';
   $('call-status-label').textContent = "Conectando...";
-
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: callData.type === 'video' ? { facingMode: currentFacingMode } : false, audio: true
-    });
+    localStream = await navigator.mediaDevices.getUserMedia({ video: callData.type === 'video' ? { facingMode: currentFacingMode } : false, audio: true });
     $('local-video').srcObject = localStream;
     pc = new RTCPeerConnection(rtcConfig);
     localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     pc.ontrack = event => { $('remote-video').srcObject = event.streams[0]; };
     pc.onicecandidate = event => { if (event.candidate) { addDoc(collection(db, 'calls', currentCallId, 'answerCandidates'), event.candidate.toJSON()); } };
-
     await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
     const answerDescription = await pc.createAnswer();
     await pc.setLocalDescription(answerDescription);
-
     await updateDoc(doc(db, 'calls', currentCallId), { answer: { type: answerDescription.type, sdp: answerDescription.sdp }, status: 'answered' });
-    startCallTimer(); 
-
+    startCallTimer();
     onSnapshot(collection(db, 'calls', currentCallId, 'candidates'), snap => {
       snap.docChanges().forEach(change => { if (change.type === 'added') { pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); } });
     });
@@ -1463,29 +1368,21 @@ async function acceptCall() {
 
 async function switchCamera() {
   if (!localStream) return;
-  const videoTrack = localStream.getVideoTracks()[0];
-  if (!videoTrack) return;
+  const videoTrack = localStream.getVideoTracks()[0]; if (!videoTrack) return;
   currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-
   try {
-    videoTrack.stop();
-    localStream.removeTrack(videoTrack);
+    videoTrack.stop(); localStream.removeTrack(videoTrack);
     const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
     const newVideoTrack = newStream.getVideoTracks()[0];
-    
-    if (pc) {
-      const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
-      if (sender) { await sender.replaceTrack(newVideoTrack); }
-    }
+    if (pc) { const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video'); if (sender) { await sender.replaceTrack(newVideoTrack); } }
     localStream.addTrack(newVideoTrack);
     updateLocalVideoMirror();
     $('local-video').srcObject = localStream;
-  } catch (err) { console.error(err); toast("Não foi possível alternar a câmera."); }
+  } catch (err) { toast("Não foi possível alternar a câmera."); }
 }
 
 function updateLocalVideoMirror() {
-  if (currentFacingMode === 'user') { $('local-video').style.transform = 'scaleX(-1)'; } 
-  else { $('local-video').style.transform = 'scaleX(1)'; }
+  $('local-video').style.transform = currentFacingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
 }
 
 async function hangupCall() {
