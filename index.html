@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -492,12 +491,18 @@ onAuthStateChanged(auth, async user=>{
   if(user){
     onSnapshot(doc(db,'users',user.uid), snap => {
       if(!snap.exists()) return;
+      const oldSavedCount = (ME?.savedChats || []).length;
       ME = snap.data();
       ME.blocked = ME.blocked || [];
       ME.savedChats = ME.savedChats || [];
       $('auth').classList.add('hidden');
       loadProfilePage();
       refreshBlockedLabel();
+      
+      // Se a quantidade de contatos salvos mudar na nuvem, força a reatualização da lista imediatamente
+      if(oldSavedCount !== ME.savedChats.length && unsubConvs) {
+         listenConvs();
+      }
     });
     listenConvs();
   } else {
@@ -620,36 +625,62 @@ function listenConvs(){
     const empty = $('convs-empty');
     list.innerHTML='';
     
-    // Filtro unificado: Traz chats ativos com mensagens OU fixados nos Contatos Salvos do usuário
-    const convs = snap.docs
-      .map(d => d.data())
-      .filter(data => {
-        const peerId = data.members.find(m=>m!==ME.uid);
-        const isSaved = ME?.savedChats?.includes(peerId);
-        const hasMessages = data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid));
-        return hasMessages || isSaved;
-      });
+    // Mapeamento inicial das conversas ativas oriundas do Firestore
+    const activeConvs = snap.docs.map(d => d.data());
+    const matchedPeerIds = new Set();
 
-    if(convs.length === 0 && (!ME?.savedChats || ME.savedChats.length === 0)){ empty.style.display=''; return; }
+    const finalConvsList = [];
+
+    // 1. Processa conversas existentes
+    for(const data of activeConvs) {
+      const peerId = data.members.find(m=>m!==ME.uid);
+      if(!peerId) continue;
+      
+      const isSaved = ME?.savedChats?.includes(peerId);
+      const hasMessages = data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid));
+      
+      if (hasMessages || isSaved) {
+        matchedPeerIds.add(peerId);
+        finalConvsList.push({
+          peerId: peerId,
+          lastAt: data.lastAt,
+          lastMsg: data.deletedBy?.includes(ME.uid) ? '' : (data.lastMsg || ''),
+          unread: data.unread?.[ME.uid] || 0,
+          isDeleted: data.deletedBy?.includes(ME.uid)
+        });
+      }
+    }
+
+    // 2. Injeta e força a aparição na lista de qualquer contato fixado ausente (mesmo pós-logout/chat vazio)
+    if(ME?.savedChats) {
+      for(const savedId of ME.savedChats) {
+        if(!matchedPeerIds.has(savedId)) {
+          finalConvsList.push({
+            peerId: savedId,
+            lastAt: null,
+            lastMsg: '',
+            unread: 0,
+            isDeleted: true
+          });
+        }
+      }
+    }
+
+    if(finalConvsList.length === 0){ empty.style.display=''; return; }
     empty.style.display='none';
 
-    convs.sort((a, b) => {
+    // Ordenação cronológica estável
+    finalConvsList.sort((a, b) => {
       const timeA = a.lastAt ? (a.lastAt.toMillis ? a.lastAt.toMillis() : 0) : 0;
       const timeB = b.lastAt ? (b.lastAt.toMillis ? b.lastAt.toMillis() : 0) : 0;
       return timeB - timeA;
     });
 
-    for(const data of convs){
-      const peerId = data.members.find(m=>m!==ME.uid);
-      if(!peerId) continue;
-      const pSnap  = await getDoc(doc(db,'users',peerId));
+    for(const itemData of finalConvsList){
+      const pSnap  = await getDoc(doc(db,'users',itemData.peerId));
       if(!pSnap.exists()) continue;
       const peer   = { uid: pSnap.id, ...pSnap.data() };
-      const unread = data.unread?.[ME.uid] || 0;
-      const lastTime = data.lastAt && data.lastAt.toDate ? fmtTime(data.lastAt.toDate()) : '';
-      
-      // Se as mensagens foram apagadas para este usuário, exibe a prévia vazia para manter o contato ativo na grade
-      const txtPreview = data.deletedBy?.includes(ME.uid) ? '' : (data.lastMsg||'');
+      const lastTime = itemData.lastAt && itemData.lastAt.toDate ? fmtTime(itemData.lastAt.toDate()) : '';
 
       const item = document.createElement('div');
       item.className = 'conv-item';
@@ -661,12 +692,12 @@ function listenConvs(){
       const info = document.createElement('div');
       info.className = 'conv-info';
       info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
-        <div class="conv-preview">${esc(txtPreview)}</div>`;
+        <div class="conv-preview">${esc(itemData.lastMsg)}</div>`;
 
       const right = document.createElement('div');
       right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
-      right.innerHTML = (lastTime && txtPreview ? `<div class="conv-time">${lastTime}</div>` : '')
-        + (unread>0 && !data.deletedBy?.includes(ME.uid) ? `<div class="unread-badge">${unread}</div>` : '');
+      right.innerHTML = (lastTime && itemData.lastMsg ? `<div class="conv-time">${lastTime}</div>` : '')
+        + (itemData.unread>0 && !itemData.isDeleted ? `<div class="unread-badge">${itemData.unread}</div>` : '');
 
       item.appendChild(av);
       item.appendChild(info);
@@ -961,7 +992,7 @@ function confirmDeleteChat(){
       const batch = writeBatch(db);
       msgs.forEach(d => { batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) }); });
       
-      // Limpa as mensagens locais inserindo no deletedBy, mas NÃO remove dos savedChats para o contato continuar salvo na lista fixa!
+      // Limpa as mensagens locais inserindo no deletedBy, mas mantém o contato ativo na grade graças ao savedChats
       batch.update(doc(db,'conversations',chatId), {
         deletedBy: arrayUnion(ME.uid),
         [`unread.${ME.uid}`]: 0
