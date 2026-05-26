@@ -420,13 +420,11 @@ function makeAvatar(container, name, photoURL, size=50){
   container.style.height = size+'px';
   container.style.fontSize = Math.round(size*.38)+'px';
   
-  const localPhoto = localStorage.getItem('onix_avatar_' + (ME?.uid || 'guest'));
-  const finalPhoto = photoURL || localPhoto;
-
-  if(finalPhoto){
-    container.innerHTML = `<img src="${finalPhoto}" style="width:100%;height:100%;object-fit:cover;">`;
+  if(photoURL){
+    container.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;">`;
   } else {
     container.textContent = (name||'?')[0].toUpperCase();
+    container.innerHTML = (name||'?')[0].toUpperCase();
   }
 }
 
@@ -491,14 +489,16 @@ $('reg-pass').onkeydown   = e=>{ if(e.key==='Enter') $('btn-register').click(); 
 /* ─────────────────────────────── AUTH STATE ──────────────── */
 onAuthStateChanged(auth, async user=>{
   if(user){
-    const snap = await getDoc(doc(db,'users',user.uid));
-    if(!snap.exists()){ signOut(auth); return; }
-    ME = snap.data();
-    ME.blocked = ME.blocked || [];
-    $('auth').classList.add('hidden');
-    loadProfilePage();
+    // Escuta em tempo real o próprio documento para pegar atualizações da própria foto de perfil
+    onSnapshot(doc(db,'users',user.uid), snap => {
+      if(!snap.exists()) return;
+      ME = snap.data();
+      ME.blocked = ME.blocked || [];
+      $('auth').classList.add('hidden');
+      loadProfilePage();
+      refreshBlockedLabel();
+    });
     listenConvs();
-    refreshBlockedLabel();
   } else {
     ME = null;
     $('auth').classList.remove('hidden');
@@ -683,9 +683,12 @@ async function openChat(peer){
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
     
+    // Escuta em tempo real o contato para o cabeçalho do chat atualizar a foto se ele mudar!
     onSnapshot(doc(db,'users',peer.uid), snapshot => {
       if(snapshot.exists()) {
         peerData = { uid: snapshot.id, ...snapshot.data() };
+        $('chat-name').textContent = peerData.name || "Usuário";
+        makeAvatar($('chat-av'), peerData.name, peerData.photoURL, 38);
         updateBlockUI();
       }
     });
@@ -808,10 +811,7 @@ async function sendMessage(fileData = null){
   }
 
   try{
-    // Gravação direta na subcoleção de mensagens vinculada ao chat ativo
     await addDoc(collection(db,'conversations',chatId,'messages'), payload);
-    
-    // Atualiza metadados do cabeçalho da conversa pai externa
     await setDoc(convRef, {
       lastMsg: text,
       lastAt: serverTimestamp(),
@@ -829,6 +829,7 @@ $('chat-file-input').onchange = async function() {
   const file = this.files[0];
   if(!file || !chatId) return;
 
+  // Imagens: Compressão local ultra-rápida via Canvas
   if(file.type.startsWith('image/')) {
     toast('Processando imagem...');
     const reader = new FileReader();
@@ -864,38 +865,28 @@ $('chat-file-input').onchange = async function() {
     return;
   }
 
+  // Vídeos e PDFs: Convertidos de modo seguro para evitar as rejeições binárias do Imgur
   if(file.type.startsWith('video/') || file.type === 'application/pdf') {
-    if (file.size > 25 * 1024 * 1024) {
-      alert('Arquivo muito grande! Limite de até 25MB.');
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Arquivo muito grande! Limite de até 15MB para transferência.');
       this.value = '';
       return;
     }
 
-    toast('Enviando para nuvem pública...');
-    const formData = new FormData();
-    formData.append('image', file);
-
-    try {
-      const response = await fetch('https://api.imgur.com/3/image', {
-        method: 'POST',
-        headers: { Authorization: 'Client-ID c982362b53ba003' },
-        body: formData
+    toast('Processando mídia...');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      sendMessage({
+        url: e.target.result,
+        type: file.type,
+        name: file.name
       });
-
-      const result = await response.json();
-      if (result.success && result.data?.link) {
-        sendMessage({
-          url: result.data.link,
-          type: file.type,
-          name: file.name
-        });
-        toast('Enviado com sucesso!');
-      } else {
-        throw new Error();
-      }
-    } catch (error) {
-      alert('Erro ao carregar o arquivo na nuvem. Verifique o console.');
-    }
+      toast('Enviado com sucesso!');
+    };
+    reader.onerror = function() {
+      alert('Erro ao processar arquivo para envio.');
+    };
+    reader.readAsDataURL(file);
     this.value = '';
     return;
   }
@@ -915,7 +906,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato bloqueado.');
+    toast('Contato blocked.');
   }
   updateBlockUI();
   refreshBlockedLabel();
@@ -972,8 +963,7 @@ function loadProfilePage(){
   $('p-name').value   = ME.name||'';
   $('p-status').value = ME.status||'';
   $('p-phone').value  = ME.phone||'';
-  const localPhoto = localStorage.getItem('onix_avatar_' + ME.uid);
-  makeAvatar($('profile-av'), ME.name, localPhoto || ME.photoURL, 86);
+  makeAvatar($('profile-av'), ME.name, ME.photoURL, 86);
 }
 
 $('btn-save-profile').onclick = async()=>{
@@ -983,7 +973,6 @@ $('btn-save-profile').onclick = async()=>{
   const btn = $('btn-save-profile');
   btn.disabled=true; btn.textContent='Salvando...';
   await updateDoc(doc(db,'users',ME.uid),{ name, status });
-  ME.name=name; ME.status=status;
   toast('Perfil salvo!');
   btn.disabled=false; btn.textContent='Salvar';
 };
@@ -993,12 +982,13 @@ $('avatar-file').onchange = function(){
   const file = this.files[0];
   if(!file) return;
   
+  toast('Processando foto de perfil...');
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
-    img.onload = function() {
+    img.onload = async function() {
       const canvas = document.createElement('canvas');
-      const MAX_SIZE = 120;
+      const MAX_SIZE = 150; // Tamanho compacto ideal para banco NoSQL
       let width = img.width;
       let height = img.height;
 
@@ -1011,14 +1001,14 @@ $('avatar-file').onchange = function(){
       canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.55);
       
       try {
-        localStorage.setItem('onix_avatar_' + ME.uid, compressedBase64);
-        loadProfilePage();
-        toast('Foto atualizada!');
+        // Envia a foto direto para o Firestore na conta do usuário ativo
+        await updateDoc(doc(db,'users', ME.uid), { photoURL: compressedBase64 });
+        toast('Foto de perfil atualizada com sucesso!');
       } catch(err) {
-        toast('Erro de espaço de armazenamento local.');
+        toast('Erro ao salvar foto no banco de dados.');
       }
     };
     img.src = e.target.result;
