@@ -224,6 +224,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .call-btn { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
 .call-btn.hangup { background: var(--red); }
 .call-btn.accept { background: var(--green); }
+.call-btn.switch-cam { background: #2a3942; } /* Estilo do botão de inverter câmera */
 </style>
 </head>
 <body>
@@ -247,6 +248,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
     <div class="call-status" id="call-status-label">Chamando...</div>
   </div>
   <div class="call-actions">
+    <button class="call-btn switch-cam" id="btn-call-switch" style="display:none;"><span class="ms">flip_camera_ios</span></button>
     <button class="call-btn accept" id="btn-call-accept" style="display:none;"><span class="ms">call</span></button>
     <button class="call-btn hangup" id="btn-call-hangup"><span class="ms">call_end</span></button>
   </div>
@@ -484,6 +486,7 @@ let localStream  = null;
 let pc           = null;
 let currentCallId = null;
 let callTimerInterval = null; 
+let currentFacingMode = 'user'; // 'user' = frontal, 'environment' = traseira
 const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
 
 /* ─────────────────────────────── HELPERS ─────────────────── */
@@ -730,7 +733,7 @@ async function doSearch(phone){
   }
 }
 
-/* ─────────────────────────────── CONVERSATIONS ───────────── */
+/* ── CONVERSATIONS ───────────── */
 function listenConvs(){
   unsubConvs?.();
   const q = query(
@@ -1393,10 +1396,10 @@ async function refreshBlockedLabel(){
   $('blocked-count-label').textContent = n===0 ? 'Nenhum contato bloqueado' : `${n} contato(s) bloqueado(s)`;
 }
 
-/* ─────────────────────────────── LOGOUT ──────────────────── */
+/* ── LOGOUT ── */
 function confirmLogout(){ openModal('Sair','Deseja sair da conta?', async()=>{ await signOut(auth); closeModal(); }); }
 
-/* ─────────────────────────────── MODAL ───────────────────── */
+/* ── MODAL ── */
 let _modalCb=null;
 function openModal(title,body,cb){
   $('modal-title').textContent=title;
@@ -1430,28 +1433,34 @@ $('chat-btn-voice').onclick = () => startCall('voice');
 $('chat-btn-video').onclick = () => startCall('video');
 $('btn-call-hangup').onclick = () => hangupCall();
 $('btn-call-accept').onclick = () => acceptCall();
+$('btn-call-switch').onclick = () => switchCamera();
 
 async function startCall(type) {
   if (!peerData) return;
   currentCallId = ME.uid + '_' + Date.now();
+  currentFacingMode = 'user'; // Começa sempre na câmera frontal
+  updateLocalVideoMirror();
   
   $('call-name-label').textContent = peerData.name;
   makeAvatar($('call-av'), peerData.name, peerData.photoURL, 110);
   $('call-status-label').textContent = "Chamando...";
   $('btn-call-accept').style.display = 'none';
-  $('call-screen').classList.add('open');
   
   if(type === 'video') {
+    $('btn-call-switch').style.display = 'flex';
     $('video-wrap').style.display = 'block';
     $('call-info-wrap').style.visibility = 'hidden';
   } else {
+    $('btn-call-switch').style.display = 'none';
     $('video-wrap').style.display = 'none';
     $('call-info-wrap').style.visibility = 'visible';
   }
+  
+  $('call-screen').classList.add('open');
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
-      video: type === 'video',
+      video: type === 'video' ? { facingMode: currentFacingMode } : false,
       audio: true
     });
     $('local-video').srcObject = localStream;
@@ -1516,21 +1525,26 @@ function listenIncomingCalls() {
       if (change.type === 'added') {
         const callData = change.doc.data();
         currentCallId = change.doc.id;
+        currentFacingMode = 'user'; // Reseta padrão
+        updateLocalVideoMirror();
 
         $('call-name-label').textContent = callData.callerName;
         makeAvatar($('call-av'), callData.callerName, callData.callerPhoto, 110);
         $('call-status-label').textContent = `Chamada de ${callData.type === 'video' ? 'vídeo' : 'voz'} recebida...`;
         
         $('btn-call-accept').style.display = 'flex';
-        $('call-screen').classList.add('open');
-
+        
         if(callData.type === 'video') {
+          $('btn-call-switch').style.display = 'flex';
           $('video-wrap').style.display = 'block';
           $('call-info-wrap').style.visibility = 'hidden';
         } else {
+          $('btn-call-switch').style.display = 'none';
           $('video-wrap').style.display = 'none';
           $('call-info-wrap').style.visibility = 'visible';
         }
+        
+        $('call-screen').classList.add('open');
 
         onSnapshot(doc(db, 'calls', currentCallId), s => {
           const data = s.data();
@@ -1553,7 +1567,7 @@ async function acceptCall() {
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
-      video: callData.type === 'video',
+      video: callData.type === 'video' ? { facingMode: currentFacingMode } : false,
       audio: true
     });
     $('local-video').srcObject = localStream;
@@ -1593,6 +1607,58 @@ async function acceptCall() {
   } catch (err) {
     console.error(err);
     hangupCall();
+  }
+}
+
+/* ── ALTERNAR CÂMERA (FRONTAL / TRASEIRA) ── */
+async function switchCamera() {
+  if (!localStream) return;
+  
+  const videoTrack = localStream.getVideoTracks()[0];
+  if (!videoTrack) return;
+
+  // Inverte o estado da câmera atual
+  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+  updateLocalVideoMirror();
+
+  try {
+    // Solicita o novo fluxo com a câmera invertida
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacingMode },
+      audio: false // Mantém o áudio atual intocado
+    });
+    
+    const newVideoTrack = newStream.getVideoTracks()[0];
+    
+    // Substitui a track antiga no RTCPeerConnection para o outro usuário ver a mudança em tempo real
+    if (pc) {
+      const senders = pc.getSenders();
+      const sender = senders.find(s => s.track && s.track.kind === 'video');
+      if (sender) {
+        sender.replaceTrack(newVideoTrack);
+      }
+    }
+
+    // Para a track antiga local e adiciona a nova
+    videoTrack.stop();
+    localStream.removeTrack(videoTrack);
+    localStream.addTrack(newVideoTrack);
+    
+    // Atualiza o elemento de vídeo local
+    $('local-video').srcObject = localStream;
+    
+  } catch (err) {
+    console.error("Erro ao inverter câmera:", err);
+    toast("Não foi possível alternar a câmera.");
+  }
+}
+
+/* Espelha o vídeo apenas se for a câmera frontal */
+function updateLocalVideoMirror() {
+  if (currentFacingMode === 'user') {
+    $('local-video').style.transform = 'scaleX(-1)';
+  } else {
+    $('local-video').style.transform = 'scaleX(1)';
   }
 }
 
