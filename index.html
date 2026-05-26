@@ -67,7 +67,7 @@ main{flex:1;overflow:hidden;position:relative;}
 .empty-state .ms{font-size:60px;color:var(--panel);}
 .empty-state p{font-size:14px;line-height:1.6;}
 
-/* CONVERSATIONS */
+/* CONVERSATIONS & CALLS ITEMS */
 .conv-item{padding:13px 16px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--border);cursor:pointer;}
 .conv-item:active{background:var(--bg2);}
 .avatar{width:50px;height:50px;border-radius:50%;background:var(--panel);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:20px;font-weight:700;overflow:hidden;}
@@ -77,6 +77,11 @@ main{flex:1;overflow:hidden;position:relative;}
 .conv-preview{color:var(--text2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
 .conv-time{color:var(--text2);font-size:11px;white-space:nowrap;}
 .unread-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+
+/* CALL ACTIONS BUTTONS IN LIST */
+.call-list-actions{display:flex;gap:12px;align-items:center;}
+.call-list-actions .ms{color:var(--green);padding:8px;border-radius:50%;cursor:pointer;}
+.call-list-actions .ms:active{background:var(--panel);}
 
 /* CHAT SCREEN */
 #chat-screen{position:fixed;inset:0;z-index:99998;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
@@ -306,9 +311,10 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
     </div>
 
     <div class="page" id="page-calls">
-      <div class="empty-state">
+      <div id="calls-contacts-list"></div>
+      <div class="empty-state" id="calls-empty" style="display:none;">
         <span class="ms">call</span>
-        <p>Nenhuma chamada recente.</p>
+        <p>Nenhum contato disponível para chamadas.</p>
       </div>
     </div>
 
@@ -796,6 +802,9 @@ function listenConvs(){
     });
     isFirstLoad = false;
 
+    /* ── Render Call Page Contacts with the same list ── */
+    renderCallsPage(finalConvsList);
+
     list.innerHTML='';
     if(finalConvsList.length === 0){ empty.style.display=''; return; }
     empty.style.display='none';
@@ -838,6 +847,67 @@ function listenConvs(){
   }, err => {
     console.error(err);
   });
+}
+
+/* ── Render Contacts in Calls Page ── */
+async function renderCallsPage(finalConvsList) {
+  const list = $('calls-contacts-list');
+  const empty = $('calls-empty');
+  
+  list.innerHTML = '';
+  if (finalConvsList.length === 0) {
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  for (const itemData of finalConvsList) {
+    const pSnap = await getDoc(doc(db, 'users', itemData.peerId));
+    if (!pSnap.exists()) continue;
+    const peer = { uid: pSnap.id, ...pSnap.data() };
+
+    const item = document.createElement('div');
+    item.className = 'conv-item';
+    item.style.cursor = 'default'; 
+
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    makeAvatar(av, peer.name, peer.photoURL, 50);
+
+    const info = document.createElement('div');
+    info.className = 'conv-info';
+    info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
+      <div class="conv-preview">${esc(peer.phone || 'Sem número')}</div>`;
+
+    const rightActions = document.createElement('div');
+    rightActions.className = 'call-list-actions';
+    
+    const voiceBtn = document.createElement('span');
+    voiceBtn.className = 'ms';
+    voiceBtn.textContent = 'call';
+    voiceBtn.onclick = (e) => {
+      e.stopPropagation();
+      peerData = peer; 
+      startCall('voice');
+    };
+
+    const videoBtn = document.createElement('span');
+    videoBtn.className = 'ms';
+    videoBtn.textContent = 'videocam';
+    videoBtn.onclick = (e) => {
+      e.stopPropagation();
+      peerData = peer; 
+      startCall('video');
+    };
+
+    rightActions.appendChild(voiceBtn);
+    rightActions.appendChild(videoBtn);
+
+    item.appendChild(av);
+    item.appendChild(info);
+    item.appendChild(rightActions);
+    list.appendChild(item);
+  }
 }
 
 /* ─────────────────────────────── OPEN CHAT ───────────────── */
