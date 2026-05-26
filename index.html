@@ -312,7 +312,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 
     <div class="page" id="page-calls">
       <div id="calls-contacts-list"></div>
-      <div class="empty-state" id="calls-empty" style="display:none;">
+      <div class="empty-state" id="calls-empty">
         <span class="ms">call</span>
         <p>Nenhum contato disponível para chamadas.</p>
       </div>
@@ -802,7 +802,7 @@ function listenConvs(){
     });
     isFirstLoad = false;
 
-    /* ── Render Call Page Contacts with the same list ── */
+    /* ── Render Call Page Contacts ── */
     renderCallsPage(finalConvsList);
 
     list.innerHTML='';
@@ -855,8 +855,8 @@ async function renderCallsPage(finalConvsList) {
   const empty = $('calls-empty');
   
   list.innerHTML = '';
-  if (finalConvsList.length === 0) {
-    empty.style.display = '';
+  if (!finalConvsList || finalConvsList.length === 0) {
+    empty.style.display = 'flex';
     return;
   }
   empty.style.display = 'none';
@@ -885,6 +885,7 @@ async function renderCallsPage(finalConvsList) {
     const voiceBtn = document.createElement('span');
     voiceBtn.className = 'ms';
     voiceBtn.textContent = 'call';
+    voiceBtn.style.cursor = 'pointer';
     voiceBtn.onclick = (e) => {
       e.stopPropagation();
       peerData = peer; 
@@ -894,6 +895,7 @@ async function renderCallsPage(finalConvsList) {
     const videoBtn = document.createElement('span');
     videoBtn.className = 'ms';
     videoBtn.textContent = 'videocam';
+    videoBtn.style.cursor = 'pointer';
     videoBtn.onclick = (e) => {
       e.stopPropagation();
       peerData = peer; 
@@ -1044,7 +1046,6 @@ $('btn-send').onclick = async () => {
 
 async function toggleAudioRecording() {
   if (!isRecording) {
-    // Iniciar Gravação
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       toast("Seu navegador não suporta gravação de áudio.");
       return;
@@ -1086,7 +1087,6 @@ async function toggleAudioRecording() {
       toast("Permissão de microfone negada.");
     }
   } else {
-    // Parar Gravação
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
     }
@@ -1463,7 +1463,6 @@ async function startCall(type) {
       status: 'ringing'
     });
 
-    // Monitora se o destino atendeu ou recusou
     onSnapshot(doc(db, 'calls', currentCallId), snap => {
       const data = snap.data();
       if (!data) return;
@@ -1477,7 +1476,6 @@ async function startCall(type) {
       }
     });
 
-    // Escuta os candidatos ICE do destino
     onSnapshot(collection(db, 'calls', currentCallId, 'answerCandidates'), snap => {
       snap.docChanges().forEach(change => {
         if (change.type === 'added') {
@@ -1515,7 +1513,6 @@ function listenIncomingCalls() {
           $('call-info-wrap').style.visibility = 'visible';
         }
 
-        // Monitora se quem ligou desistiu
         onSnapshot(doc(db, 'calls', currentCallId), s => {
           if (s.data()?.status === 'ended') cleanCallState();
         });
