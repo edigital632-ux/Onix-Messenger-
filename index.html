@@ -175,9 +175,24 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 
 /* BLOCKED NOTICE */
 #blocked-notice{display:none;padding:14px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--border);background:var(--bg3);}
+
+/* WHATSAPP-LIKE FLOATING NOTIFICATION */
+.push-banner{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-100px);width:calc(100% - 24px);max-width:440px;background:var(--bg3);border:1px solid var(--border);box-shadow:0 12px 28px rgba(0,0,0,.6);border-radius:14px;padding:12px;display:flex;align-items:center;gap:12px;z-index:100000;transition:transform .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);cursor:pointer;}
+.push-banner.show{transform:translateX(-50%) translateY(0);}
+.push-body{flex:1;min-width:0;}
+.push-title{color:var(--green);font-size:14px;font-weight:700;margin-bottom:2px;}
+.push-text{color:var(--text);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 </style>
 </head>
 <body>
+
+<div class="push-banner" id="push-notif">
+  <div class="avatar" id="push-av" style="width:40px;height:40px;"></div>
+  <div class="push-body">
+    <div class="push-title" id="push-title">Nome do Contato</div>
+    <div class="push-text" id="push-msg">Mensagem recebida</div>
+  </div>
+</div>
 
 <div id="auth">
   <div class="auth-logo">💬</div>
@@ -394,6 +409,8 @@ let peerData     = null;
 let unsubMsgs    = null;
 let unsubConvs   = null;
 let searchTimer  = null;
+let knownPreviews = {}; // Controle para evitar disparar notificações duplicadas ou antigas
+let isFirstLoad  = true;
 
 /* ─────────────────────────────── HELPERS ─────────────────── */
 const $  = id => document.getElementById(id);
@@ -426,6 +443,31 @@ function makeAvatar(container, name, photoURL, size=50){
     container.textContent = (name||'?')[0].toUpperCase();
     container.innerHTML = (name||'?')[0].toUpperCase();
   }
+}
+
+/* ── Banner Notification Builder (WhatsApp Style) ── */
+let bannerTimeout = null;
+function showWhatsAppNotification(peerName, photoURL, messageText, peerObj) {
+  const banner = $('push-notif');
+  const title = $('push-title');
+  const text = $('push-msg');
+  const avContainer = $('push-av');
+
+  title.textContent = peerName;
+  text.textContent = messageText;
+  makeAvatar(avContainer, peerName, photoURL, 40);
+
+  banner.onclick = () => {
+    banner.classList.remove('show');
+    openChat(peerObj);
+  };
+
+  banner.classList.add('show');
+
+  clearTimeout(bannerTimeout);
+  bannerTimeout = setTimeout(() => {
+    banner.classList.remove('show');
+  }, 4000);
 }
 
 /* ─────────────────────────────── AUTH UI ─────────────────── */
@@ -489,9 +531,11 @@ $('reg-pass').onkeydown   = e=>{ if(e.key==='Enter') $('btn-register').click(); 
 /* ─────────────────────────────── AUTH STATE ──────────────── */
 onAuthStateChanged(auth, async user=>{
   if(user){
+    isFirstLoad = true;
+    knownPreviews = {};
     onSnapshot(doc(db,'users',user.uid), snap => {
       if(!snap.exists()) return;
-      const oldSavedCount = (ME?.savedChats || []).length;
+      const wasNull = (ME === null);
       ME = snap.data();
       ME.blocked = ME.blocked || [];
       ME.savedChats = ME.savedChats || [];
@@ -499,12 +543,11 @@ onAuthStateChanged(auth, async user=>{
       loadProfilePage();
       refreshBlockedLabel();
       
-      // Se a quantidade de contatos salvos mudar na nuvem, força a reatualização da lista imediatamente
-      if(oldSavedCount !== ME.savedChats.length && unsubConvs) {
+      // Inicializa ou reatualiza a escuta de conversas garantindo o perfil carregado
+      if(wasNull) {
          listenConvs();
       }
     });
-    listenConvs();
   } else {
     ME = null;
     $('auth').classList.remove('hidden');
@@ -623,15 +666,13 @@ function listenConvs(){
   unsubConvs = onSnapshot(q, async snap=>{
     const list  = $('convs-list');
     const empty = $('convs-empty');
-    list.innerHTML='';
     
     // Mapeamento inicial das conversas ativas oriundas do Firestore
-    const activeConvs = snap.docs.map(d => d.data());
+    const activeConvs = snap.docs.map(d => { return { cid: d.id, ...d.data() }; });
     const matchedPeerIds = new Set();
-
     const finalConvsList = [];
 
-    // 1. Processa conversas existentes
+    // 1. Processa conversas existentes no barramento
     for(const data of activeConvs) {
       const peerId = data.members.find(m=>m!==ME.uid);
       if(!peerId) continue;
@@ -646,12 +687,13 @@ function listenConvs(){
           lastAt: data.lastAt,
           lastMsg: data.deletedBy?.includes(ME.uid) ? '' : (data.lastMsg || ''),
           unread: data.unread?.[ME.uid] || 0,
-          isDeleted: data.deletedBy?.includes(ME.uid)
+          isDeleted: data.deletedBy?.includes(ME.uid),
+          cid: data.cid
         });
       }
     }
 
-    // 2. Injeta e força a aparição na lista de qualquer contato fixado ausente (mesmo pós-logout/chat vazio)
+    // 2. Injeta e força a aparição na lista de qualquer contato salvo/fixo ausente
     if(ME?.savedChats) {
       for(const savedId of ME.savedChats) {
         if(!matchedPeerIds.has(savedId)) {
@@ -660,16 +702,43 @@ function listenConvs(){
             lastAt: null,
             lastMsg: '',
             unread: 0,
-            isDeleted: true
+            isDeleted: true,
+            cid: [ME.uid, savedId].sort().join('_')
           });
         }
       }
     }
 
+    // Gerenciador de Push Notifications estilo WhatsApp
+    if (!isFirstLoad) {
+      for(const activeItem of finalConvsList) {
+        if(activeItem.lastMsg && activeItem.cid !== chatId) {
+          const stringKey = activeItem.cid;
+          if(knownPreviews[stringKey] !== undefined && knownPreviews[stringKey] !== activeItem.lastMsg) {
+             const userLeaf = await getDoc(doc(db,'users',activeItem.peerId));
+             if(userLeaf.exists()) {
+               const parsedPeer = { uid: userLeaf.id, ...userLeaf.data() };
+               // Não notifica se você tiver bloqueado a pessoa
+               if(!ME.blocked?.includes(parsedPeer.uid)) {
+                 showWhatsAppNotification(parsedPeer.name, parsedPeer.photoURL, activeItem.lastMsg, parsedPeer);
+               }
+             }
+          }
+        }
+      }
+    }
+
+    // Salva o mapa de mensagens atuais para as próximas atualizações
+    finalConvsList.forEach(c => {
+      if(c.lastMsg) knownPreviews[c.cid] = c.lastMsg;
+    });
+    isFirstLoad = false;
+
+    list.innerHTML='';
     if(finalConvsList.length === 0){ empty.style.display=''; return; }
     empty.style.display='none';
 
-    // Ordenação cronológica estável
+    // Ordenação estável cronológica
     finalConvsList.sort((a, b) => {
       const timeA = a.lastAt ? (a.lastAt.toMillis ? a.lastAt.toMillis() : 0) : 0;
       const timeB = b.lastAt ? (b.lastAt.toMillis ? b.lastAt.toMillis() : 0) : 0;
@@ -692,7 +761,7 @@ function listenConvs(){
       const info = document.createElement('div');
       info.className = 'conv-info';
       info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
-        <div class="conv-preview">${esc(itemData.lastMsg)}</div>`;
+        <div class="conv-preview">${esc(itemData.lastMsg || 'Nenhuma mensagem')}</div>`;
 
       const right = document.createElement('div');
       right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
@@ -724,7 +793,7 @@ async function openChat(peer){
     $('chat-sub').textContent  = peer.phone || "";
     makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
     
-    // Adiciona instantaneamente o contato na lista de preservação contínua da nuvem
+    // Assegura salvamento perpétuo na lista de contatos do usuário na nuvem
     if(!ME.savedChats?.includes(peer.uid)){
       await updateDoc(doc(db,'users',ME.uid), { savedChats: arrayUnion(peer.uid) });
     }
@@ -858,11 +927,20 @@ async function sendMessage(fileData = null){
   try{
     await addDoc(collection(db,'conversations',chatId,'messages'), payload);
     
-    // Remove do barramento de exclusão se novas mensagens forem mandadas
+    // Contabiliza notificação de não lida e atualiza previews globais
+    const snapCount = await getDoc(convRef);
+    let currentUnread = 0;
+    if(snapCount.exists()){
+      currentUnread = snapCount.data().unread?.[peerData.uid] || 0;
+    }
+
     await setDoc(convRef, {
       lastMsg: text,
       lastAt: serverTimestamp(),
-      deletedBy: []
+      deletedBy: [],
+      unread: {
+        [peerData.uid]: currentUnread + 1
+      }
     }, { merge: true });
 
   }catch(e){ 
@@ -951,7 +1029,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato blocked.');
+    toast('Contato bloqueado.');
   }
   updateBlockUI();
   refreshBlockedLabel();
@@ -992,7 +1070,7 @@ function confirmDeleteChat(){
       const batch = writeBatch(db);
       msgs.forEach(d => { batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) }); });
       
-      // Limpa as mensagens locais inserindo no deletedBy, mas mantém o contato ativo na grade graças ao savedChats
+      // Limpa as mensagens locais mas o contato não some da grade pois está no savedChats
       batch.update(doc(db,'conversations',chatId), {
         deletedBy: arrayUnion(ME.uid),
         [`unread.${ME.uid}`]: 0
@@ -1052,7 +1130,7 @@ $('avatar-file').onchange = function(){
       
       try {
         await updateDoc(doc(db,'users', ME.uid), { photoURL: compressedBase64 });
-        toast('Foto de perfil updated!');
+        toast('Foto de perfil atualizada!');
       } catch(err) {
         toast('Erro ao salvar foto no banco de dados.');
       }
