@@ -105,9 +105,6 @@ main{flex:1;overflow:hidden;position:relative;}
 .msg-img{max-width:100%;max-height:200px;border-radius:8px;margin-top:4px;display:block;cursor:pointer;}
 .msg-video{max-width:100%;max-height:240px;border-radius:8px;margin-top:4px;display:block;outline:none;background:#000;}
 
-/* CALLS PAGE */
-.section-title{padding:10px 16px;color:var(--text2);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--border);}
-
 /* PROFILE PAGE */
 .profile-banner{height:110px;background:linear-gradient(135deg,var(--green-dark),var(--green));flex-shrink:0;}
 .profile-body{padding:0 20px 40px;}
@@ -376,7 +373,7 @@ import { getFirestore, doc, setDoc, getDoc,
          collection, query, where, orderBy,
          onSnapshot, addDoc, updateDoc, deleteDoc,
          getDocs, serverTimestamp, arrayUnion,
-         arrayRemove, writeBatch, increment }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+         arrayRemove, writeBatch }                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ── init ── */
 const fbApp   = initializeApp({
@@ -405,7 +402,8 @@ const phoneToEmail = p => 'u' + p.replace(/\D/g,'') + '@onix.app';
 const cleanPhone   = p => p.replace(/\D/g,'');
 
 function fmtTime(date){
-  const diff = Date.now() - date;
+  if(!date) return '';
+  const diff = Date.now() - date.getTime();
   if(diff < 86400000) return date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
 }
@@ -450,7 +448,7 @@ function authErr(code){
     'auth/invalid-credential':'Número ou senha incorretos.',
     'auth/email-already-in-use':'Número já cadastrado.',
     'auth/too-many-requests':'Muitas tentativas. Aguarde.',
-    'auth/operation-not-allowed':'Ative Email/Senha no Firebase Console.',
+    'auth/operation-not-allowed':'Ative as credenciais no Console.',
     'auth/network-request-failed':'Sem conexão.'
   };
   return map[code]||'Erro: '+code;
@@ -629,8 +627,8 @@ function listenConvs(){
     empty.style.display='none';
 
     convs.sort((a, b) => {
-      const timeA = a.lastAt ? a.lastAt.toMillis() : 0;
-      const timeB = b.lastAt ? b.lastAt.toMillis() : 0;
+      const timeA = a.lastAt ? (a.lastAt.toMillis ? a.lastAt.toMillis() : 0) : 0;
+      const timeB = b.lastAt ? (b.lastAt.toMillis ? b.lastAt.toMillis() : 0) : 0;
       return timeB - timeA;
     });
 
@@ -641,7 +639,7 @@ function listenConvs(){
       if(!pSnap.exists()) continue;
       const peer   = { uid: pSnap.id, ...pSnap.data() };
       const unread = data.unread?.[ME.uid] || 0;
-      const lastTime = data.lastAt ? fmtTime(data.lastAt.toDate()) : '';
+      const lastTime = data.lastAt && data.lastAt.toDate ? fmtTime(data.lastAt.toDate()) : '';
 
       const item = document.createElement('div');
       item.className = 'conv-item';
@@ -667,21 +665,15 @@ function listenConvs(){
       list.appendChild(item);
     }
   }, err => {
-    toast('Erro ao listar conversas: ' + err.message);
+    console.error(err);
   });
 }
 
 /* ─────────────────────────────── OPEN CHAT ───────────────── */
 async function openChat(peer){
   try {
-    if (!peer || !peer.uid) {
-      alert("Não foi possível abrir o chat: dados do contato inválidos.");
-      return;
-    }
-    if (!ME || !ME.uid) {
-      alert("Erro de sessão: Faça login novamente.");
-      return;
-    }
+    if (!peer || !peer.uid) return;
+    if (!ME || !ME.uid) return;
 
     peerData = peer;
     const ids = [ME.uid, peer.uid].sort();
@@ -718,7 +710,7 @@ async function openChat(peer){
         await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
       }
     } catch(dbErr) {
-      console.warn("Aviso de sincronização inicial:", dbErr);
+      console.warn(dbErr);
     }
 
     unsubMsgs?.();
@@ -737,14 +729,14 @@ async function openChat(peer){
       });
 
       if(visibleMsgs.length === 0){
-        body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;"><span class="ms" style="font-size:48px;color:var(--panel);display:block;margin-bottom:10px;">chat_bubble_outline</span>Envie uma mensagem para começar!</div>';
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Envie uma mensagem para começar!</div>';
         return;
       }
 
       visibleMsgs.forEach(m=>{
         const div = document.createElement('div');
         div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
-        const time = m.ts ? fmtTime(m.ts.toDate()) : '';
+        const time = m.ts && m.ts.toDate ? fmtTime(m.ts.toDate()) : '';
         
         if(m.fileUrl) {
           if(m.fileType?.startsWith('image/')) {
@@ -755,7 +747,7 @@ async function openChat(peer){
             div.innerHTML = vidCaption + `<video src="${m.fileUrl}" class="msg-video" controls playsinline></video><span class="msg-time">${time}</span>`;
           } else {
             let docCaption = m.text !== "📁 Arquivo enviado" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
-            div.innerHTML = docCaption + `<a href="${m.fileUrl}" download="${esc(m.fileName || 'arquivo')}" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName || 'Arquivo/Documento')}</b><br><small style="opacity:0.7">Clique para Baixar</small></div></a><span class="msg-time">${time}</span>`;
+            div.innerHTML = docCaption + `<a href="${m.fileUrl}" download="${esc(m.fileName || 'arquivo')}" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName || 'Arquivo')}</b></div></a><span class="msg-time">${time}</span>`;
           }
         } else {
           div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
@@ -764,13 +756,12 @@ async function openChat(peer){
         body.appendChild(div);
       });
       if(atBot) body.scrollTop = body.scrollHeight;
-      updateDoc(convRef,{ [`unread.${ME.uid}`]:0 }).catch(()=>{});
     }, err=>{ 
-      toast('Erro de permissão ou sincronização.'); 
+      console.error(err);
     });
 
   } catch (error) {
-    alert("Falha fatal ao abrir tela de chat: " + error.message);
+    console.error(error);
   }
 }
 
@@ -789,18 +780,6 @@ $('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
 async function sendMessage(fileData = null){
   if(!chatId||!peerData) return;
   
-  const myUserSnap = await getDoc(doc(db,'users',ME.uid));
-  const peerSnap   = await getDoc(doc(db,'users',peerData.uid));
-  
-  const currentMeData   = myUserSnap.data();
-  const currentPeerData = peerSnap.data();
-
-  const didIBlock  = currentMeData?.blocked?.includes(peerData.uid);
-  const amIBlocked = currentPeerData?.blocked?.includes(ME.uid);
-
-  if(didIBlock){ toast('Você bloqueou este contato.'); return; }
-  if(amIBlocked){ toast('Você foi bloqueado por este contato.'); return; }
-
   const input = $('msg-input');
   let text  = input.value.trim();
   
@@ -829,19 +808,20 @@ async function sendMessage(fileData = null){
   }
 
   try{
+    // Gravação direta na subcoleção de mensagens vinculada ao chat ativo
     await addDoc(collection(db,'conversations',chatId,'messages'), payload);
-    const cSnap = await getDoc(convRef);
-    const cur   = cSnap.data()?.unread?.[peerData.uid] || 0;
     
-    await updateDoc(convRef,{
+    // Atualiza metadados do cabeçalho da conversa pai externa
+    await setDoc(convRef, {
       lastMsg: text,
       lastAt: serverTimestamp(),
-      [`unread.${peerData.uid}`]: cur+1,
       deletedBy: []
-    });
+    }, { merge: true });
+
   }catch(e){ 
-    toast('Erro de envio. Verifique as regras do Firebase.'); 
-    input.value=text; 
+    toast('Erro de envio. Verifique as regras do Firestore.'); 
+    console.error(e);
+    if(!fileData) input.value=text; 
   }
 }
 
@@ -849,15 +829,6 @@ $('chat-file-input').onchange = async function() {
   const file = this.files[0];
   if(!file || !chatId) return;
 
-  const myUserSnap = await getDoc(doc(db,'users',ME.uid));
-  const peerSnap   = await getDoc(doc(db,'users',peerData.uid));
-  if(myUserSnap.data()?.blocked?.includes(peerData.uid) || peerSnap.data()?.blocked?.includes(ME.uid)){
-    toast('Operação cancelada: Bloqueio ativo.');
-    this.value = '';
-    return;
-  }
-
-  // 1. SE FOR FOTO: Mantém intocável sua lógica de Base64 com Canvas que deu certo!
   if(file.type.startsWith('image/')) {
     toast('Processando imagem...');
     const reader = new FileReader();
@@ -880,13 +851,11 @@ $('chat-file-input').onchange = async function() {
         ctx.drawImage(img, 0, 0, width, height);
 
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-        
         sendMessage({
           url: compressedBase64,
           type: 'image/jpeg',
           name: file.name.replace(/\.[^/.]+$/, "") + ".jpg"
         });
-        toast('Enviado com sucesso!');
       };
       img.src = e.target.result;
     };
@@ -895,48 +864,38 @@ $('chat-file-input').onchange = async function() {
     return;
   }
 
-  // 2. SE FOR VÍDEO (OU OUTRO ARQUIVO): Alternativa estável via API Imgur/Video (Evita erros CORS e estouro de RAM)
   if(file.type.startsWith('video/') || file.type === 'application/pdf') {
-    if (file.size > 20 * 1024 * 1024) {
-      alert('O vídeo é muito grande! Escolha um arquivo menor de até 20MB.');
+    if (file.size > 25 * 1024 * 1024) {
+      alert('Arquivo muito grande! Limite de até 25MB.');
       this.value = '';
       return;
     }
 
-    toast('Enviando vídeo para o servidor gratuito...');
-
+    toast('Enviando para nuvem pública...');
     const formData = new FormData();
-    formData.append('video', file);
+    formData.append('image', file);
 
     try {
-      // Faz o upload seguro e direto em formato binário sem restrições de CORS locais
       const response = await fetch('https://api.imgur.com/3/image', {
         method: 'POST',
-        headers: {
-          Authorization: 'Client-ID c982362b53ba003'
-        },
+        headers: { Authorization: 'Client-ID c982362b53ba003' },
         body: formData
       });
 
       const result = await response.json();
-
-      if (result.success && result.data && result.data.link) {
-        // Envia a URL do vídeo armazenada com sucesso direta ao seu banco Firestore
+      if (result.success && result.data?.link) {
         sendMessage({
           url: result.data.link,
           type: file.type,
           name: file.name
         });
-        toast('Vídeo enviado com sucesso!');
+        toast('Enviado com sucesso!');
       } else {
-        throw new Error('Retorno inválido do servidor externo.');
+        throw new Error();
       }
-
     } catch (error) {
-      console.error(error);
-      alert('Erro ao carregar o vídeo na nuvem gratuita. Tente novamente mais tarde.');
+      alert('Erro ao carregar o arquivo na nuvem. Verifique o console.');
     }
-
     this.value = '';
     return;
   }
@@ -956,7 +915,7 @@ async function toggleBlock(){
   } else {
     await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
     ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato blocked.');
+    toast('Contato bloqueado.');
   }
   updateBlockUI();
   refreshBlockedLabel();
@@ -964,7 +923,6 @@ async function toggleBlock(){
 
 function updateBlockUI(){
   if(!peerData) return;
-  
   const amIBlocked = peerData.blocked?.includes(ME.uid);
   const didIBlock  = ME.blocked?.includes(peerData.uid);
   
@@ -991,21 +949,16 @@ function updateBlockUI(){
 $('dc-delete').onclick = ()=>{ closeDrops(); confirmDeleteChat(); };
 
 function confirmDeleteChat(){
-  openModal('Apagar conversa','Deseja apagar toda esta conversa? Esta ação não pode ser desfeita.', async()=>{
+  openModal('Apagar conversa','Deseja apagar toda esta conversa?', async()=>{
     if(!chatId) return;
     try{
       const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
       const batch = writeBatch(db);
-      
-      msgs.forEach(d => {
-        batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) });
-      });
-      
+      msgs.forEach(d => { batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) }); });
       batch.update(doc(db,'conversations',chatId), {
         deletedBy: arrayUnion(ME.uid),
         [`unread.${ME.uid}`]: 0
       });
-      
       await batch.commit();
       closeModal(); closeChat();
       toast('Conversa apagada.');
@@ -1019,7 +972,6 @@ function loadProfilePage(){
   $('p-name').value   = ME.name||'';
   $('p-status').value = ME.status||'';
   $('p-phone').value  = ME.phone||'';
-  
   const localPhoto = localStorage.getItem('onix_avatar_' + ME.uid);
   makeAvatar($('profile-av'), ME.name, localPhoto || ME.photoURL, 86);
 }
@@ -1041,8 +993,6 @@ $('avatar-file').onchange = function(){
   const file = this.files[0];
   if(!file) return;
   
-  toast('Processando imagem...');
-  
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
@@ -1053,31 +1003,22 @@ $('avatar-file').onchange = function(){
       let height = img.height;
 
       if (width > height) {
-        if (width > MAX_SIZE) {
-          height *= MAX_SIZE / width;
-          width = MAX_SIZE;
-        }
+        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
       } else {
-        if (height > MAX_SIZE) {
-          width *= MAX_SIZE / height;
-          height = MAX_SIZE;
-        }
+        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
       }
       
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      
       const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
       
       try {
         localStorage.setItem('onix_avatar_' + ME.uid, compressedBase64);
         loadProfilePage();
-        toast('Foto atualizada com sucesso!');
+        toast('Foto atualizada!');
       } catch(err) {
-        console.error(err);
-        toast('Erro de espaço no celular.');
+        toast('Erro de espaço de armazenamento local.');
       }
     };
     img.src = e.target.result;
@@ -1110,8 +1051,7 @@ async function renderBlockedList(){
 
     const info=document.createElement('div');
     info.style.flex='1';
-    info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div>
-      <div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
+    info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div><div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
 
     const btn=document.createElement('button');
     btn.className='unblock-btn';
@@ -1121,7 +1061,6 @@ async function renderBlockedList(){
       ME.blocked=ME.blocked.filter(x=>x!==uid);
       refreshBlockedLabel();
       renderBlockedList();
-      toast('Contato desbloqueado.');
     };
 
     row.append(av,info,btn);
@@ -1133,15 +1072,11 @@ async function refreshBlockedLabel(){
   const snap = await getDoc(doc(db,'users',ME.uid));
   ME.blocked = snap.data()?.blocked||[];
   const n = ME.blocked.length;
-  $('blocked-count-label').textContent = n===0
-    ? 'Nenhum contato bloqueado'
-    : `${n} contato${n>1?'s':''} bloqueado${n>1?'s':''}`;
+  $('blocked-count-label').textContent = n===0 ? 'Nenhum contato bloqueado' : `${n} contato(s) bloqueado(s)`;
 }
 
 /* ─────────────────────────────── LOGOUT ──────────────────── */
-function confirmLogout(){
-  openModal('Sair','Deseja sair da conta?', async()=>{ await signOut(auth); closeModal(); });
-}
+function confirmLogout(){ openModal('Sair','Deseja sair da conta?', async()=>{ await signOut(auth); closeModal(); }); }
 
 /* ─────────────────────────────── MODAL ───────────────────── */
 let _modalCb=null;
@@ -1154,7 +1089,6 @@ function openModal(title,body,cb){
 function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
 $('modal-ok').onclick     = ()=>{ _modalCb?.(); };
 $('modal-cancel').onclick = ()=>closeModal();
-$('modal').onclick        = e=>{ if(e.target===$('modal')) closeModal(); };
 </script>
 </body>
 </html>
