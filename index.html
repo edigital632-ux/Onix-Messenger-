@@ -616,10 +616,10 @@ function listenConvs(){
     const empty = $('convs-empty');
     list.innerHTML='';
     
-    // Filtra conversas válidas (que possuem mensagens ou não foram deletadas)
+    // CORREÇÃO: Filtra se você não tiver ocultado/deletado a conversa de forma privada
     const convs = snap.docs
       .map(d => d.data())
-      .filter(data => data.lastMsg !== undefined && data.lastMsg !== '');
+      .filter(data => data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid)));
 
     if(convs.length === 0){ empty.style.display=''; return; }
     empty.style.display='none';
@@ -703,7 +703,8 @@ async function openChat(peer){
           members:[ME.uid, peer.uid],
           lastMsg:'',
           lastAt: serverTimestamp(),
-          unread:{ [ME.uid]:0, [peer.uid]:0 }
+          unread:{ [ME.uid]:0, [peer.uid]:0 },
+          deletedBy: []
         });
       } else {
         await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
@@ -719,13 +720,21 @@ async function openChat(peer){
       const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
       body.innerHTML='';
       
-      if(snap.empty){
+      // Filtra mensagens ocultadas privadamente por você
+      const visibleMsgs = [];
+      snap.forEach(d => {
+        const m = d.data();
+        if (!(m.hideFrom?.includes(ME.uid))) {
+          visibleMsgs.push(m);
+        }
+      });
+
+      if(visibleMsgs.length === 0){
         body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;"><span class="ms" style="font-size:48px;color:var(--panel);display:block;margin-bottom:10px;">chat_bubble_outline</span>Envie uma mensagem para começar!</div>';
         return;
       }
 
-      snap.forEach(d=>{
-        const m   = d.data();
+      visibleMsgs.forEach(m=>{
         const div = document.createElement('div');
         div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
         const time = m.ts ? fmtTime(m.ts.toDate()) : '';
@@ -760,7 +769,6 @@ async function sendMessage(){
   const text  = input.value.trim();
   if(!text) return;
 
-  // CORREÇÃO: Verifica de forma bidirecional se existe bloqueio ativo antes de enviar
   const amIBlocked = peerData.blocked?.includes(ME.uid);
   const didIBlock  = ME.blocked?.includes(peerData.uid);
 
@@ -772,14 +780,17 @@ async function sendMessage(){
 
   try{
     await addDoc(collection(db,'conversations',chatId,'messages'),{
-      text, sender:ME.uid, ts:serverTimestamp()
+      text, sender:ME.uid, ts:serverTimestamp(), hideFrom: []
     });
     const cSnap = await getDoc(convRef);
     const cur   = cSnap.data()?.unread?.[peerData.uid] || 0;
+    
+    // Quando você envia uma mensagem nova, a conversa volta a ficar visível para ambos caso estivesse oculta
     await updateDoc(convRef,{
       lastMsg:text,
       lastAt:serverTimestamp(),
-      [`unread.${peerData.uid}`]: cur+1
+      [`unread.${peerData.uid}`]: cur+1,
+      deletedBy: []
     });
   }catch(e){ toast('Erro ao enviar: '+e.message); input.value=text; }
 }
@@ -838,17 +849,21 @@ function confirmDeleteChat(){
     try{
       const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
       const batch = writeBatch(db);
-      msgs.forEach(d=>batch.delete(d.ref));
       
-      // CORREÇÃO: Zera a conversa principal para ela sumir da listagem imediatamente
+      // CORREÇÃO EXCLUSIVA: Em vez de explodir a mensagem do servidor, oculta apenas da sua visão
+      msgs.forEach(d => {
+        batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) });
+      });
+      
+      // Registra que você ocultou essa conversa da listagem inicial
       batch.update(doc(db,'conversations',chatId), {
-        lastMsg: '',
-        unread: { [ME.uid]: 0, [peerData.uid]: 0 }
+        deletedBy: arrayUnion(ME.uid),
+        [`unread.${ME.uid}`]: 0
       });
       
       await batch.commit();
       closeModal(); closeChat();
-      toast('Conversa apagada.');
+      toast('Conversa apagada localmente.');
     }catch(e){ closeModal(); toast('Erro: '+e.message); }
   });
 }
@@ -914,7 +929,7 @@ $('avatar-file').onchange = function(){
       try {
         localStorage.setItem('onix_avatar_' + ME.uid, compressedBase64);
         loadProfilePage();
-        toast('Foto updated com sucesso!');
+        toast('Foto atualizada com sucesso!');
       } catch(err) {
         console.error(err);
         toast('Erro de espaço no celular.');
