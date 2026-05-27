@@ -207,7 +207,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .push-title{color:#00a884;font-size:14px;font-weight:700;margin-bottom:2px;}
 .push-text{color:#e9edef;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
-/* CALL INTERFACE (ESTILO WHATSAPP) */
+/* CALL INTERFACE */
 #call-screen {
   position: fixed; inset: 0; z-index: 1000005; background: #0b141a;
   display: none; flex-direction: column; align-items: center; justify-content: space-between;
@@ -228,6 +228,11 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 </style>
 </head>
 <body>
+
+<!-- ── ÁUDIO REMOTO: sempre no DOM, nunca escondido ── -->
+<!-- FIX: Elemento dedicado para áudio de chamadas de voz.         -->
+<!-- Separado do <video> (que fica dentro de video-wrap oculto).   -->
+<audio id="remote-audio" autoplay playsinline></audio>
 
 <div class="push-banner" id="push-notif">
   <div class="avatar" id="push-av" style="width:42px;height:42px;"></div>
@@ -482,14 +487,23 @@ let audioChunks = [];
 let isRecording = false;
 
 /* ── WebRTC State ── */
-let localStream  = null;
-let pc           = null;
-let currentCallId = null;
-let callTimerInterval = null; 
-let currentFacingMode = 'user'; 
-let unsubCandidates = null;
+let localStream        = null;
+let pc                 = null;
+let currentCallId      = null;
+let callTimerInterval  = null; 
+let currentFacingMode  = 'user'; 
+let unsubCandidates    = null;
 let unsubAnswerCandidates = null;
-const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
+
+/*
+ * FIX: currentCallType rastreia se a chamada ativa é 'voice' ou 'video'.
+ * Usado para rotear o stream remoto para o elemento correto:
+ *   - 'video' → <video id="remote-video"> (dentro do video-wrap visível)
+ *   - 'voice' → <audio id="remote-audio"> (sempre no DOM, nunca oculto)
+ */
+let currentCallType = 'voice';
+
+const rtcConfig = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
 
 /* ─────────────────────────────── HELPERS ─────────────────── */
 const $  = id => document.getElementById(id);
@@ -517,11 +531,28 @@ function makeAvatar(container, name, photoURL, size=50){
   container.style.width  = size+'px';
   container.style.height = size+'px';
   container.style.fontSize = Math.round(size*.38)+'px';
-  
   if(photoURL){
     container.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;">`;
   } else {
     container.textContent = (name||'?')[0].toUpperCase();
+  }
+}
+
+/*
+ * FIX: Função central para atribuir o stream remoto ao elemento correto.
+ * Para chamada de VOZ → usa <audio id="remote-audio"> que está sempre
+ * visível no DOM (nunca dentro de container display:none).
+ * Para chamada de VÍDEO → usa <video id="remote-video"> dentro do video-wrap.
+ */
+function attachRemoteStream(stream) {
+  if (currentCallType === 'video') {
+    const remoteVideo = $('remote-video');
+    remoteVideo.srcObject = stream;
+    remoteVideo.play().catch(e => console.log('remote-video autoplay:', e));
+  } else {
+    const remoteAudio = $('remote-audio');
+    remoteAudio.srcObject = stream;
+    remoteAudio.play().catch(e => console.log('remote-audio autoplay:', e));
   }
 }
 
@@ -532,17 +563,11 @@ function showWhatsAppNotification(peerName, photoURL, messageText, peerObj) {
   const title = $('push-title');
   const text = $('push-msg');
   const avContainer = $('push-av');
-
   if(!banner) return;
   title.textContent = peerName;
   text.textContent = messageText;
   makeAvatar(avContainer, peerName, photoURL, 42);
-
-  banner.onclick = () => {
-    banner.classList.remove('show');
-    openChat(peerObj);
-  };
-
+  banner.onclick = () => { banner.classList.remove('show'); openChat(peerObj); };
   banner.classList.add('show');
   clearTimeout(bannerTimeout);
   bannerTimeout = setTimeout(() => { banner.classList.remove('show'); }, 3500);
@@ -754,10 +779,8 @@ function listenConvs(){
     for(const data of activeConvs) {
       const peerId = data.members.find(m=>m!==ME.uid);
       if(!peerId) continue;
-      
       const isSaved = ME?.savedChats?.includes(peerId);
       const hasMessages = data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid));
-      
       if (hasMessages || isSaved) {
         matchedPeerIds.add(peerId);
         finalConvsList.push({
@@ -855,7 +878,6 @@ async function renderCallsPage(finalConvsList) {
   const empty = $('calls-empty');
   if(!list) return;
   list.innerHTML = '';
-  
   if (!finalConvsList || finalConvsList.length === 0) {
     if(empty) empty.style.display = 'flex';
     return;
@@ -869,7 +891,7 @@ async function renderCallsPage(finalConvsList) {
 
     const item = document.createElement('div');
     item.className = 'conv-item';
-    item.style.cursor = 'default'; 
+    item.style.cursor = 'default';
 
     const av = document.createElement('div');
     av.className = 'avatar';
@@ -882,7 +904,7 @@ async function renderCallsPage(finalConvsList) {
 
     const rightActions = document.createElement('div');
     rightActions.className = 'call-list-actions';
-    
+
     const voiceBtn = document.createElement('span');
     voiceBtn.className = 'ms'; voiceBtn.textContent = 'call'; voiceBtn.style.cursor = 'pointer';
     voiceBtn.onclick = (e) => { e.stopPropagation(); peerData = peer; startCall('voice'); };
@@ -916,7 +938,7 @@ async function openChat(peer){
     if(!ME.savedChats?.includes(peer.uid)){
       await updateDoc(doc(db,'users',ME.uid), { savedChats: arrayUnion(peer.uid) });
     }
-    
+
     onSnapshot(doc(db,'users',peer.uid), snapshot => {
       if(snapshot.exists()) {
         peerData = { uid: snapshot.id, ...snapshot.data() };
@@ -925,7 +947,7 @@ async function openChat(peer){
         updateBlockUI();
       }
     });
-    
+
     $('chat-screen').classList.add('open');
     $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
     $('msg-input').value = '';
@@ -1093,9 +1115,9 @@ async function sendMessage(fileData = null){
       unread: { [peerData.uid]: currentUnread + 1 }
     }, { merge: true });
   }catch(e) { 
-    toast('Erro de envio (Arquivo muito pesado).'); 
+    toast('Erro de envio (Arquivo muito pesado).');
     console.error(e);
-    if(!fileData) input.value=text; 
+    if(!fileData) input.value=text;
   }
 }
 
@@ -1111,15 +1133,13 @@ $('chat-file-input').onchange = async function() {
       const img = new Image();
       img.onload = function() {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 600; 
+        const MAX_WIDTH = 600;
         let width = img.width;
         let height = img.height;
-
         if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
         canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.45);
         sendMessage({ url: compressedBase64, type: 'image/jpeg', name: file.name.replace(/\.[^/.]+$/, "") + ".jpg" });
       };
@@ -1171,11 +1191,10 @@ async function toggleBlock(){
   refreshBlockedLabel();
 }
 
- function updateBlockUI(){
+function updateBlockUI(){
   if(!peerData) return;
   const amIBlocked = peerData.blocked?.includes(ME.uid);
   const didIBlock  = ME.blocked?.includes(peerData.uid);
-  
   if (didIBlock) {
     $('dc-block').textContent      = 'Desbloquear contato';
     $('chat-footer').style.visibility = 'hidden';
@@ -1236,25 +1255,21 @@ $('p-cam-btn').onclick = ()=>$('avatar-file').click();
 $('avatar-file').onchange = function(){
   const file = this.files[0];
   if(!file) return;
-  
   toast('Processando foto de perfil...');
   const reader = new FileReader();
   reader.onload = function(e) {
     const img = new Image();
     img.onload = async function() {
       const canvas = document.createElement('canvas');
-      const MAX_SIZE = 150; 
+      const MAX_SIZE = 150;
       let width = img.width;
       let height = img.height;
-
-      if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
+      if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
       else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-      
       canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
       const compressedBase64 = canvas.toDataURL('image/jpeg', 0.55);
-      
       try {
         await updateDoc(doc(db,'users', ME.uid), { photoURL: compressedBase64 });
         toast('Foto de perfil salva!');
@@ -1327,7 +1342,7 @@ function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
 $('modal-ok').onclick     = ()=>{ _modalCb?.(); };
 $('modal-cancel').onclick = ()=>closeModal();
 
-/* ── EXTERNAL TIMER UTILITY ── */
+/* ── CALL TIMER ── */
 function startCallTimer() {
   if (callTimerInterval) clearInterval(callTimerInterval);
   let totalSeconds = 0;
@@ -1335,29 +1350,40 @@ function startCallTimer() {
     totalSeconds++;
     let minutes = Math.floor(totalSeconds / 60);
     let seconds = totalSeconds % 60;
-    $('call-status-label').textContent = (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
+    $('call-status-label').textContent =
+      (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
   }, 1000);
 }
 
-/* ─────────────────────────────── CORREÇÃO CRUCIAL DA CHAMADA (WebRTC MÃO DUPLA) ───────────────── */
-$('chat-btn-voice').onclick = () => startCall('voice');
-$('chat-btn-video').onclick = () => startCall('video');
+/* ─────────────────────────────── WebRTC ─────────────────────────────────── */
+
+$('chat-btn-voice').onclick  = () => startCall('voice');
+$('chat-btn-video').onclick  = () => startCall('video');
 $('btn-call-hangup').onclick = () => hangupCall();
 $('btn-call-accept').onclick = () => acceptCall();
 $('btn-call-switch').onclick = () => switchCamera();
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * startCall — quem inicia a chamada
+ * FIX: currentCallType = type  →  attachRemoteStream() roteia para
+ *      <audio> (voz) ou <video> (vídeo) corretamente.
+ * ────────────────────────────────────────────────────────────────────────── */
 async function startCall(type) {
   if (!peerData) return;
+
+  // FIX ①: registra o tipo ANTES de qualquer coisa para ontrack usar
+  currentCallType = type;
+
   currentCallId = ME.uid + '_' + Date.now();
-  currentFacingMode = 'user'; 
+  currentFacingMode = 'user';
   updateLocalVideoMirror();
-  
+
   $('call-name-label').textContent = peerData.name;
   makeAvatar($('call-av'), peerData.name, peerData.photoURL, 110);
   $('call-status-label').textContent = "Chamando...";
   $('btn-call-accept').style.display = 'none';
-  
-  if(type === 'video') {
+
+  if (type === 'video') {
     $('btn-call-switch').style.display = 'flex';
     $('video-wrap').style.display = 'block';
     $('call-info-wrap').style.visibility = 'hidden';
@@ -1370,25 +1396,26 @@ async function startCall(type) {
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
-      video: type === 'video' ? { facingMode: currentFacingMode } : false, audio: true
+      video: type === 'video' ? { facingMode: currentFacingMode } : false,
+      audio: true
     });
     $('local-video').srcObject = localStream;
-    
+
     pc = new RTCPeerConnection(rtcConfig);
     localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    
-    // Captura o stream remoto do parceiro e força a renderização/áudio instantâneo
+
+    // FIX ②: usa attachRemoteStream() — roteia para <audio> ou <video>
     pc.ontrack = event => {
-      if (event.streams && event.streams[0]) {
-        $('remote-video').srcObject = event.streams[0];
-        $('remote-video').play().catch(e => console.log("Auto-play defendido:", e));
-      }
+      const stream = (event.streams && event.streams[0])
+        ? event.streams[0]
+        : new MediaStream([event.track]);
+      attachRemoteStream(stream);
     };
 
-    pc.onicecandidate = event => { 
-      if (event.candidate) { 
-        addDoc(collection(db, 'calls', currentCallId, 'candidates'), event.candidate.toJSON()); 
-      } 
+    pc.onicecandidate = event => {
+      if (event.candidate) {
+        addDoc(collection(db, 'calls', currentCallId, 'candidates'), event.candidate.toJSON());
+      }
     };
 
     const offerDescription = await pc.createOffer();
@@ -1403,50 +1430,79 @@ async function startCall(type) {
     onSnapshot(doc(db, 'calls', currentCallId), snap => {
       const data = snap.data(); if (!data) return;
       if (data.status === 'answered' && data.answer && !pc.currentRemoteDescription) {
-        pc.setRemoteDescription(new RTCSessionDescription(data.answer)); startCallTimer(); 
+        pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+        startCallTimer();
       }
       if (data.status === 'ended') { cleanCallState(); }
     });
 
-    // Escuta e injeta os candidatos ICE gerados por quem aceitou a chamada (mão dupla perfeita)
-    unsubAnswerCandidates = onSnapshot(collection(db, 'calls', currentCallId, 'answerCandidates'), snap => {
-      snap.docChanges().forEach(change => { 
-        if (change.type === 'added' && pc) { 
-          pc.addIceCandidate(new RTCIceCandidate(change.doc.data())).catch(e => console.log(e)); 
-        } 
-      });
-    });
-  } catch (err) { toast("Sem permissão de câmera/microfone."); hangupCall(); }
+    // Candidatos ICE gerados por quem aceitou
+    unsubAnswerCandidates = onSnapshot(
+      collection(db, 'calls', currentCallId, 'answerCandidates'), snap => {
+        snap.docChanges().forEach(change => {
+          if (change.type === 'added' && pc) {
+            pc.addIceCandidate(new RTCIceCandidate(change.doc.data())).catch(e => console.log(e));
+          }
+        });
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    toast("Sem permissão de câmera/microfone.");
+    hangupCall();
+  }
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * listenIncomingCalls — quem recebe a chamada
+ * FIX: currentCallType = callData.type  →  attachRemoteStream() OK
+ * ────────────────────────────────────────────────────────────────────────── */
 function listenIncomingCalls() {
-  const q = query(collection(db, 'calls'), where('receiver', '==', ME.uid), where('status', '==', 'ringing'));
+  const q = query(
+    collection(db, 'calls'),
+    where('receiver', '==', ME.uid),
+    where('status', '==', 'ringing')
+  );
   unsubCall = onSnapshot(q, snap => {
     snap.docChanges().forEach(async change => {
       if (change.type === 'added') {
         const callData = change.doc.data();
         currentCallId = change.doc.id;
-        currentFacingMode = 'user'; 
+        currentFacingMode = 'user';
         updateLocalVideoMirror();
+
+        // FIX ③: registra o tipo para ontrack e attachRemoteStream usarem
+        currentCallType = callData.type;
 
         $('call-name-label').textContent = callData.callerName;
         makeAvatar($('call-av'), callData.callerName, callData.callerPhoto, 110);
-        $('call-status-label').textContent = `Chamada de ${callData.type === 'video' ? 'vídeo' : 'voz'} recebida...`;
+        $('call-status-label').textContent =
+          `Chamada de ${callData.type === 'video' ? 'vídeo' : 'voz'} recebida...`;
         $('btn-call-accept').style.display = 'flex';
-        
-        if(callData.type === 'video') {
-          $('btn-call-switch').style.display = 'flex'; $('video-wrap').style.display = 'block'; $('call-info-wrap').style.visibility = 'hidden';
+
+        if (callData.type === 'video') {
+          $('btn-call-switch').style.display = 'flex';
+          $('video-wrap').style.display = 'block';
+          $('call-info-wrap').style.visibility = 'hidden';
         } else {
-          $('btn-call-switch').style.display = 'none'; $('video-wrap').style.display = 'none'; $('call-info-wrap').style.visibility = 'visible';
+          $('btn-call-switch').style.display = 'none';
+          $('video-wrap').style.display = 'none';
+          $('call-info-wrap').style.visibility = 'visible';
         }
         $('call-screen').classList.add('open');
 
-        onSnapshot(doc(db, 'calls', currentCallId), s => { if (s.data()?.status === 'ended') { cleanCallState(); } });
+        onSnapshot(doc(db, 'calls', currentCallId), s => {
+          if (s.data()?.status === 'ended') { cleanCallState(); }
+        });
       }
     });
   });
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * acceptCall — quem aceita a chamada
+ * FIX: currentCallType já foi definido em listenIncomingCalls.
+ * ────────────────────────────────────────────────────────────────────────── */
 async function acceptCall() {
   const callSnap = await getDoc(doc(db, 'calls', currentCallId));
   if (!callSnap.exists()) return;
@@ -1457,59 +1513,67 @@ async function acceptCall() {
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia({
-      video: callData.type === 'video' ? { facingMode: currentFacingMode } : false, audio: true
+      video: callData.type === 'video' ? { facingMode: currentFacingMode } : false,
+      audio: true
     });
     $('local-video').srcObject = localStream;
-    
+
     pc = new RTCPeerConnection(rtcConfig);
     localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    
-    pc.ontrack = event => { 
-      if (event.streams && event.streams[0]) {
-        $('remote-video').srcObject = event.streams[0];
-        $('remote-video').play().catch(e => console.log(e));
-      }
+
+    // FIX ④: usa attachRemoteStream() — roteia para <audio> ou <video>
+    pc.ontrack = event => {
+      const stream = (event.streams && event.streams[0])
+        ? event.streams[0]
+        : new MediaStream([event.track]);
+      attachRemoteStream(stream);
     };
-    
-    pc.onicecandidate = event => { 
-      if (event.candidate) { 
-        addDoc(collection(db, 'calls', currentCallId, 'answerCandidates'), event.candidate.toJSON()); 
-      } 
+
+    pc.onicecandidate = event => {
+      if (event.candidate) {
+        addDoc(collection(db, 'calls', currentCallId, 'answerCandidates'), event.candidate.toJSON());
+      }
     };
 
     await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
     const answerDescription = await pc.createAnswer();
     await pc.setLocalDescription(answerDescription);
 
-    await updateDoc(doc(db, 'calls', currentCallId), { 
-      answer: { type: answerDescription.type, sdp: answerDescription.sdp }, 
-      status: 'answered' 
+    await updateDoc(doc(db, 'calls', currentCallId), {
+      answer: { type: answerDescription.type, sdp: answerDescription.sdp },
+      status: 'answered'
     });
-    startCallTimer(); 
+    startCallTimer();
 
-    // Escuta e injeta os candidatos ICE gerados por quem iniciou a chamada original
-    unsubCandidates = onSnapshot(collection(db, 'calls', currentCallId, 'candidates'), snap => {
-      snap.docChanges().forEach(change => { 
-        if (change.type === 'added' && pc) { 
-          pc.addIceCandidate(new RTCIceCandidate(change.doc.data())).catch(e => console.log(e)); 
-        } 
-      });
-    });
-  } catch (err) { console.error(err); hangupCall(); }
+    // Candidatos ICE gerados por quem iniciou
+    unsubCandidates = onSnapshot(
+      collection(db, 'calls', currentCallId, 'candidates'), snap => {
+        snap.docChanges().forEach(change => {
+          if (change.type === 'added' && pc) {
+            pc.addIceCandidate(new RTCIceCandidate(change.doc.data())).catch(e => console.log(e));
+          }
+        });
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    hangupCall();
+  }
 }
 
+/* ── Alternar câmera ── */
 async function switchCamera() {
   if (!localStream) return;
   const videoTrack = localStream.getVideoTracks()[0];
   if (!videoTrack) return;
   currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-
   try {
     videoTrack.stop();
     localStream.removeTrack(videoTrack);
-    const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacingMode }, audio: false
+    });
     const newVideoTrack = newStream.getVideoTracks()[0];
-    
     if (pc) {
       const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
       if (sender) { await sender.replaceTrack(newVideoTrack); }
@@ -1517,25 +1581,41 @@ async function switchCamera() {
     localStream.addTrack(newVideoTrack);
     updateLocalVideoMirror();
     $('local-video').srcObject = localStream;
-  } catch (err) { console.error(err); toast("Não foi possível alternar a câmera."); }
+  } catch (err) {
+    console.error(err);
+    toast("Não foi possível alternar a câmera.");
+  }
 }
 
 function updateLocalVideoMirror() {
-  if (currentFacingMode === 'user') { $('local-video').style.transform = 'scaleX(-1)'; } 
-  else { $('local-video').style.transform = 'scaleX(1)'; }
+  $('local-video').style.transform = currentFacingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
 }
 
+/* ── Encerrar chamada ── */
 async function hangupCall() {
-  if (currentCallId) { try { await updateDoc(doc(db, 'calls', currentCallId), { status: 'ended' }); } catch(e){} }
+  if (currentCallId) {
+    try { await updateDoc(doc(db, 'calls', currentCallId), { status: 'ended' }); } catch(e) {}
+  }
   cleanCallState();
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * cleanCallState
+ * FIX ⑤: limpa srcObject tanto do <audio> quanto do <video> remoto.
+ * ────────────────────────────────────────────────────────────────────────── */
 function cleanCallState() {
   $('call-screen').classList.remove('open');
   if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
-  if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
-  if (pc) { pc.close(); pc = null; }
-  unsubCandidates?.(); unsubCandidates = null;
+  if (localStream)  { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if (pc)           { pc.close(); pc = null; }
+
+  // Libera os elementos de mídia remota
+  const rv = $('remote-video');
+  if (rv) { rv.srcObject = null; }
+  const ra = $('remote-audio');
+  if (ra) { ra.srcObject = null; }
+
+  unsubCandidates?.();       unsubCandidates = null;
   unsubAnswerCandidates?.(); unsubAnswerCandidates = null;
   currentCallId = null;
 }
