@@ -15,13 +15,11 @@
 html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif;}
 .ms{font-family:'Material Symbols Rounded';font-size:24px;line-height:1;user-select:none;}
 
-/* SHELL */
 .shell{width:100%;max-width:480px;height:100dvh;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;}
 
-/* AUTH */
-#auth{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;pointer-events: auto;}
-#auth.hidden{display:none !important; pointer-events: none !important;}
-.auth-logo {font-size:52px;margin-bottom:8px;}
+#auth{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;pointer-events:auto;}
+#auth.hidden{display:none !important;pointer-events:none !important;}
+.auth-logo{font-size:52px;margin-bottom:8px;}
 .auth-brand{color:var(--green);font-size:26px;font-weight:700;margin-bottom:4px;}
 .auth-sub{color:var(--text2);font-size:13px;margin-bottom:28px;text-align:center;line-height:1.5;}
 .auth-card{background:var(--bg3);border-radius:18px;padding:22px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
@@ -36,14 +34,12 @@ html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'
 .auth-err{color:var(--red);font-size:13px;margin-bottom:10px;text-align:center;display:none;}
 .auth-err.show{display:block;}
 
-/* HEADER */
 header{height:56px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;border-bottom:1px solid var(--border);position:relative;z-index:10;}
 .brand{color:var(--green);font-size:20px;font-weight:700;}
 .hicons{display:flex;gap:14px;}
 .hicons .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
 .hicons .ms:active{background:var(--panel);}
 
-/* SEARCH BAR */
 #search-bar{padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:none;}
 #search-bar.show{display:block;}
 .sbar-inner{background:var(--panel);border-radius:25px;display:flex;align-items:center;padding:9px 14px;gap:10px;}
@@ -51,7 +47,6 @@ header{height:56px;background:var(--bg3);display:flex;align-items:center;justify
 .sbar-inner input{background:none;border:none;outline:none;color:var(--text);font-size:15px;flex:1;}
 .sbar-inner input::placeholder{color:var(--text2);}
 
-/* SEARCH RESULTS */
 #search-results{background:var(--bg);display:none;border-bottom:2px solid var(--green);position:relative;z-index:50;}
 #search-results.show{display:block;}
 .sr-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
@@ -59,7 +54,6 @@ header{height:56px;background:var(--bg3);display:flex;align-items:center;justify
 .sr-tel{color:var(--text2);font-size:13px;margin-top:2px;}
 .sr-btn{background:var(--green);border:none;border-radius:20px;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
 
-/* MAIN / PAGES */
 main{flex:1;overflow:hidden;position:relative;}
 .page{position:absolute;inset:0;overflow-y:auto;display:none;}
 .page.active{display:block;}
@@ -67,7 +61,8 @@ main{flex:1;overflow:hidden;position:relative;}
 .empty-state .ms{font-size:60px;color:var(--panel);}
 .empty-state p{font-size:14px;line-height:1.6;}
 
-/* CONVERSATIONS & CALLS ITEMS */
+.section-title{padding:10px 16px 6px;color:var(--text2);font-size:11px;font-weight:700;letter-spacing:.8px;background:var(--bg);}
+
 .conv-item{padding:13px 16px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--border);cursor:pointer;}
 .conv-item:active{background:var(--bg2);}
 .avatar{width:50px;height:50px;border-radius:50%;background:var(--panel);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:20px;font-weight:700;overflow:hidden;}
@@ -78,12 +73,10 @@ main{flex:1;overflow:hidden;position:relative;}
 .conv-time{color:var(--text2);font-size:11px;white-space:nowrap;}
 .unread-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 
-/* CALL ACTIONS BUTTONS IN LIST */
 .call-list-actions{display:flex;gap:12px;align-items:center;}
 .call-list-actions .ms{color:var(--green);padding:8px;border-radius:50%;cursor:pointer;}
 .call-list-actions .ms:active{background:var(--panel);}
 
-/* CHAT SCREEN */
 #chat-screen{position:fixed;inset:0;z-index:99998;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
 #chat-screen.open{display:flex;}
 .chat-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);position:relative;}
@@ -103,17 +96,16 @@ main{flex:1;overflow:hidden;position:relative;}
 .send-btn{background:var(--green);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .send-btn:active{background:var(--green-dark);}
 .send-btn .ms{color:#fff;font-size:20px;}
-.send-btn.recording { background: var(--red); animation: pulse 1s infinite; }
-@keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
+.send-btn.recording{background:var(--red);animation:pulse 1s infinite;}
+@keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.1);}100%{transform:scale(1);}}
+.rec-timer{color:var(--red);font-size:13px;font-weight:700;min-width:36px;text-align:center;display:none;}
 
-/* FILE CHAT GRAPHICS */
 .file-link{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px;margin-top:4px;}
 .file-link .ms{font-size:28px;}
 .msg-img{max-width:100%;max-height:200px;border-radius:8px;margin-top:4px;display:block;cursor:pointer;}
 .msg-video{max-width:100%;max-height:240px;border-radius:8px;margin-top:4px;display:block;outline:none;background:#000;}
 .msg-audio{max-width:100%;margin-top:4px;outline:none;display:block;}
 
-/* PROFILE PAGE */
 .profile-banner{height:110px;background:linear-gradient(135deg,var(--green-dark),var(--green));flex-shrink:0;}
 .profile-body{padding:0 20px 40px;}
 .p-avatar-wrap{position:relative;width:86px;height:86px;margin:-43px auto 18px;}
@@ -129,7 +121,6 @@ main{flex:1;overflow:hidden;position:relative;}
 .save-btn:active{background:var(--green-dark);}
 .save-btn:disabled{opacity:.6;}
 
-/* SETTINGS PAGE */
 .config-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);cursor:pointer;}
 .config-item:active{background:var(--bg2);}
 .config-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -137,7 +128,6 @@ main{flex:1;overflow:hidden;position:relative;}
 .config-label{color:var(--text);font-size:14px;flex:1;}
 .config-sub{color:var(--text2);font-size:12px;margin-top:1px;}
 
-/* BLOCKED PANEL */
 #blocked-panel{position:fixed;inset:0;z-index:99990;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
 #blocked-panel.open{display:flex;}
 .blocked-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
@@ -146,7 +136,6 @@ main{flex:1;overflow:hidden;position:relative;}
 .blocked-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
 .unblock-btn{background:transparent;border:1.5px solid var(--green);border-radius:20px;padding:7px 14px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;}
 
-/* DROP MENUS */
 .drop-menu{position:absolute;background:var(--bg3);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:600;min-width:180px;overflow:hidden;display:none;}
 .drop-menu.open{display:block;}
 #drop-main{top:52px;right:10px;}
@@ -156,21 +145,17 @@ main{flex:1;overflow:hidden;position:relative;}
 .drop-menu .drop-item:active{background:var(--panel);}
 .drop-menu .drop-item.danger{color:var(--red);}
 
-/* NAV */
 nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text2);font-size:10px;}
 .nav-btn.active{color:var(--green);}
 .nav-btn .ms{font-size:22px;}
 
-/* TOAST */
 #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);color:var(--text);padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* SPINNER */
 .spin{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* MODAL */
 .modal-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.open{display:flex;}
 .modal-box{background:var(--bg3);border-radius:16px;padding:24px;width:100%;max-width:380px;}
@@ -181,53 +166,27 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .modal-btn.cancel{background:var(--panel);color:var(--text2);}
 .modal-btn.danger{background:var(--red);color:#fff;}
 
-/* BLOCKED NOTICE */
 #blocked-notice{display:none;padding:14px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--border);background:var(--bg3);}
 
-/* HEADS-UP NOTIFICATION */
-.push-banner{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  background:#1f2c34;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  box-shadow:0 6px 20px rgba(0,0,0,.6);
-  padding:14px 18px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  z-index:1000000;
-  transform:translateY(-100%);
-  transition:transform .3s cubic-bezier(0.1, 1, 0.1, 1);
-  cursor:pointer;
-}
+.push-banner{position:fixed;top:0;left:0;width:100%;background:#1f2c34;border-bottom:1px solid rgba(255,255,255,0.08);box-shadow:0 6px 20px rgba(0,0,0,.6);padding:14px 18px;display:flex;align-items:center;gap:14px;z-index:1000000;transform:translateY(-100%);transition:transform .3s cubic-bezier(0.1,1,0.1,1);cursor:pointer;}
 .push-banner.show{transform:translateY(0);}
 .push-body{flex:1;min-width:0;}
 .push-title{color:#00a884;font-size:14px;font-weight:700;margin-bottom:2px;}
 .push-text{color:#e9edef;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
-/* CALL INTERFACE */
-#call-screen {
-  position: fixed; inset: 0; z-index: 1000005; background: #0b141a;
-  display: none; flex-direction: column; align-items: center; justify-content: space-between;
-  padding: 40px 20px; color: #fff; width: 100%; max-width: 480px; margin: 0 auto;
-}
-#call-screen.open { display: flex; }
-.call-profile { text-align: center; margin-top: 40px; }
-.call-name { font-size: 24px; font-weight: 600; margin-top: 15px; }
-.call-status { font-size: 14px; color: #8696a0; margin-top: 5px; }
-.video-container { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; display: none; }
-#remote-video { width: 100%; height: 100%; object-fit: cover; }
-#local-video { position: absolute; top: 20px; right: 20px; width: 110px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #202c33; z-index: 2; transform: scaleX(-1); }
-.call-actions { display: flex; gap: 30px; margin-bottom: 30px; z-index: 10; }
-.call-btn { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
-.call-btn.hangup { background: var(--red); }
-.call-btn.accept { background: var(--green); }
-.call-btn.switch-cam { background: #2a3942; }
-
-/* AUDIO TIMER */
-.rec-timer{color:var(--red);font-size:13px;font-weight:700;min-width:36px;text-align:center;}
+#call-screen{position:fixed;inset:0;z-index:1000005;background:#0b141a;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:40px 20px;color:#fff;width:100%;max-width:480px;margin:0 auto;}
+#call-screen.open{display:flex;}
+.call-profile{text-align:center;margin-top:40px;}
+.call-name{font-size:24px;font-weight:600;margin-top:15px;}
+.call-status{font-size:14px;color:#8696a0;margin-top:5px;}
+.video-container{position:absolute;inset:0;width:100%;height:100%;background:#000;display:none;}
+#remote-video{width:100%;height:100%;object-fit:cover;}
+#local-video{position:absolute;top:20px;right:20px;width:110px;height:150px;object-fit:cover;border-radius:8px;border:2px solid #202c33;z-index:2;transform:scaleX(-1);}
+.call-actions{display:flex;gap:30px;margin-bottom:30px;z-index:10;}
+.call-btn{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;color:#fff;}
+.call-btn.hangup{background:var(--red);}
+.call-btn.accept{background:var(--green);}
+.call-btn.switch-cam{background:#2a3942;}
 </style>
 </head>
 <body>
@@ -235,8 +194,8 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 <div class="push-banner" id="push-notif">
   <div class="avatar" id="push-av" style="width:42px;height:42px;"></div>
   <div class="push-body">
-    <div class="push-title" id="push-title">Nome do Contato</div>
-    <div class="push-text" id="push-msg">Mensagem recebida</div>
+    <div class="push-title" id="push-title"></div>
+    <div class="push-text" id="push-msg"></div>
   </div>
 </div>
 
@@ -247,7 +206,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </div>
   <div class="call-profile" id="call-info-wrap">
     <div class="avatar" id="call-av" style="width:110px;height:110px;font-size:44px;margin:0 auto;"></div>
-    <div class="call-name" id="call-name-label">Nome do Contato</div>
+    <div class="call-name" id="call-name-label"></div>
     <div class="call-status" id="call-status-label">Chamando...</div>
   </div>
   <div class="call-actions">
@@ -266,16 +225,16 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
       <h2>Entrar na conta</h2>
       <div class="auth-err" id="login-err"></div>
       <input class="field" id="login-phone" type="tel" placeholder="Seu número virtual" maxlength="20">
-      <input class="field" id="login-pass"  type="password" placeholder="Senha">
+      <input class="field" id="login-pass" type="password" placeholder="Senha">
       <button class="btn-main" id="btn-login">Entrar</button>
       <div class="auth-switch" id="to-register">Não tem conta? <b>Cadastrar</b></div>
     </div>
     <div id="view-register" style="display:none;">
       <h2>Criar conta</h2>
       <div class="auth-err" id="reg-err"></div>
-      <input class="field" id="reg-name"  type="text"     placeholder="Seu nome" maxlength="40">
-      <input class="field" id="reg-phone" type="tel"      placeholder="Escolha um número (ex: 11987654321)" maxlength="20">
-      <input class="field" id="reg-pass"  type="password" placeholder="Senha (mínimo 6 caracteres)">
+      <input class="field" id="reg-name" type="text" placeholder="Seu nome" maxlength="40">
+      <input class="field" id="reg-phone" type="tel" placeholder="Escolha um número (ex: 11987654321)" maxlength="20">
+      <input class="field" id="reg-pass" type="password" placeholder="Senha (mínimo 6 caracteres)">
       <button class="btn-main" id="btn-register">Criar conta</button>
       <div class="auth-switch" id="to-login">Já tem conta? <b>Entrar</b></div>
     </div>
@@ -303,7 +262,6 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
       <span class="ms" id="search-close" style="cursor:pointer;">close</span>
     </div>
   </div>
-
   <div id="search-results"></div>
 
   <main>
@@ -317,7 +275,8 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 
     <div class="page" id="page-calls">
       <div id="calls-contacts-list"></div>
-      <div class="empty-state" id="calls-empty">
+      <!-- começa oculto -->
+      <div class="empty-state" id="calls-empty" style="display:none;">
         <span class="ms">call</span>
         <p>Nenhum contato disponível para chamadas.</p>
       </div>
@@ -328,25 +287,14 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
       <div class="profile-body">
         <div class="p-avatar-wrap">
           <div class="avatar" id="profile-av">?</div>
-          <div class="p-cam" id="p-cam-btn">
-            <span class="ms">photo_camera</span>
-          </div>
+          <div class="p-cam" id="p-cam-btn"><span class="ms">photo_camera</span></div>
         </div>
         <span class="field-label">NOME</span>
-        <div class="field-row">
-          <span class="ms">person</span>
-          <input id="p-name" type="text" placeholder="Seu nome" maxlength="40">
-        </div>
+        <div class="field-row"><span class="ms">person</span><input id="p-name" type="text" placeholder="Seu nome" maxlength="40"></div>
         <span class="field-label">STATUS</span>
-        <div class="field-row">
-          <span class="ms">edit</span>
-          <input id="p-status" type="text" placeholder="Hey! Estou usando o Onix." maxlength="80">
-        </div>
+        <div class="field-row"><span class="ms">edit</span><input id="p-status" type="text" placeholder="Hey! Estou usando o Onix." maxlength="80"></div>
         <span class="field-label">NÚMERO VIRTUAL</span>
-        <div class="field-row">
-          <span class="ms">phone</span>
-          <input id="p-phone" type="text" disabled>
-        </div>
+        <div class="field-row"><span class="ms">phone</span><input id="p-phone" type="text" disabled></div>
         <button class="save-btn" id="btn-save-profile">Salvar</button>
       </div>
     </div>
@@ -367,7 +315,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
       <div class="section-title">SOBRE</div>
       <div class="config-item" style="cursor:default;">
         <div class="config-icon" style="background:rgba(0,168,132,.15)"><span class="ms" style="color:var(--green)">info</span></div>
-        <div style="flex:1"><div class="config-label">Onix Messenger</div><div class="config-sub">v1.0 — Mensagens em tempo real</div></div>
+        <div style="flex:1"><div class="config-label">Onix Messenger</div><div class="config-sub">v1.1 — Mensagens em tempo real</div></div>
       </div>
       <div class="config-item" id="cfg-logout">
         <div class="config-icon" style="background:rgba(241,92,109,.15)"><span class="ms" style="color:var(--red)">logout</span></div>
@@ -377,18 +325,10 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   </main>
 
   <nav>
-    <div class="nav-btn active" id="nav-chats">
-      <span class="ms">chat</span>Conversas
-    </div>
-    <div class="nav-btn" id="nav-calls">
-      <span class="ms">call</span>Chamadas
-    </div>
-    <div class="nav-btn" id="nav-profile">
-      <span class="ms">person</span>Perfil
-    </div>
-    <div class="nav-btn" id="nav-settings">
-      <span class="ms">settings</span>Config
-    </div>
+    <div class="nav-btn active" id="nav-chats"><span class="ms">chat</span>Conversas</div>
+    <div class="nav-btn" id="nav-calls"><span class="ms">call</span>Chamadas</div>
+    <div class="nav-btn" id="nav-profile"><span class="ms">person</span>Perfil</div>
+    <div class="nav-btn" id="nav-settings"><span class="ms">settings</span>Config</div>
   </nav>
 </div>
 
@@ -412,7 +352,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div class="chat-footer" id="chat-footer">
     <span class="ms" id="chat-attach-btn" style="color:var(--text2);cursor:pointer;padding:6px;">attach_file</span>
     <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
-    <span class="rec-timer" id="rec-timer" style="display:none;">0:00</span>
+    <span class="rec-timer" id="rec-timer"></span>
     <button class="send-btn" id="btn-send"><span class="ms" id="send-icon">mic</span></button>
   </div>
   <div id="blocked-notice">
@@ -430,37 +370,33 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
   <div id="blocked-list" style="flex:1;overflow-y:auto;"></div>
 </div>
 
-<!-- Foto de perfil: apenas imagens -->
 <input type="file" id="avatar-file" accept="image/*" style="display:none;">
-<!-- Anexo no chat: apenas imagens -->
 <input type="file" id="chat-file-input" accept="image/*" style="display:none;">
 
 <div class="modal-overlay" id="modal">
   <div class="modal-box">
     <div class="modal-title" id="modal-title"></div>
-    <div class="modal-body"  id="modal-body"></div>
+    <div class="modal-body" id="modal-body"></div>
     <div class="modal-actions">
       <button class="modal-btn cancel" id="modal-cancel">Cancelar</button>
-      <button class="modal-btn danger"  id="modal-ok">Confirmar</button>
+      <button class="modal-btn danger" id="modal-ok">Confirmar</button>
     </div>
   </div>
 </div>
-
 <div id="toast"></div>
 
 <script type="module">
-import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp }                         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword,
          signInWithEmailAndPassword, onAuthStateChanged,
-         signOut }                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+         signOut, deleteUser }                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc,
          collection, query, where, orderBy,
-         onSnapshot, addDoc, updateDoc, deleteDoc,
+         onSnapshot, addDoc, updateDoc,
          getDocs, serverTimestamp, arrayUnion,
-         arrayRemove, writeBatch }                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+         arrayRemove, writeBatch }               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ── init ── */
-const fbApp   = initializeApp({
+const fbApp = initializeApp({
   apiKey:"AIzaSyANAPc3ZsaGt_3QCNh0M1KskoC67ggwLEA",
   authDomain:"bairon-89014.firebaseapp.com",
   projectId:"bairon-89014",
@@ -468,41 +404,31 @@ const fbApp   = initializeApp({
   messagingSenderId:"263387553023",
   appId:"1:263387553023:web:d5402f3106b5992879c0ca"
 });
-const auth    = getAuth(fbApp);
-const db      = getFirestore(fbApp);
+const auth = getAuth(fbApp);
+const db   = getFirestore(fbApp);
 
 /* ── State ── */
-let ME           = null;
-let chatId       = null;
-let peerData     = null;
-let unsubMsgs    = null;
-let unsubConvs   = null;
-let unsubCall    = null;
-let searchTimer  = null;
-let knownPreviews = {}; 
-let isFirstLoad  = true;
+let ME = null, chatId = null, peerData = null;
+let unsubMsgs = null, unsubConvs = null, unsubCall = null;
+let searchTimer = null, knownPreviews = {}, isFirstLoad = true;
 
-/* ── Audio Recording State ── */
-let mediaRecorder    = null;
-let audioChunks      = [];
-let isRecording      = false;
-let recTimerInterval = null;   // ← timer para exibir segundos
-let recSeconds       = 0;
-const MAX_REC_SECS   = 60;     // ← limite: 60 segundos
+/* ── Audio ── */
+let mediaRecorder = null, audioChunks = [], isRecording = false;
+let recTimerInterval = null, recSeconds = 0;
+const MAX_REC_SECS = 55; // 55s → ~700KB em mp3 mono
 
-/* ── WebRTC State ── */
-let localStream  = null;
-let pc           = null;
-let currentCallId = null;
-let callTimerInterval = null; 
-let currentFacingMode = 'user'; 
-const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
+/* ── WebRTC ── */
+let localStream = null, pc = null, currentCallId = null;
+let callTimerInterval = null, currentFacingMode = 'user';
+const rtcConfig = { iceServers:[{urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]}] };
 
-/* ── Firestore safe limit: ~700 KB em base64 (1 MB doc - overhead) ── */
-const MAX_BASE64_BYTES = 700 * 1024;
+/* Limite seguro: 700 KB em bytes de dados reais */
+const MAX_BYTES = 700 * 1024;
+/* Limite da foto de perfil: muito menor pois fica no doc do usuário junto de outros campos */
+const MAX_PROFILE_BYTES = 60 * 1024;
 
-/* ─────────────────────────────── HELPERS ─────────────────── */
-const $  = id => document.getElementById(id);
+/* ─── HELPERS ─── */
+const $ = id => document.getElementById(id);
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const phoneToEmail = p => 'u' + p.replace(/\D/g,'') + '@onix.app';
 const cleanPhone   = p => p.replace(/\D/g,'');
@@ -513,137 +439,121 @@ function fmtTime(date){
   if(diff < 86400000) return date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
 }
-
 function toast(msg, dur=2800){
-  const t = $('toast');
-  if(!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), dur);
+  const t=$('toast'); if(!t) return;
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+function makeAvatar(el,name,photo,size=50){
+  if(!el) return;
+  el.style.width=size+'px'; el.style.height=size+'px';
+  el.style.fontSize=Math.round(size*.38)+'px';
+  el.innerHTML = photo
+    ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;">`
+    : (name||'?')[0].toUpperCase();
 }
 
-function makeAvatar(container, name, photoURL, size=50){
-  if(!container) return;
-  container.style.width  = size+'px';
-  container.style.height = size+'px';
-  container.style.fontSize = Math.round(size*.38)+'px';
-  if(photoURL){
-    container.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;">`;
-  } else {
-    container.textContent = (name||'?')[0].toUpperCase();
-  }
-}
-
-/* ── Comprime imagem e retorna base64 dentro do limite seguro ── */
-function compressImage(file, cb) {
+/* ── Compressão progressiva para fotos do chat ── */
+function compressImage(file, maxBytes, cb){
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = e => {
     const img = new Image();
-    img.onload = function() {
-
-      // Tenta compressões progressivamente mais agressivas
-      const attempts = [
-        { maxPx: 640, q: 0.5 },
-        { maxPx: 480, q: 0.4 },
-        { maxPx: 360, q: 0.3 },
-        { maxPx: 280, q: 0.25 },
-        { maxPx: 200, q: 0.2 },
+    img.onload = () => {
+      const steps = [
+        {maxPx:640,q:0.5},{maxPx:480,q:0.4},{maxPx:360,q:0.3},
+        {maxPx:260,q:0.25},{maxPx:180,q:0.2}
       ];
-
-      function tryCompress(index) {
-        if (index >= attempts.length) {
-          cb(null, 'Foto muito pesada mesmo após compressão máxima. Tente uma foto menor.');
-          return;
-        }
-        const { maxPx, q } = attempts[index];
-        let w = img.width, h = img.height;
-        if (w > h) { if (w > maxPx) { h = Math.round(h * maxPx / w); w = maxPx; } }
-        else        { if (h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; } }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        const b64 = canvas.toDataURL('image/jpeg', q);
-
-        // Verifica tamanho real em bytes
-        const byteLen = Math.round((b64.length - b64.indexOf(',') - 1) * 0.75);
-        if (byteLen <= MAX_BASE64_BYTES) {
-          cb(b64, null);
-        } else {
-          tryCompress(index + 1);
-        }
+      function try_(i){
+        if(i>=steps.length){ cb(null,'Foto muito pesada. Tente uma imagem menor.'); return; }
+        const {maxPx,q} = steps[i];
+        let w=img.width, h=img.height;
+        if(w>h){ if(w>maxPx){h=Math.round(h*maxPx/w);w=maxPx;} }
+        else    { if(h>maxPx){w=Math.round(w*maxPx/h);h=maxPx;} }
+        const c=document.createElement('canvas');
+        c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        const b64=c.toDataURL('image/jpeg',q);
+        const bytes=Math.round((b64.length-b64.indexOf(',')-1)*0.75);
+        bytes<=maxBytes ? cb(b64,null) : try_(i+1);
       }
-      tryCompress(0);
+      try_(0);
     };
-    img.src = e.target.result;
+    img.src=e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-/* ── System Top Notification ── */
-let bannerTimeout = null;
-function showWhatsAppNotification(peerName, photoURL, messageText, peerObj) {
-  const banner = $('push-notif');
-  const title = $('push-title');
-  const text = $('push-msg');
-  const avContainer = $('push-av');
-  if(!banner) return;
-  title.textContent = peerName;
-  text.textContent = messageText;
-  makeAvatar(avContainer, peerName, photoURL, 42);
-  banner.onclick = () => { banner.classList.remove('show'); openChat(peerObj); };
-  banner.classList.add('show');
-  clearTimeout(bannerTimeout);
-  bannerTimeout = setTimeout(() => { banner.classList.remove('show'); }, 3500);
+/* ── Notificação banner ── */
+let bannerTO=null;
+function showBanner(name,photo,text,peer){
+  const b=$('push-notif'); if(!b) return;
+  $('push-title').textContent=name;
+  $('push-msg').textContent=text;
+  makeAvatar($('push-av'),name,photo,42);
+  b.onclick=()=>{ b.classList.remove('show'); openChat(peer); };
+  b.classList.add('show');
+  clearTimeout(bannerTO);
+  bannerTO=setTimeout(()=>b.classList.remove('show'),3500);
 }
 
-/* ─────────────────────────────── AUTH UI ─────────────────── */
-$('to-register').onclick = ()=>{ $('view-login').style.display='none'; $('view-register').style.display=''; clearErr(); };
-$('to-login').onclick    = ()=>{ $('view-register').style.display='none'; $('view-login').style.display=''; clearErr(); };
-
-function clearErr(){ ['login-err','reg-err'].forEach(id=>{ const el=$(id); if(el){ el.textContent=''; el.classList.remove('show'); } }); }
-function showErr(id, msg){ const el=$(id); if(el){ el.textContent=msg; el.classList.add('show'); } }
-
-function setLoading(btnId, on){
-  const b=$(btnId); if(!b) return;
+/* ─── AUTH UI ─── */
+$('to-register').onclick=()=>{ $('view-login').style.display='none'; $('view-register').style.display=''; clearErr(); };
+$('to-login').onclick   =()=>{ $('view-register').style.display='none'; $('view-login').style.display=''; clearErr(); };
+function clearErr(){ ['login-err','reg-err'].forEach(id=>{ const el=$(id); if(el){el.textContent='';el.classList.remove('show');} }); }
+function showErr(id,msg){ const el=$(id); if(el){el.textContent=msg;el.classList.add('show');} }
+function setLoading(id,on){
+  const b=$(id); if(!b) return;
   b.disabled=on;
-  const labels={'btn-login':'Entrar','btn-register':'Criar conta'};
-  b.innerHTML = on ? '<span class="spin"></span>' : labels[btnId];
+  b.innerHTML=on?'<span class="spin"></span>':{'btn-login':'Entrar','btn-register':'Criar conta'}[id];
+}
+function authErrMsg(code){
+  return({'auth/user-not-found':'Número não cadastrado.','auth/wrong-password':'Senha incorreta.',
+    'auth/invalid-credential':'Número ou senha incorretos.','auth/email-already-in-use':'Número já cadastrado.',
+    'auth/too-many-requests':'Muitas tentativas. Aguarde.','auth/network-request-failed':'Sem conexão com a internet.'}
+  [code]||'Erro: '+code);
 }
 
-function authErr(code){
-  const map={
-    'auth/user-not-found':'Número não cadastrado.',
-    'auth/wrong-password':'Senha incorreta.',
-    'auth/invalid-credential':'Número ou senha incorretos.',
-    'auth/email-already-in-use':'Número já cadastrado.',
-    'auth/too-many-requests':'Muitas tentativas. Aguarde.',
-    'auth/operation-not-allowed':'Erro nas credenciais do console.',
-    'auth/network-request-failed':'Sem conexão com a internet.'
-  };
-  return map[code]||'Erro: '+code;
-}
-
-/* ── Register ── */
+/* ── REGISTRO — cria Auth PRIMEIRO, depois verifica número (evita permission-denied) ── */
 $('btn-register').onclick = async ()=>{
   const name  = $('reg-name').value.trim();
   const phone = cleanPhone($('reg-phone').value);
   const pass  = $('reg-pass').value;
-  if(!name)           return showErr('reg-err','Digite seu nome.');
-  if(phone.length<8)  return showErr('reg-err','Número muito curto.');
-  if(pass.length<6)   return showErr('reg-err','Senha mínimo 6 caracteres.');
+  if(!name)          return showErr('reg-err','Digite seu nome.');
+  if(phone.length<8) return showErr('reg-err','Número muito curto (mín. 8 dígitos).');
+  if(pass.length<6)  return showErr('reg-err','Senha mínimo 6 caracteres.');
   setLoading('btn-register',true);
+  let cred = null;
   try{
+    // 1️⃣ Cria usuário Firebase Auth PRIMEIRO — agora está autenticado
+    cred = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+    const uid = cred.user.uid;
+
+    // 2️⃣ Agora tem permissão para ler o Firestore
     const existing = await getDoc(doc(db,'phones',phone));
-    if(existing.exists()){ setLoading('btn-register',false); return showErr('reg-err','Número já em uso.'); }
-    const cred = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), pass);
-    const uid  = cred.user.uid;
-    await setDoc(doc(db,'users',uid),{ uid, name, phone, photoURL:'', status:'Hey! Estou usando o Onix.', blocked:[], savedChats:[], createdAt:serverTimestamp() });
+    if(existing.exists()){
+      // Número já em uso: desfaz o usuário recém-criado
+      await deleteUser(cred.user);
+      await signOut(auth);
+      setLoading('btn-register',false);
+      return showErr('reg-err','Número já em uso. Escolha outro.');
+    }
+
+    // 3️⃣ Salva dados do usuário e do número
+    await setDoc(doc(db,'users',uid),{
+      uid, name, phone, photoURL:'', status:'Hey! Estou usando o Onix.',
+      blocked:[], savedChats:[], createdAt:serverTimestamp()
+    });
     await setDoc(doc(db,'phones',phone),{ uid });
-  }catch(e){ setLoading('btn-register',false); showErr('reg-err', authErr(e.code)); }
+    // onAuthStateChanged cuida do resto
+  }catch(e){
+    // Se a conta foi criada mas deu erro depois, remove ela
+    if(cred){ try{ await deleteUser(cred.user); await signOut(auth); }catch(_){} }
+    setLoading('btn-register',false);
+    showErr('reg-err', authErrMsg(e.code));
+  }
 };
 
-/* ── Login ── */
+/* ── LOGIN ── */
 $('btn-login').onclick = async ()=>{
   const phone = cleanPhone($('login-phone').value);
   const pass  = $('login-pass').value;
@@ -652,41 +562,36 @@ $('btn-login').onclick = async ()=>{
   setLoading('btn-login',true);
   try{
     await signInWithEmailAndPassword(auth, phoneToEmail(phone), pass);
-  }catch(e){ setLoading('btn-login',false); showErr('login-err', authErr(e.code)); }
+  }catch(e){ setLoading('btn-login',false); showErr('login-err', authErrMsg(e.code)); }
 };
 
-/* ─────────────────────────────── AUTH STATE ──────────────── */
+/* ─── AUTH STATE ─── */
 onAuthStateChanged(auth, async user=>{
   if(user){
-    isFirstLoad = true;
-    knownPreviews = {};
-    onSnapshot(doc(db,'users',user.uid), snap => {
+    isFirstLoad=true; knownPreviews={};
+    onSnapshot(doc(db,'users',user.uid), snap=>{
       if(!snap.exists()) return;
-      const wasNull = (ME === null);
-      ME = snap.data();
-      ME.blocked = ME.blocked || [];
-      ME.savedChats = ME.savedChats || [];
+      const wasNull=(ME===null);
+      ME=snap.data();
+      ME.blocked=ME.blocked||[];
+      ME.savedChats=ME.savedChats||[];
       $('auth').classList.add('hidden');
-      setLoading('btn-login', false);
-      setLoading('btn-register', false);
-      loadProfilePage();
-      refreshBlockedLabel();
-      if(wasNull) { listenConvs(); listenIncomingCalls(); }
+      setLoading('btn-login',false); setLoading('btn-register',false);
+      loadProfilePage(); refreshBlockedLabel();
+      if(wasNull){ listenConvs(); listenIncomingCalls(); }
     });
-  } else {
-    ME = null;
+  }else{
+    ME=null;
     $('auth').classList.remove('hidden');
-    setLoading('btn-login', false);
-    setLoading('btn-register', false);
-    $('login-phone').value = '';
-    $('login-pass').value = '';
+    setLoading('btn-login',false); setLoading('btn-register',false);
+    $('login-phone').value=''; $('login-pass').value='';
     unsubConvs?.(); unsubConvs=null;
     unsubMsgs?.();  unsubMsgs=null;
     unsubCall?.();  unsubCall=null;
   }
 });
 
-/* ─────────────────────────────── NAV ─────────────────────── */
+/* ─── NAV ─── */
 function navTo(page){
   ['chats','calls','profile','settings'].forEach(p=>{
     $('page-'+p).classList.remove('active');
@@ -696,706 +601,555 @@ function navTo(page){
   $('nav-'+page)?.classList.add('active');
   closeDrops(); closeSearch();
 }
-$('nav-chats').onclick    = ()=>navTo('chats');
-$('nav-calls').onclick    = ()=>navTo('calls');
-$('nav-profile').onclick  = ()=>navTo('profile');
-$('nav-settings').onclick = ()=>navTo('settings');
+$('nav-chats').onclick   =()=>navTo('chats');
+$('nav-calls').onclick   =()=>navTo('calls');
+$('nav-profile').onclick =()=>navTo('profile');
+$('nav-settings').onclick=()=>navTo('settings');
 
-/* ── DROPS ── */
+/* ─── DROPS ─── */
 function closeDrops(){ document.querySelectorAll('.drop-menu').forEach(d=>d.classList.remove('open')); }
-$('icon-menu').onclick    = e=>{ e.stopPropagation(); toggleDrop('drop-main'); };
-$('chat-menu-btn').onclick= e=>{ e.stopPropagation(); toggleDrop('drop-chat'); };
-function toggleDrop(id){ const d=$(id); const was=d.classList.contains('open'); closeDrops(); if(!was) d.classList.add('open'); }
-document.addEventListener('click', ()=>closeDrops());
+$('icon-menu').onclick    =e=>{ e.stopPropagation(); toggleDrop('drop-main'); };
+$('chat-menu-btn').onclick=e=>{ e.stopPropagation(); toggleDrop('drop-chat'); };
+function toggleDrop(id){ const d=$(id),was=d.classList.contains('open'); closeDrops(); if(!was)d.classList.add('open'); }
+document.addEventListener('click',()=>closeDrops());
+$('dm-profile').onclick =()=>{ navTo('profile'); closeDrops(); };
+$('dm-settings').onclick=()=>{ navTo('settings'); closeDrops(); };
+$('dm-logout').onclick  =()=>{ closeDrops(); confirmLogout(); };
+$('cfg-profile').onclick=()=>navTo('profile');
+$('cfg-blocked').onclick=()=>openBlockedPanel();
+$('cfg-logout').onclick =()=>confirmLogout();
 
-$('dm-profile').onclick  = ()=>{ navTo('profile'); closeDrops(); };
-$('dm-settings').onclick = ()=>{ navTo('settings'); closeDrops(); };
-$('dm-logout').onclick   = ()=>{ closeDrops(); confirmLogout(); };
-$('cfg-profile').onclick = ()=>navTo('profile');
-$('cfg-blocked').onclick = ()=>openBlockedPanel();
-$('cfg-logout').onclick  = ()=>confirmLogout();
-
-/* ── SEARCH ── */
-$('icon-search').onclick = ()=>{
-  const bar = $('search-bar');
+/* ─── SEARCH ─── */
+$('icon-search').onclick=()=>{
+  const bar=$('search-bar');
   if(bar.classList.contains('show')){ closeSearch(); }
-  else { bar.classList.add('show'); $('search-input').value=''; $('search-input').focus(); }
+  else{ bar.classList.add('show'); $('search-input').value=''; $('search-input').focus(); }
 };
-$('search-close').onclick = ()=>closeSearch();
-
+$('search-close').onclick=()=>closeSearch();
 function closeSearch(){
   $('search-bar').classList.remove('show');
   $('search-results').classList.remove('show');
   $('search-input').value='';
 }
-
-$('search-input').oninput = ()=>{
+$('search-input').oninput=()=>{
   clearTimeout(searchTimer);
-  const phone = cleanPhone($('search-input').value);
-  if(phone.length < 4){ $('search-results').classList.remove('show'); return; }
-  searchTimer = setTimeout(()=>doSearch(phone), 400);
+  const phone=cleanPhone($('search-input').value);
+  if(phone.length<4){ $('search-results').classList.remove('show'); return; }
+  searchTimer=setTimeout(()=>doSearch(phone),400);
 };
-
 async function doSearch(phone){
-  const res = $('search-results');
-  res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Buscando...</div>';
+  const res=$('search-results');
+  res.innerHTML='<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Buscando...</div>';
   res.classList.add('show');
   try{
-    const snap = await getDoc(doc(db,'phones',phone));
-    if(!snap.exists()){
-      res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Nenhum usuário encontrado.</div>';
-      return;
-    }
-    const uid = snap.data().uid;
-    if(uid===ME.uid){
-      res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Este é o seu próprio número.</div>';
-      return;
-    }
-    const usnap = await getDoc(doc(db,'users',uid));
+    const snap=await getDoc(doc(db,'phones',phone));
+    if(!snap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Nenhum usuário encontrado.</div>'; return; }
+    const uid=snap.data().uid;
+    if(uid===ME.uid){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Este é o seu próprio número.</div>'; return; }
+    const usnap=await getDoc(doc(db,'users',uid));
     if(!usnap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);">Usuário não encontrado.</div>'; return; }
-    const u = { uid: usnap.id, ...usnap.data() };
-    res.innerHTML = '';
-    const row = document.createElement('div');
-    row.className = 'sr-item';
-    const av = document.createElement('div');
-    av.className = 'avatar';
-    makeAvatar(av, u.name, u.photoURL, 42);
-    const info = document.createElement('div');
-    info.style.flex = '1';
-    info.innerHTML = `<div class="sr-name">${esc(u.name)}</div><div class="sr-tel">${u.phone}</div>`;
-    const btn = document.createElement('button');
-    btn.className = 'sr-btn';
-    btn.textContent = 'Mensagem';
-    btn.onclick = ()=>{ closeSearch(); openChat(u); };
-    row.appendChild(av); row.appendChild(info); row.appendChild(btn);
-    res.appendChild(row);
-  }catch(e){
-    res.innerHTML = `<div style="padding:14px 16px;color:var(--red);font-size:13px;">Erro ao buscar: ${e.message}</div>`;
-  }
+    const u={uid:usnap.id,...usnap.data()};
+    res.innerHTML='';
+    const row=document.createElement('div'); row.className='sr-item';
+    const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,u.name,u.photoURL,42);
+    const info=document.createElement('div'); info.style.flex='1';
+    info.innerHTML=`<div class="sr-name">${esc(u.name)}</div><div class="sr-tel">${u.phone}</div>`;
+    const btn=document.createElement('button'); btn.className='sr-btn'; btn.textContent='Mensagem';
+    btn.onclick=()=>{ closeSearch(); openChat(u); };
+    row.append(av,info,btn); res.appendChild(row);
+  }catch(e){ res.innerHTML=`<div style="padding:14px 16px;color:var(--red);font-size:13px;">Erro: ${e.message}</div>`; }
 }
 
-/* ── CONVERSATIONS ── */
+/* ─── CONVERSATIONS ─── */
 function listenConvs(){
   unsubConvs?.();
-  const q = query(collection(db,'conversations'), where('members','array-contains',ME.uid));
-  unsubConvs = onSnapshot(q, async snap=>{
-    const list  = $('convs-list');
-    const empty = $('convs-empty');
-    const activeConvs = snap.docs.map(d => { return { cid: d.id, ...d.data() }; });
-    const matchedPeerIds = new Set();
-    const finalConvsList = [];
+  const q=query(collection(db,'conversations'),where('members','array-contains',ME.uid));
+  unsubConvs=onSnapshot(q,async snap=>{
+    const list=$('convs-list'), empty=$('convs-empty');
+    const finalList=[];
+    const matched=new Set();
 
-    for(const data of activeConvs) {
-      const peerId = data.members.find(m=>m!==ME.uid);
-      if(!peerId) continue;
-      const isSaved = ME?.savedChats?.includes(peerId);
-      const hasMessages = data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid));
-      if (hasMessages || isSaved) {
-        matchedPeerIds.add(peerId);
-        finalConvsList.push({
-          peerId, lastAt: data.lastAt,
-          lastMsg: data.deletedBy?.includes(ME.uid) ? '' : (data.lastMsg || ''),
-          unread: data.unread?.[ME.uid] || 0,
-          isDeleted: data.deletedBy?.includes(ME.uid),
-          cid: data.cid
-        });
+    for(const d of snap.docs){
+      const data={cid:d.id,...d.data()};
+      const peerId=data.members.find(m=>m!==ME.uid); if(!peerId) continue;
+      const isSaved=ME.savedChats?.includes(peerId);
+      const hasMsg=data.lastMsg&&!(data.deletedBy?.includes(ME.uid));
+      if(hasMsg||isSaved){
+        matched.add(peerId);
+        finalList.push({peerId,lastAt:data.lastAt,
+          lastMsg:data.deletedBy?.includes(ME.uid)?'':(data.lastMsg||''),
+          unread:data.unread?.[ME.uid]||0,
+          isDeleted:!!data.deletedBy?.includes(ME.uid),cid:data.cid});
+      }
+    }
+    if(ME.savedChats){
+      for(const id of ME.savedChats){
+        if(!matched.has(id)) finalList.push({peerId:id,lastAt:null,lastMsg:'',unread:0,isDeleted:true,cid:[ME.uid,id].sort().join('_')});
       }
     }
 
-    if(ME?.savedChats) {
-      for(const savedId of ME.savedChats) {
-        if(!matchedPeerIds.has(savedId)) {
-          finalConvsList.push({
-            peerId: savedId, lastAt: null, lastMsg: '', unread: 0, isDeleted: true,
-            cid: [ME.uid, savedId].sort().join('_')
-          });
-        }
-      }
-    }
-
-    if (!isFirstLoad) {
-      for(const activeItem of finalConvsList) {
-        if(activeItem.lastMsg && activeItem.cid !== chatId) {
-          const stringKey = activeItem.cid;
-          if(knownPreviews[stringKey] !== undefined && knownPreviews[stringKey] !== activeItem.lastMsg) {
-            const userLeaf = await getDoc(doc(db,'users',activeItem.peerId));
-            if(userLeaf.exists()) {
-              const parsedPeer = { uid: userLeaf.id, ...userLeaf.data() };
-              if(!ME.blocked?.includes(parsedPeer.uid)) {
-                showWhatsAppNotification(parsedPeer.name, parsedPeer.photoURL, activeItem.lastMsg, parsedPeer);
-              }
+    if(!isFirstLoad){
+      for(const item of finalList){
+        if(item.lastMsg && item.cid!==chatId){
+          const key=item.cid;
+          if(knownPreviews[key]!==undefined && knownPreviews[key]!==item.lastMsg){
+            const us=await getDoc(doc(db,'users',item.peerId));
+            if(us.exists()){
+              const p={uid:us.id,...us.data()};
+              if(!ME.blocked?.includes(p.uid)) showBanner(p.name,p.photoURL,item.lastMsg,p);
             }
           }
         }
       }
     }
-
-    finalConvsList.forEach(c => { if(c.lastMsg) knownPreviews[c.cid] = c.lastMsg; });
-    isFirstLoad = false;
-    renderCallsPage(finalConvsList);
+    finalList.forEach(c=>{ if(c.lastMsg) knownPreviews[c.cid]=c.lastMsg; });
+    isFirstLoad=false;
+    renderCallsPage(finalList);
 
     list.innerHTML='';
-    if(finalConvsList.length === 0){ empty.style.display=''; return; }
+    if(!finalList.length){ empty.style.display=''; return; }
     empty.style.display='none';
 
-    finalConvsList.sort((a, b) => {
-      const timeA = a.lastAt ? (a.lastAt.toMillis ? a.lastAt.toMillis() : 0) : 0;
-      const timeB = b.lastAt ? (b.lastAt.toMillis ? b.lastAt.toMillis() : 0) : 0;
-      return timeB - timeA;
+    finalList.sort((a,b)=>{
+      const ta=a.lastAt?.toMillis?.()||0, tb=b.lastAt?.toMillis?.()||0;
+      return tb-ta;
     });
 
-    for(const itemData of finalConvsList){
-      const pSnap  = await getDoc(doc(db,'users',itemData.peerId));
-      if(!pSnap.exists()) continue;
-      const peer   = { uid: pSnap.id, ...pSnap.data() };
-      const lastTime = itemData.lastAt && itemData.lastAt.toDate ? fmtTime(itemData.lastAt.toDate()) : '';
-      const item = document.createElement('div');
-      item.className = 'conv-item';
-      const av = document.createElement('div');
-      av.className = 'avatar';
-      makeAvatar(av, peer.name, peer.photoURL, 50);
-      const info = document.createElement('div');
-      info.className = 'conv-info';
-      info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
-        <div class="conv-preview">${esc(itemData.lastMsg || 'Nenhuma mensagem')}</div>`;
-      const right = document.createElement('div');
+    for(const item of finalList){
+      const ps=await getDoc(doc(db,'users',item.peerId)); if(!ps.exists()) continue;
+      const peer={uid:ps.id,...ps.data()};
+      const t=item.lastAt?.toDate?fmtTime(item.lastAt.toDate()):'';
+      const el=document.createElement('div'); el.className='conv-item';
+      const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,peer.name,peer.photoURL,50);
+      const info=document.createElement('div'); info.className='conv-info';
+      info.innerHTML=`<div class="conv-name">${esc(peer.name)}</div><div class="conv-preview">${esc(item.lastMsg||'Nenhuma mensagem')}</div>`;
+      const right=document.createElement('div');
       right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
-      right.innerHTML = (lastTime && itemData.lastMsg ? `<div class="conv-time">${lastTime}</div>` : '')
-        + (itemData.unread>0 && !itemData.isDeleted ? `<div class="unread-badge">${itemData.unread}</div>` : '');
-      item.appendChild(av); item.appendChild(info); item.appendChild(right);
-      item.onclick = ()=>openChat(peer);
-      list.appendChild(item);
+      right.innerHTML=(t&&item.lastMsg?`<div class="conv-time">${t}</div>`:'')+
+        (item.unread>0&&!item.isDeleted?`<div class="unread-badge">${item.unread}</div>`:'');
+      el.append(av,info,right); el.onclick=()=>openChat(peer);
+      list.appendChild(el);
     }
-  }, err => { console.error(err); });
+  });
 }
 
-/* ── Render Contacts in Calls Page ── */
-async function renderCallsPage(finalConvsList) {
-  const list = $('calls-contacts-list');
-  const empty = $('calls-empty');
-  if(!list) return;
-  list.innerHTML = '';
-  if (!finalConvsList || finalConvsList.length === 0) {
-    if(empty) empty.style.display = 'flex'; return;
-  }
-  if(empty) empty.style.display = 'none';
-  for (const itemData of finalConvsList) {
-    const pSnap = await getDoc(doc(db, 'users', itemData.peerId));
-    if (!pSnap.exists()) continue;
-    const peer = { uid: pSnap.id, ...pSnap.data() };
-    const item = document.createElement('div');
-    item.className = 'conv-item'; item.style.cursor = 'default';
-    const av = document.createElement('div');
-    av.className = 'avatar'; makeAvatar(av, peer.name, peer.photoURL, 50);
-    const info = document.createElement('div');
-    info.className = 'conv-info';
-    info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
-      <div class="conv-preview">${esc(peer.phone || 'Sem número')}</div>`;
-    const rightActions = document.createElement('div');
-    rightActions.className = 'call-list-actions';
-    const voiceBtn = document.createElement('span');
-    voiceBtn.className = 'ms'; voiceBtn.textContent = 'call'; voiceBtn.style.cursor = 'pointer';
-    voiceBtn.onclick = (e) => { e.stopPropagation(); peerData = peer; startCall('voice'); };
-    const videoBtn = document.createElement('span');
-    videoBtn.className = 'ms'; videoBtn.textContent = 'videocam'; videoBtn.style.cursor = 'pointer';
-    videoBtn.onclick = (e) => { e.stopPropagation(); peerData = peer; startCall('video'); };
-    rightActions.appendChild(voiceBtn); rightActions.appendChild(videoBtn);
-    item.appendChild(av); item.appendChild(info); item.appendChild(rightActions);
-    list.appendChild(item);
+/* ─── CALLS PAGE ─── */
+async function renderCallsPage(list){
+  const el=$('calls-contacts-list'), empty=$('calls-empty'); if(!el) return;
+  el.innerHTML='';
+  if(!list?.length){ empty.style.display='flex'; return; }
+  empty.style.display='none';
+  for(const item of list){
+    const ps=await getDoc(doc(db,'users',item.peerId)); if(!ps.exists()) continue;
+    const peer={uid:ps.id,...ps.data()};
+    const row=document.createElement('div'); row.className='conv-item'; row.style.cursor='default';
+    const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,peer.name,peer.photoURL,50);
+    const info=document.createElement('div'); info.className='conv-info';
+    info.innerHTML=`<div class="conv-name">${esc(peer.name)}</div><div class="conv-preview">${esc(peer.phone||'')}</div>`;
+    const acts=document.createElement('div'); acts.className='call-list-actions';
+    const vBtn=document.createElement('span'); vBtn.className='ms'; vBtn.textContent='call';
+    vBtn.onclick=e=>{ e.stopPropagation(); peerData=peer; startCall('voice'); };
+    const vidBtn=document.createElement('span'); vidBtn.className='ms'; vidBtn.textContent='videocam';
+    vidBtn.onclick=e=>{ e.stopPropagation(); peerData=peer; startCall('video'); };
+    acts.append(vBtn,vidBtn); row.append(av,info,acts); el.appendChild(row);
   }
 }
 
-/* ─────────────────────────────── OPEN CHAT ───────────────── */
+/* ─── OPEN CHAT ─── */
 async function openChat(peer){
-  try {
-    if (!peer || !peer.uid || !ME || !ME.uid) return;
-    peerData = peer;
-    const ids = [ME.uid, peer.uid].sort();
-    chatId    = ids.join('_');
-    $('chat-name').textContent = peer.name || "Usuário";
-    $('chat-sub').textContent  = peer.phone || "";
-    makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
-    if(!ME.savedChats?.includes(peer.uid)){
-      await updateDoc(doc(db,'users',ME.uid), { savedChats: arrayUnion(peer.uid) });
-    }
-    onSnapshot(doc(db,'users',peer.uid), snapshot => {
-      if(snapshot.exists()) {
-        peerData = { uid: snapshot.id, ...snapshot.data() };
-        $('chat-name').textContent = peerData.name || "Usuário";
-        makeAvatar($('chat-av'), peerData.name, peerData.photoURL, 38);
+  try{
+    if(!peer?.uid||!ME?.uid) return;
+    peerData=peer;
+    chatId=[ME.uid,peer.uid].sort().join('_');
+    $('chat-name').textContent=peer.name||'Usuário';
+    $('chat-sub').textContent=peer.phone||'';
+    makeAvatar($('chat-av'),peer.name,peer.photoURL,38);
+
+    if(!ME.savedChats?.includes(peer.uid))
+      await updateDoc(doc(db,'users',ME.uid),{savedChats:arrayUnion(peer.uid)});
+
+    onSnapshot(doc(db,'users',peer.uid),s=>{
+      if(s.exists()){ peerData={uid:s.id,...s.data()};
+        $('chat-name').textContent=peerData.name||'Usuário';
+        makeAvatar($('chat-av'),peerData.name,peerData.photoURL,38);
         updateBlockUI();
       }
     });
+
     $('chat-screen').classList.add('open');
-    $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
-    $('msg-input').value = '';
-    updateSendIcon();
-    const convRef = doc(db,'conversations',chatId);
+    $('chat-body').innerHTML='<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando...</div>';
+    $('msg-input').value=''; updateSendIcon();
+
+    const convRef=doc(db,'conversations',chatId);
     try{
-      const convSnap = await getDoc(convRef);
-      if(!convSnap.exists()){
-        await setDoc(convRef,{ members:[ME.uid, peer.uid], lastMsg:'', lastAt: serverTimestamp(), unread:{ [ME.uid]:0, [peer.uid]:0 }, deletedBy: [] });
-      } else {
-        await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
-      }
-    } catch(dbErr) { console.warn(dbErr); }
+      const cs=await getDoc(convRef);
+      if(!cs.exists()) await setDoc(convRef,{members:[ME.uid,peer.uid],lastMsg:'',lastAt:serverTimestamp(),unread:{[ME.uid]:0,[peer.uid]:0},deletedBy:[]});
+      else await updateDoc(convRef,{[`unread.${ME.uid}`]:0});
+    }catch(_){}
 
     unsubMsgs?.();
-    const mq = query(collection(db,'conversations',chatId,'messages'), orderBy('ts','asc'));
-    unsubMsgs = onSnapshot(mq, snap=>{
-      const body  = $('chat-body');
-      const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
+    const mq=query(collection(db,'conversations',chatId,'messages'),orderBy('ts','asc'));
+    unsubMsgs=onSnapshot(mq,snap=>{
+      const body=$('chat-body');
+      const atBot=body.scrollHeight-body.clientHeight-body.scrollTop<100||body.innerHTML.includes('Carregando');
       body.innerHTML='';
-      const visibleMsgs = [];
-      snap.forEach(d => { const m = d.data(); if (!(m.hideFrom?.includes(ME.uid))) { visibleMsgs.push(m); } });
-      if(visibleMsgs.length === 0){
-        body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Envie uma mensagem para começar!</div>';
-        return;
-      }
-      visibleMsgs.forEach(m=>{
-        const div = document.createElement('div');
-        div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
-        const time = m.ts && m.ts.toDate ? fmtTime(m.ts.toDate()) : '';
-        if(m.fileUrl) {
-          if(m.fileType?.startsWith('image/')) {
-            let cap = m.text !== "📁 Foto enviada" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
-            div.innerHTML = cap + `<img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
-          } else if(m.fileType?.startsWith('audio/')) {
-            div.innerHTML = `<audio src="${m.fileUrl}" class="msg-audio" controls></audio><span class="msg-time">${time}</span>`;
+      const msgs=[]; snap.forEach(d=>{ const m=d.data(); if(!m.hideFrom?.includes(ME.uid)) msgs.push(m); });
+      if(!msgs.length){ body.innerHTML='<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Envie uma mensagem para começar!</div>'; return; }
+      msgs.forEach(m=>{
+        const div=document.createElement('div');
+        div.className='msg '+(m.sender===ME.uid?'sent':'recv');
+        const t=m.ts?.toDate?fmtTime(m.ts.toDate()):'';
+        if(m.fileUrl){
+          if(m.fileType?.startsWith('image/')){
+            div.innerHTML=(m.text&&m.text!=='📁 Foto enviada'?`<p style="margin-bottom:5px;">${esc(m.text)}</p>`:'')+
+              `<img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}','_blank')"><span class="msg-time">${t}</span>`;
+          } else if(m.fileType?.startsWith('audio/')){
+            div.innerHTML=`<audio src="${m.fileUrl}" class="msg-audio" controls></audio><span class="msg-time">${t}</span>`;
+          } else if(m.fileType?.startsWith('video/')){
+            /* Mantém renderização para mensagens antigas com vídeo */
+            div.innerHTML=`<video src="${m.fileUrl}" class="msg-video" controls playsinline></video><span class="msg-time">${t}</span>`;
           } else {
-            div.innerHTML = `<span class="msg-time">${time}</span>`;
+            div.innerHTML=`<a href="${m.fileUrl}" download="${esc(m.fileName||'arquivo')}" class="file-link"><span class="ms">description</span><div><b>${esc(m.fileName||'Arquivo')}</b></div></a><span class="msg-time">${t}</span>`;
           }
         } else {
-          div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
+          div.innerHTML=esc(m.text)+`<span class="msg-time">${t}</span>`;
         }
         body.appendChild(div);
       });
-      if(atBot) body.scrollTop = body.scrollHeight;
-    }, err=>{ console.error(err); });
-  } catch (error) { console.error(error); }
+      if(atBot) body.scrollTop=body.scrollHeight;
+    });
+  }catch(e){ console.error(e); }
 }
 
-$('chat-back').onclick = closeChat;
+$('chat-back').onclick=closeChat;
 function closeChat(){
   $('chat-screen').classList.remove('open');
-  unsubMsgs?.(); unsubMsgs=null;
-  chatId=null; peerData=null;
+  unsubMsgs?.(); unsubMsgs=null; chatId=null; peerData=null;
 }
 
-/* ─────────────────────────────── AUDIO RECORDING ─────────────────── */
-function updateSendIcon() {
-  const icon = $('send-icon'); if(!icon) return;
-  icon.textContent = ($('msg-input').value.trim() !== '') ? 'send' : (isRecording ? 'stop' : 'mic');
+/* ─── ENVIAR MENSAGEM ─── */
+function updateSendIcon(){
+  const ic=$('send-icon'); if(!ic) return;
+  ic.textContent=$('msg-input').value.trim()!==''?'send':(isRecording?'stop':'mic');
 }
-$('msg-input').oninput = updateSendIcon;
-
-$('btn-send').onclick = async () => {
-  const text = $('msg-input').value.trim();
-  if (text !== '') { sendMessage(); } else { toggleAudioRecording(); }
+$('msg-input').oninput=updateSendIcon;
+$('btn-send').onclick=async()=>{
+  const text=$('msg-input').value.trim();
+  text!==''?sendMessage():toggleRecording();
 };
+$('msg-input').onkeydown=e=>{ if(e.key==='Enter'&&!isRecording) sendMessage(); };
 
-function startRecTimer() {
-  recSeconds = 0;
-  const timerEl = $('rec-timer');
-  timerEl.style.display = 'inline';
-  timerEl.textContent = '0:00';
-  recTimerInterval = setInterval(() => {
-    recSeconds++;
-    const m = Math.floor(recSeconds / 60);
-    const s = recSeconds % 60;
-    timerEl.textContent = m + ':' + (s < 10 ? '0' + s : s);
-    // Para automaticamente no limite
-    if (recSeconds >= MAX_REC_SECS) { stopRecording(); }
-  }, 1000);
-}
-
-function stopRecTimer() {
-  clearInterval(recTimerInterval);
-  recTimerInterval = null;
-  $('rec-timer').style.display = 'none';
-}
-
-function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); }
-  isRecording = false;
-  $('btn-send').classList.remove('recording');
-  $('msg-input').placeholder = 'Mensagem';
-  $('msg-input').disabled = false;
-  stopRecTimer();
-  updateSendIcon();
-}
-
-async function toggleAudioRecording() {
-  if (!isRecording) {
-    if (!navigator.mediaDevices?.getUserMedia) { toast('Seu navegador não suporta gravação de áudio.'); return; }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
-      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-
-        // Verifica tamanho antes de enviar
-        const approxBase64 = audioBlob.size * 1.37; // estimativa base64
-        if (approxBase64 > MAX_BASE64_BYTES) {
-          toast('Áudio muito longo. Máximo ' + MAX_REC_SECS + ' segundos.');
-          stream.getTracks().forEach(t => t.stop());
-          return;
-        }
-
-        toast('Enviando áudio...');
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          sendMessage({ url: e.target.result, type: 'audio/mp3', name: 'Audio_' + Date.now() + '.mp3' });
-        };
-        reader.readAsDataURL(audioBlob);
-        stream.getTracks().forEach(t => t.stop());
-      };
-      mediaRecorder.start();
-      isRecording = true;
-      $('btn-send').classList.add('recording');
-      $('msg-input').placeholder = 'Gravando... (máx ' + MAX_REC_SECS + 's)';
-      $('msg-input').disabled = true;
-      startRecTimer();
-      updateSendIcon();
-    } catch (err) { toast('Permissão de microfone negada.'); }
-  } else {
-    stopRecording();
-  }
-}
-
-$('msg-input').onkeydown  = e=>{ if(e.key==='Enter' && !isRecording) sendMessage(); };
-
-/* ─────────────────────────────── ANEXO (APENAS FOTOS) ──────── */
-$('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
-
-$('chat-file-input').onchange = async function() {
-  const file = this.files[0];
-  if (!file || !chatId) { this.value = ''; return; }
-
-  // Só aceita imagens
-  if (!file.type.startsWith('image/')) {
-    toast('Apenas fotos são suportadas no momento.');
-    this.value = '';
-    return;
-  }
-
-  toast('Compactando foto...');
-  compressImage(file, (b64, err) => {
-    if (err) { toast(err); return; }
-    sendMessage({ url: b64, type: 'image/jpeg', name: file.name.replace(/\.[^/.]+$/, '') + '.jpg' });
-  });
-
-  this.value = '';
-};
-
-/* ── SEND MESSAGE ── */
-async function sendMessage(fileData = null){
+async function sendMessage(fileData=null){
   if(!chatId||!peerData) return;
-  const input = $('msg-input');
-  let text  = input.value.trim();
-  if(!text && !fileData) return;
-  if(fileData && !text) {
-    if(fileData.type.startsWith('image/'))      text = '📁 Foto enviada';
-    else if(fileData.type.startsWith('audio/')) text = '🎙️ Áudio enviado';
-    else                                         text = '📁 Arquivo enviado';
+  const input=$('msg-input');
+  let text=input.value.trim();
+  if(!text&&!fileData) return;
+  if(fileData&&!text){
+    if(fileData.type.startsWith('image/'))      text='📁 Foto enviada';
+    else if(fileData.type.startsWith('audio/')) text='🎙️ Áudio enviado';
+    else                                         text='📁 Arquivo enviado';
   }
-  input.value='';
-  updateSendIcon();
-  const convRef = doc(db,'conversations',chatId);
-  const payload = { text, sender: ME.uid, ts: serverTimestamp(), hideFrom: [] };
-  if(fileData) { payload.fileUrl = fileData.url; payload.fileType = fileData.type; payload.fileName = fileData.name; }
+  input.value=''; updateSendIcon();
+  const convRef=doc(db,'conversations',chatId);
+  const payload={text,sender:ME.uid,ts:serverTimestamp(),hideFrom:[]};
+  if(fileData){ payload.fileUrl=fileData.url; payload.fileType=fileData.type; payload.fileName=fileData.name; }
   try{
-    await addDoc(collection(db,'conversations',chatId,'messages'), payload);
-    const snapCount = await getDoc(convRef);
-    let currentUnread = 0;
-    if(snapCount.exists()){ currentUnread = snapCount.data().unread?.[peerData.uid] || 0; }
-    await setDoc(convRef, { lastMsg: text, lastAt: serverTimestamp(), deletedBy: [], unread: { [peerData.uid]: currentUnread + 1 } }, { merge: true });
+    await addDoc(collection(db,'conversations',chatId,'messages'),payload);
+    const cs=await getDoc(convRef);
+    const cur=cs.exists()?(cs.data().unread?.[peerData.uid]||0):0;
+    await setDoc(convRef,{lastMsg:text,lastAt:serverTimestamp(),deletedBy:[],unread:{[peerData.uid]:cur+1}},{merge:true});
   }catch(e){
-    toast('Erro ao enviar. Foto ainda muito pesada?');
-    console.error(e);
+    toast('Erro ao enviar. Arquivo muito grande?');
     if(!fileData) input.value=text;
   }
 }
 
-/* ── BLOCK ── */
-$('dc-block').onclick = ()=>{ closeDrops(); toggleBlock(); };
-$('btn-unblock-notice').onclick = ()=>toggleBlock();
+/* ─── GRAVAR ÁUDIO ─── */
+function startRecTimer(){
+  recSeconds=0;
+  const el=$('rec-timer'); el.style.display='inline'; el.textContent='0:00';
+  recTimerInterval=setInterval(()=>{
+    recSeconds++;
+    const m=Math.floor(recSeconds/60), s=recSeconds%60;
+    el.textContent=m+':'+(s<10?'0'+s:s);
+    if(recSeconds>=MAX_REC_SECS) stopRecording(); // para automaticamente
+  },1000);
+}
+function stopRecTimer(){
+  clearInterval(recTimerInterval); recTimerInterval=null;
+  $('rec-timer').style.display='none';
+}
+function stopRecording(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+  isRecording=false;
+  $('btn-send').classList.remove('recording');
+  $('msg-input').placeholder='Mensagem'; $('msg-input').disabled=false;
+  stopRecTimer(); updateSendIcon();
+}
 
+async function toggleRecording(){
+  if(!isRecording){
+    if(!navigator.mediaDevices?.getUserMedia){ toast('Microfone não suportado.'); return; }
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      mediaRecorder=new MediaRecorder(stream);
+      audioChunks=[];
+      mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) audioChunks.push(e.data); };
+      mediaRecorder.onstop=()=>{
+        const blob=new Blob(audioChunks,{type:'audio/mp3'});
+        // Verifica tamanho estimado em base64
+        const estBase64=blob.size*1.37;
+        if(estBase64>MAX_BYTES){ toast(`Áudio muito longo (máx ${MAX_REC_SECS}s).`); stream.getTracks().forEach(t=>t.stop()); return; }
+        toast('Enviando áudio...');
+        const r=new FileReader();
+        r.onload=ev=>sendMessage({url:ev.target.result,type:'audio/mp3',name:'Audio_'+Date.now()+'.mp3'});
+        r.readAsDataURL(blob);
+        stream.getTracks().forEach(t=>t.stop());
+      };
+      mediaRecorder.start();
+      isRecording=true;
+      $('btn-send').classList.add('recording');
+      $('msg-input').placeholder='Gravando... (máx '+MAX_REC_SECS+'s)';
+      $('msg-input').disabled=true;
+      startRecTimer(); updateSendIcon();
+    }catch(_){ toast('Permissão de microfone negada.'); }
+  }else{ stopRecording(); }
+}
+
+/* ─── ANEXO (apenas fotos) ─── */
+$('chat-attach-btn').onclick=()=>$('chat-file-input').click();
+$('chat-file-input').onchange=function(){
+  const file=this.files[0]; if(!file||!chatId){ this.value=''; return; }
+  if(!file.type.startsWith('image/')){ toast('Apenas fotos são suportadas.'); this.value=''; return; }
+  toast('Compactando foto...');
+  compressImage(file,MAX_BYTES,(b64,err)=>{
+    if(err){ toast(err); return; }
+    sendMessage({url:b64,type:'image/jpeg',name:file.name.replace(/\.[^/.]+$/,'')+'.jpg'});
+  });
+  this.value='';
+};
+
+/* ─── BLOCK ─── */
+$('dc-block').onclick=()=>{ closeDrops(); toggleBlock(); };
+$('btn-unblock-notice').onclick=()=>toggleBlock();
 async function toggleBlock(){
   if(!peerData) return;
-  const isBlocked = ME.blocked?.includes(peerData.uid);
-  if(isBlocked){
-    await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayRemove(peerData.uid) });
-    ME.blocked = ME.blocked.filter(x=>x!==peerData.uid);
-    toast('Contato desbloqueado.');
-  } else {
-    await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
-    ME.blocked = [...(ME.blocked||[]), peerData.uid];
-    toast('Contato bloqueado.');
+  const blocked=ME.blocked?.includes(peerData.uid);
+  if(blocked){
+    await updateDoc(doc(db,'users',ME.uid),{blocked:arrayRemove(peerData.uid)});
+    ME.blocked=ME.blocked.filter(x=>x!==peerData.uid); toast('Contato desbloqueado.');
+  }else{
+    await updateDoc(doc(db,'users',ME.uid),{blocked:arrayUnion(peerData.uid)});
+    ME.blocked=[...(ME.blocked||[]),peerData.uid]; toast('Contato bloqueado.');
   }
   updateBlockUI(); refreshBlockedLabel();
 }
-
 function updateBlockUI(){
   if(!peerData) return;
-  const amIBlocked = peerData.blocked?.includes(ME.uid);
-  const didIBlock  = ME.blocked?.includes(peerData.uid);
-  if (didIBlock) {
-    $('dc-block').textContent = 'Desbloquear contato';
-    $('chat-footer').style.visibility = 'hidden';
-    $('blocked-text-notice').textContent = 'Você bloqueou este contato';
-    $('btn-unblock-notice').style.display = 'inline';
-    $('blocked-notice').style.display = 'block';
-  } else if (amIBlocked) {
-    $('dc-block').textContent = 'Bloquear contato';
-    $('chat-footer').style.visibility = 'hidden';
-    $('blocked-text-notice').textContent = 'Você foi bloqueado por este contato';
-    $('btn-unblock-notice').style.display = 'none';
-    $('blocked-notice').style.display = 'block';
-  } else {
-    $('dc-block').textContent = 'Bloquear contato';
-    $('chat-footer').style.visibility = 'visible';
-    $('blocked-notice').style.display = 'none';
+  const amI=peerData.blocked?.includes(ME.uid), didI=ME.blocked?.includes(peerData.uid);
+  if(didI){
+    $('dc-block').textContent='Desbloquear contato';
+    $('chat-footer').style.visibility='hidden';
+    $('blocked-text-notice').textContent='Você bloqueou este contato';
+    $('btn-unblock-notice').style.display='inline';
+    $('blocked-notice').style.display='block';
+  }else if(amI){
+    $('dc-block').textContent='Bloquear contato';
+    $('chat-footer').style.visibility='hidden';
+    $('blocked-text-notice').textContent='Você foi bloqueado por este contato';
+    $('btn-unblock-notice').style.display='none';
+    $('blocked-notice').style.display='block';
+  }else{
+    $('dc-block').textContent='Bloquear contato';
+    $('chat-footer').style.visibility='visible';
+    $('blocked-notice').style.display='none';
   }
 }
 
-/* ── DELETE CHAT ── */
-$('dc-delete').onclick = ()=>{ closeDrops(); confirmDeleteChat(); };
+/* ─── DELETE CHAT ─── */
+$('dc-delete').onclick=()=>{ closeDrops(); confirmDeleteChat(); };
 function confirmDeleteChat(){
-  openModal('Apagar conversa','Deseja apagar toda esta conversa?', async()=>{
+  openModal('Apagar conversa','Deseja apagar toda esta conversa?',async()=>{
     if(!chatId) return;
     try{
-      const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
-      const batch = writeBatch(db);
-      msgs.forEach(d => { batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) }); });
-      batch.update(doc(db,'conversations',chatId), { deletedBy: arrayUnion(ME.uid), [`unread.${ME.uid}`]: 0 });
+      const msgs=await getDocs(collection(db,'conversations',chatId,'messages'));
+      const batch=writeBatch(db);
+      msgs.forEach(d=>batch.update(d.ref,{hideFrom:arrayUnion(ME.uid)}));
+      batch.update(doc(db,'conversations',chatId),{deletedBy:arrayUnion(ME.uid),[`unread.${ME.uid}`]:0});
       await batch.commit();
-      closeModal(); closeChat();
-      toast('Conversa apagada.');
+      closeModal(); closeChat(); toast('Conversa apagada.');
     }catch(e){ closeModal(); toast('Erro: '+e.message); }
   });
 }
 
-/* ─────────────────────────────── PROFILE ─────────────────── */
+/* ─── PROFILE ─── */
 function loadProfilePage(){
   if(!ME) return;
-  $('p-name').value   = ME.name||'';
-  $('p-status').value = ME.status||'';
-  $('p-phone').value  = ME.phone||'';
-  makeAvatar($('profile-av'), ME.name, ME.photoURL, 86);
+  $('p-name').value=ME.name||''; $('p-status').value=ME.status||''; $('p-phone').value=ME.phone||'';
+  makeAvatar($('profile-av'),ME.name,ME.photoURL,86);
 }
-
-$('btn-save-profile').onclick = async()=>{
-  const name   = $('p-name').value.trim();
-  const status = $('p-status').value.trim();
+$('btn-save-profile').onclick=async()=>{
+  const name=$('p-name').value.trim(), status=$('p-status').value.trim();
   if(!name){ toast('Nome não pode ser vazio.'); return; }
-  const btn = $('btn-save-profile');
-  btn.disabled=true; btn.textContent='Salvando...';
-  await updateDoc(doc(db,'users',ME.uid),{ name, status });
-  toast('Perfil salvo!');
-  btn.disabled=false; btn.textContent='Salvar';
+  const btn=$('btn-save-profile'); btn.disabled=true; btn.textContent='Salvando...';
+  await updateDoc(doc(db,'users',ME.uid),{name,status});
+  toast('Perfil salvo!'); btn.disabled=false; btn.textContent='Salvar';
 };
-
-$('p-cam-btn').onclick = ()=>$('avatar-file').click();
-$('avatar-file').onchange = function(){
-  const file = this.files[0];
-  if(!file) return;
+$('p-cam-btn').onclick=()=>$('avatar-file').click();
+$('avatar-file').onchange=function(){
+  const file=this.files[0]; if(!file) return;
   toast('Processando foto de perfil...');
-  compressImage(file, async (b64, err) => {
+  /* Foto de perfil usa limite MENOR para não encher o documento do usuário */
+  compressImage(file,MAX_PROFILE_BYTES,async(b64,err)=>{
     if(err){ toast(err); return; }
-    try {
-      await updateDoc(doc(db,'users', ME.uid), { photoURL: b64 });
-      toast('Foto de perfil salva!');
-    } catch(e) { toast('Erro ao salvar foto.'); }
+    try{ await updateDoc(doc(db,'users',ME.uid),{photoURL:b64}); toast('Foto de perfil salva!'); }
+    catch(e){ toast('Erro ao salvar foto.'); }
   });
-  this.value = '';
+  this.value='';
 };
 
-/* ─────────────────────────────── BLOCKED PANEL ───────────── */
+/* ─── BLOCKED PANEL ─── */
 function openBlockedPanel(){ $('blocked-panel').classList.add('open'); renderBlockedList(); }
-$('blocked-back').onclick = ()=>$('blocked-panel').classList.remove('open');
-
+$('blocked-back').onclick=()=>$('blocked-panel').classList.remove('open');
 async function renderBlockedList(){
-  const list = $('blocked-list');
-  if(!ME.blocked?.length){
-    list.innerHTML='<div class="empty-state"><span class="ms">block</span><p>Nenhum contato bloqueado.</p></div>'; return;
-  }
+  const list=$('blocked-list');
+  if(!ME.blocked?.length){ list.innerHTML='<div class="empty-state"><span class="ms">block</span><p>Nenhum contato bloqueado.</p></div>'; return; }
   list.innerHTML='';
   for(const uid of ME.blocked){
-    const s = await getDoc(doc(db,'users',uid));
-    if(!s.exists()) continue;
-    const u = { uid: s.id, ...s.data() };
-    const row = document.createElement('div'); row.className='blocked-item';
+    const s=await getDoc(doc(db,'users',uid)); if(!s.exists()) continue;
+    const u={uid:s.id,...s.data()};
+    const row=document.createElement('div'); row.className='blocked-item';
     const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,u.name,u.photoURL,44);
     const info=document.createElement('div'); info.style.flex='1';
     info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div><div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
     const btn=document.createElement('button'); btn.className='unblock-btn'; btn.textContent='Desbloquear';
     btn.onclick=async()=>{
-      await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayRemove(uid) });
+      await updateDoc(doc(db,'users',ME.uid),{blocked:arrayRemove(uid)});
       ME.blocked=ME.blocked.filter(x=>x!==uid);
       refreshBlockedLabel(); renderBlockedList();
     };
     row.append(av,info,btn); list.appendChild(row);
   }
 }
-
 async function refreshBlockedLabel(){
-  const snap = await getDoc(doc(db,'users',ME.uid));
-  ME.blocked = snap.data()?.blocked||[];
-  const n = ME.blocked.length;
-  $('blocked-count-label').textContent = n===0 ? 'Nenhum contato bloqueado' : `${n} contato(s) bloqueado(s)`;
+  const snap=await getDoc(doc(db,'users',ME.uid));
+  ME.blocked=snap.data()?.blocked||[];
+  const n=ME.blocked.length;
+  $('blocked-count-label').textContent=n===0?'Nenhum contato bloqueado':`${n} contato(s) bloqueado(s)`;
 }
 
-/* ── LOGOUT ── */
-function confirmLogout(){ openModal('Sair','Deseja sair da conta?', async()=>{ await signOut(auth); closeModal(); }); }
-
-/* ── MODAL ── */
+/* ─── LOGOUT / MODAL ─── */
+function confirmLogout(){ openModal('Sair','Deseja sair da conta?',async()=>{ await signOut(auth); closeModal(); }); }
 let _modalCb=null;
 function openModal(title,body,cb){ $('modal-title').textContent=title; $('modal-body').textContent=body; _modalCb=cb; $('modal').classList.add('open'); }
 function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
-$('modal-ok').onclick     = ()=>{ _modalCb?.(); };
-$('modal-cancel').onclick = ()=>closeModal();
+$('modal-ok').onclick    =()=>_modalCb?.();
+$('modal-cancel').onclick=()=>closeModal();
 
-/* ─────────────────────────────── CALL LOGIC (WebRTC) ─────── */
-function startCallTimer() {
-  if (callTimerInterval) clearInterval(callTimerInterval);
-  let totalSeconds = 0;
-  callTimerInterval = setInterval(() => {
-    totalSeconds++;
-    const m = Math.floor(totalSeconds / 60);
-    const s = totalSeconds % 60;
-    $('call-status-label').textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
-  }, 1000);
+/* ─── WEBRTC ─── */
+function startCallTimer(){
+  clearInterval(callTimerInterval); let s=0;
+  callTimerInterval=setInterval(()=>{
+    s++; const m=Math.floor(s/60),sec=s%60;
+    $('call-status-label').textContent=(m<10?'0'+m:m)+':'+(sec<10?'0'+sec:sec);
+  },1000);
+}
+$('chat-btn-voice').onclick=()=>startCall('voice');
+$('chat-btn-video').onclick=()=>startCall('video');
+$('btn-call-hangup').onclick=()=>hangupCall();
+$('btn-call-accept').onclick=()=>acceptCall();
+$('btn-call-switch').onclick=()=>switchCamera();
+
+async function startCall(type){
+  if(!peerData) return;
+  currentCallId=ME.uid+'_'+Date.now(); currentFacingMode='user'; updateMirror();
+  $('call-name-label').textContent=peerData.name;
+  makeAvatar($('call-av'),peerData.name,peerData.photoURL,110);
+  $('call-status-label').textContent='Chamando...'; $('btn-call-accept').style.display='none';
+  toggleVideoUI(type==='video'); $('call-screen').classList.add('open');
+  try{
+    localStream=await navigator.mediaDevices.getUserMedia({video:type==='video'?{facingMode:currentFacingMode}:false,audio:true});
+    $('local-video').srcObject=localStream;
+    pc=new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+    pc.ontrack=e=>{ $('remote-video').srcObject=e.streams[0]; };
+    pc.onicecandidate=e=>{ if(e.candidate) addDoc(collection(db,'calls',currentCallId,'candidates'),e.candidate.toJSON()); };
+    const offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+    await setDoc(doc(db,'calls',currentCallId),{offer:{type:offer.type,sdp:offer.sdp},caller:ME.uid,callerName:ME.name,callerPhoto:ME.photoURL||'',receiver:peerData.uid,type,status:'ringing'});
+    onSnapshot(doc(db,'calls',currentCallId),snap=>{
+      const d=snap.data(); if(!d) return;
+      if(d.status==='answered'&&d.answer&&!pc.currentRemoteDescription){ pc.setRemoteDescription(new RTCSessionDescription(d.answer)); startCallTimer(); }
+      if(d.status==='ended') cleanCallState();
+    });
+    onSnapshot(collection(db,'calls',currentCallId,'answerCandidates'),snap=>{
+      snap.docChanges().forEach(c=>{ if(c.type==='added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
+    });
+  }catch(_){ toast('Sem permissão de câmera/microfone.'); hangupCall(); }
 }
 
-$('chat-btn-voice').onclick = () => startCall('voice');
-$('chat-btn-video').onclick = () => startCall('video');
-$('btn-call-hangup').onclick = () => hangupCall();
-$('btn-call-accept').onclick = () => acceptCall();
-$('btn-call-switch').onclick = () => switchCamera();
-
-async function startCall(type) {
-  if (!peerData) return;
-  currentCallId = ME.uid + '_' + Date.now();
-  currentFacingMode = 'user';
-  updateLocalVideoMirror();
-  $('call-name-label').textContent = peerData.name;
-  makeAvatar($('call-av'), peerData.name, peerData.photoURL, 110);
-  $('call-status-label').textContent = "Chamando...";
-  $('btn-call-accept').style.display = 'none';
-  if(type === 'video') {
-    $('btn-call-switch').style.display = 'flex'; $('video-wrap').style.display = 'block'; $('call-info-wrap').style.visibility = 'hidden';
-  } else {
-    $('btn-call-switch').style.display = 'none'; $('video-wrap').style.display = 'none'; $('call-info-wrap').style.visibility = 'visible';
-  }
-  $('call-screen').classList.add('open');
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: type === 'video' ? { facingMode: currentFacingMode } : false, audio: true });
-    $('local-video').srcObject = localStream;
-    pc = new RTCPeerConnection(rtcConfig);
-    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    pc.ontrack = event => { $('remote-video').srcObject = event.streams[0]; };
-    pc.onicecandidate = event => { if (event.candidate) { addDoc(collection(db, 'calls', currentCallId, 'candidates'), event.candidate.toJSON()); } };
-    const offerDescription = await pc.createOffer();
-    await pc.setLocalDescription(offerDescription);
-    await setDoc(doc(db, 'calls', currentCallId), {
-      offer: { type: offerDescription.type, sdp: offerDescription.sdp },
-      caller: ME.uid, callerName: ME.name, callerPhoto: ME.photoURL || '',
-      receiver: peerData.uid, type: type, status: 'ringing'
-    });
-    onSnapshot(doc(db, 'calls', currentCallId), snap => {
-      const data = snap.data(); if (!data) return;
-      if (data.status === 'answered' && data.answer && !pc.currentRemoteDescription) {
-        pc.setRemoteDescription(new RTCSessionDescription(data.answer)); startCallTimer();
-      }
-      if (data.status === 'ended') { cleanCallState(); }
-    });
-    onSnapshot(collection(db, 'calls', currentCallId, 'answerCandidates'), snap => {
-      snap.docChanges().forEach(change => { if (change.type === 'added') { pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); } });
-    });
-  } catch (err) { toast("Sem permissão de câmera/microfone."); hangupCall(); }
-}
-
-function listenIncomingCalls() {
-  const q = query(collection(db, 'calls'), where('receiver', '==', ME.uid), where('status', '==', 'ringing'));
-  unsubCall = onSnapshot(q, snap => {
-    snap.docChanges().forEach(async change => {
-      if (change.type === 'added') {
-        const callData = change.doc.data();
-        currentCallId = change.doc.id;
-        currentFacingMode = 'user'; updateLocalVideoMirror();
-        $('call-name-label').textContent = callData.callerName;
-        makeAvatar($('call-av'), callData.callerName, callData.callerPhoto, 110);
-        $('call-status-label').textContent = `Chamada de ${callData.type === 'video' ? 'vídeo' : 'voz'} recebida...`;
-        $('btn-call-accept').style.display = 'flex';
-        if(callData.type === 'video') {
-          $('btn-call-switch').style.display = 'flex'; $('video-wrap').style.display = 'block'; $('call-info-wrap').style.visibility = 'hidden';
-        } else {
-          $('btn-call-switch').style.display = 'none'; $('video-wrap').style.display = 'none'; $('call-info-wrap').style.visibility = 'visible';
-        }
-        $('call-screen').classList.add('open');
-        onSnapshot(doc(db, 'calls', currentCallId), s => { if (s.data()?.status === 'ended') { cleanCallState(); } });
-      }
+function listenIncomingCalls(){
+  const q=query(collection(db,'calls'),where('receiver','==',ME.uid),where('status','==','ringing'));
+  unsubCall=onSnapshot(q,snap=>{
+    snap.docChanges().forEach(async c=>{
+      if(c.type!=='added') return;
+      const d=c.doc.data(); currentCallId=c.doc.id; currentFacingMode='user'; updateMirror();
+      $('call-name-label').textContent=d.callerName;
+      makeAvatar($('call-av'),d.callerName,d.callerPhoto,110);
+      $('call-status-label').textContent=`Chamada de ${d.type==='video'?'vídeo':'voz'} recebida...`;
+      $('btn-call-accept').style.display='flex';
+      toggleVideoUI(d.type==='video'); $('call-screen').classList.add('open');
+      onSnapshot(doc(db,'calls',currentCallId),s=>{ if(s.data()?.status==='ended') cleanCallState(); });
     });
   });
 }
 
-async function acceptCall() {
-  const callSnap = await getDoc(doc(db, 'calls', currentCallId));
-  if (!callSnap.exists()) return;
-  const callData = callSnap.data();
-  $('btn-call-accept').style.display = 'none';
-  $('call-status-label').textContent = "Conectando...";
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: callData.type === 'video' ? { facingMode: currentFacingMode } : false, audio: true });
-    $('local-video').srcObject = localStream;
-    pc = new RTCPeerConnection(rtcConfig);
-    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-    pc.ontrack = event => { $('remote-video').srcObject = event.streams[0]; };
-    pc.onicecandidate = event => { if (event.candidate) { addDoc(collection(db, 'calls', currentCallId, 'answerCandidates'), event.candidate.toJSON()); } };
-    await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
-    const answerDescription = await pc.createAnswer();
-    await pc.setLocalDescription(answerDescription);
-    await updateDoc(doc(db, 'calls', currentCallId), { answer: { type: answerDescription.type, sdp: answerDescription.sdp }, status: 'answered' });
+async function acceptCall(){
+  const cs=await getDoc(doc(db,'calls',currentCallId)); if(!cs.exists()) return;
+  const d=cs.data(); $('btn-call-accept').style.display='none'; $('call-status-label').textContent='Conectando...';
+  try{
+    localStream=await navigator.mediaDevices.getUserMedia({video:d.type==='video'?{facingMode:currentFacingMode}:false,audio:true});
+    $('local-video').srcObject=localStream;
+    pc=new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+    pc.ontrack=e=>{ $('remote-video').srcObject=e.streams[0]; };
+    pc.onicecandidate=e=>{ if(e.candidate) addDoc(collection(db,'calls',currentCallId,'answerCandidates'),e.candidate.toJSON()); };
+    await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
+    const ans=await pc.createAnswer(); await pc.setLocalDescription(ans);
+    await updateDoc(doc(db,'calls',currentCallId),{answer:{type:ans.type,sdp:ans.sdp},status:'answered'});
     startCallTimer();
-    onSnapshot(collection(db, 'calls', currentCallId, 'candidates'), snap => {
-      snap.docChanges().forEach(change => { if (change.type === 'added') { pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); } });
+    onSnapshot(collection(db,'calls',currentCallId,'candidates'),snap=>{
+      snap.docChanges().forEach(c=>{ if(c.type==='added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data())); });
     });
-  } catch (err) { console.error(err); hangupCall(); }
+  }catch(e){ console.error(e); hangupCall(); }
 }
 
-async function switchCamera() {
-  if (!localStream) return;
-  const videoTrack = localStream.getVideoTracks()[0]; if (!videoTrack) return;
-  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-  try {
-    videoTrack.stop(); localStream.removeTrack(videoTrack);
-    const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
-    const newVideoTrack = newStream.getVideoTracks()[0];
-    if (pc) { const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video'); if (sender) { await sender.replaceTrack(newVideoTrack); } }
-    localStream.addTrack(newVideoTrack);
-    updateLocalVideoMirror();
-    $('local-video').srcObject = localStream;
-  } catch (err) { toast("Não foi possível alternar a câmera."); }
+async function switchCamera(){
+  if(!localStream) return;
+  const vt=localStream.getVideoTracks()[0]; if(!vt) return;
+  currentFacingMode=currentFacingMode==='user'?'environment':'user';
+  try{
+    vt.stop(); localStream.removeTrack(vt);
+    const ns=await navigator.mediaDevices.getUserMedia({video:{facingMode:currentFacingMode},audio:false});
+    const nvt=ns.getVideoTracks()[0];
+    if(pc){ const s=pc.getSenders().find(s=>s.track?.kind==='video'); if(s) await s.replaceTrack(nvt); }
+    localStream.addTrack(nvt); updateMirror(); $('local-video').srcObject=localStream;
+  }catch(_){ toast('Não foi possível alternar a câmera.'); }
 }
-
-function updateLocalVideoMirror() {
-  $('local-video').style.transform = currentFacingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+function updateMirror(){ $('local-video').style.transform=currentFacingMode==='user'?'scaleX(-1)':'scaleX(1)'; }
+function toggleVideoUI(isVideo){
+  $('btn-call-switch').style.display=isVideo?'flex':'none';
+  $('video-wrap').style.display=isVideo?'block':'none';
+  $('call-info-wrap').style.visibility=isVideo?'hidden':'visible';
 }
-
-async function hangupCall() {
-  if (currentCallId) { try { await updateDoc(doc(db, 'calls', currentCallId), { status: 'ended' }); } catch(e){} }
+async function hangupCall(){
+  if(currentCallId){ try{ await updateDoc(doc(db,'calls',currentCallId),{status:'ended'}); }catch(_){} }
   cleanCallState();
 }
-
-function cleanCallState() {
+function cleanCallState(){
   $('call-screen').classList.remove('open');
-  if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
-  if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
-  if (pc) { pc.close(); pc = null; }
-  currentCallId = null;
+  clearInterval(callTimerInterval); callTimerInterval=null;
+  localStream?.getTracks().forEach(t=>t.stop()); localStream=null;
+  pc?.close(); pc=null; currentCallId=null;
 }
 </script>
 </body>
