@@ -1,911 +1,1402 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <title>Bomberman Battle Online - Zapia</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Onix Messenger</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#00a884;--green-dark:#008069;--green-light:#d9fdd3;
+  --bg:#111b21;--bg2:#1c2b33;--bg3:#202c33;--panel:#2a3942;
+  --text:#e9edef;--text2:#8696a0;--border:#2a3942;--red:#f15c6d;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100dvh;width:100%;background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif;}
+.ms{font-family:'Material Symbols Rounded';font-size:24px;line-height:1;user-select:none;}
 
-  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database-compat.js"></script>
+/* SHELL */
+.shell{width:100%;max-width:480px;height:100dvh;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;}
 
-  <style>
-    * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
-    body { margin: 0; background: #1a1a1a; color: white; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; }
-    #lobby { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; padding: 20px; overflow-y: auto; }
-    #canvas-container { position: relative; width: 100%; max-width: 600px; aspect-ratio: 15/13; }
-    canvas { width: 100%; height: auto; background: #2e7d32; border: 4px solid #fff; image-rendering: pixelated; display: block; transition: background 1s ease; }
-    .controls { width: 100%; max-width: 600px; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .dpad { display: grid; grid-template-columns: repeat(3, 60px); gap: 5px; }
-    .btn { width: 60px; height: 60px; background: #444; border: 2px solid #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; cursor: pointer; }
-    .btn:active { background: #666; }
-    .btn-bomb { width: 85px; height: 85px; border-radius: 50%; background: #d32f2f; font-weight: bold; border: 4px solid #fff; cursor: pointer; }
-    .btn-bomb:active { background: #ff5252; }
-    input { padding: 10px; margin: 5px; border-radius: 5px; width: 220px; text-align: center; border: 2px solid #555; font-family: inherit; background: #222; color: #fff; }
-    button#join-btn { padding: 15px 30px; background: #f44336; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-    button#join-btn:disabled { background: #777; cursor: default; }
-    #status { padding: 10px; color: #ffeb3b; min-height: 24px; }
-    
-    #scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 600px; padding: 8px 15px; font-weight: bold; font-size: 16px; text-transform: uppercase; background: #222; border: 2px solid #555; margin-bottom: 5px; border-radius: 5px; }
-    .score-side { display: flex; align-items: center; }
-    
-    #lobby-error { color: #ff5252; font-size: 13px; min-height: 18px; margin-top: 5px; }
-    #room-share { font-size: 12px; color: #9ccc65; margin-top: 4px; }
-    #event-log { font-size: 12px; color: #80d8ff; min-height: 18px; margin-top: 2px; transition: opacity 0.3s; }
-    #phase-banner { font-size: 14px; color: #fff176; min-height: 18px; margin-top: 2px; }
+/* AUTH */
+#auth{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto;pointer-events: auto;}
+#auth.hidden{display:none !important; pointer-events: none !important;}
+.auth-logo {font-size:52px;margin-bottom:8px;}
+.auth-brand{color:var(--green);font-size:26px;font-weight:700;margin-bottom:4px;}
+.auth-sub{color:var(--text2);font-size:13px;margin-bottom:28px;text-align:center;line-height:1.5;}
+.auth-card{background:var(--bg3);border-radius:18px;padding:22px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.auth-card h2{color:var(--text);font-size:17px;margin-bottom:18px;}
+.field{width:100%;background:var(--panel);border:1.5px solid var(--border);border-radius:10px;padding:13px 15px;color:var(--text);font-size:15px;outline:none;margin-bottom:10px;transition:border .2s;}
+.field:focus{border-color:var(--green);}
+.field::placeholder{color:var(--text2);}
+.btn-main{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;}
+.btn-main:disabled{opacity:.6;cursor:not-allowed;}
+.btn-main:not(:disabled):active{background:var(--green-dark);}
+.auth-switch{color:var(--green);text-align:center;margin-top:14px;font-size:13px;cursor:pointer;}
+.auth-err{color:var(--red);font-size:13px;margin-bottom:10px;text-align:center;display:none;}
+.auth-err.show{display:block;}
 
-    #ranking-box { margin-top: 25px; background: #222; border: 2px dashed #ffeb3b; padding: 15px; width: 320px; border-radius: 5px; text-align: left; }
-    #ranking-box h3 { margin: 0 0 10px 0; text-align: center; color: #ffeb3b; font-size: 16px; letter-spacing: 1px; }
-    .ranking-item { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 6px; padding: 4px; border-bottom: 1px solid #333;}
-    .ranking-item.rank-1 { color: #ffd700; font-weight: bold; }
-    .ranking-item.rank-2 { color: #e0e0e0; }
-    .ranking-item.rank-3 { color: #cd7f32; }
-    
-    /* Destaque para o Campeão (5 vitórias ou mais) */
-    .champion { color: #00e676 !important; font-weight: bold; text-shadow: 0 0 5px rgba(0, 230, 118, 0.5); background: rgba(0, 230, 118, 0.1); border-radius: 4px; border-bottom: none; }
+/* HEADER */
+header{height:56px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;border-bottom:1px solid var(--border);position:relative;z-index:10;}
+.brand{color:var(--green);font-size:20px;font-weight:700;}
+.hicons{display:flex;gap:14px;}
+.hicons .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
+.hicons .ms:active{background:var(--panel);}
 
-    /* Times / Duplas */
-    #team-box { width: 100%; max-width: 600px; padding: 6px 15px; display: none; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; background: #222; border: 2px solid #555; border-radius: 5px; margin-bottom: 5px; font-size: 13px; }
-    #team-box button { background: #455a64; color: #fff; border: 1px solid #777; border-radius: 4px; padding: 6px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
-    #team-box button:active { background: #607d8b; }
-    .team-tag { padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 4px; }
-    .team-A { background: #1565c0; color: #fff; }
-    .team-B { background: #c62828; color: #fff; }
+/* SEARCH BAR */
+#search-bar{padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:none;}
+#search-bar.show{display:block;}
+.sbar-inner{background:var(--panel);border-radius:25px;display:flex;align-items:center;padding:9px 14px;gap:10px;}
+.sbar-inner .ms{color:var(--text2);font-size:20px;}
+.sbar-inner input{background:none;border:none;outline:none;color:var(--text);font-size:15px;flex:1;}
+.sbar-inner input::placeholder{color:var(--text2);}
 
-    /* Chat */
-    #chat-box { width: 100%; max-width: 600px; background: transparent; border: none; margin-bottom: 5px; display: flex; flex-direction: column; }
-    #chat-log { height: 90px; overflow: hidden; font-size: 12px; padding: 4px 8px; display: flex; flex-direction: column-reverse; gap: 3px; pointer-events: none; }
-    #chat-log div { word-break: break-word; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 4px; display: inline-block; max-width: 100%; transition: opacity 0.6s ease; }
-    #chat-input-row { display: flex; border-top: 1px solid #444; background: #181818; border-radius: 5px; border: 2px solid #555; }
-    #chat-input { flex: 1; border: none; border-radius: 0; background: #222; color: #fff; padding: 8px; font-size: 13px; margin: 0; width: auto; }
-    #chat-send { background: #2e7d32; color: #fff; border: none; padding: 8px 14px; cursor: pointer; font-family: inherit; font-size: 13px; }
-    #chat-send:active { background: #43a047; }
+/* SEARCH RESULTS */
+#search-results{background:var(--bg);display:none;border-bottom:2px solid var(--green);position:relative;z-index:50;}
+#search-results.show{display:block;}
+.sr-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
+.sr-name{color:var(--text);font-size:15px;font-weight:600;}
+.sr-tel{color:var(--text2);font-size:13px;margin-top:2px;}
+.sr-btn{background:var(--green);border:none;border-radius:20px;padding:8px 16px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
 
-    /* Status de efeitos (escudo / invisibilidade) */
-    #effects-status { font-size: 12px; min-height: 16px; margin-top: 2px; }
-    .effect-shield { color: #29b6f6; }
-    .effect-invis { color: #ab47bc; }
-  </style>
+/* MAIN / PAGES */
+main{flex:1;overflow:hidden;position:relative;}
+.page{position:absolute;inset:0;overflow-y:auto;display:none;}
+.page.active{display:block;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:80vh;gap:12px;color:var(--text2);padding:40px;text-align:center;}
+.empty-state .ms{font-size:60px;color:var(--panel);}
+.empty-state p{font-size:14px;line-height:1.6;}
+
+/* CONVERSATIONS & CALLS ITEMS */
+.conv-item{padding:13px 16px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--border);cursor:pointer;}
+.conv-item:active{background:var(--bg2);}
+.avatar{width:50px;height:50px;border-radius:50%;background:var(--panel);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:20px;font-weight:700;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.conv-info{flex:1;min-width:0;}
+.conv-name{color:var(--text);font-size:15px;font-weight:600;}
+.conv-preview{color:var(--text2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.conv-time{color:var(--text2);font-size:11px;white-space:nowrap;}
+.unread-badge{background:var(--green);color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+
+/* CALL ACTIONS BUTTONS IN LIST */
+.call-list-actions{display:flex;gap:12px;align-items:center;}
+.call-list-actions .ms{color:var(--green);padding:8px;border-radius:50%;cursor:pointer;}
+.call-list-actions .ms:active{background:var(--panel);}
+
+/* CHAT SCREEN */
+#chat-screen{position:fixed;inset:0;z-index:99998;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
+#chat-screen.open{display:flex;}
+.chat-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);position:relative;}
+.chat-header .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
+.chat-header .ms:active{background:var(--panel);}
+.chat-hname{color:var(--text);font-size:15px;font-weight:600;}
+.chat-hstatus{color:var(--text2);font-size:12px;}
+.chat-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px;}
+.msg{max-width:78%;padding:9px 13px;border-radius:12px;font-size:14px;line-height:1.5;word-break:break-word;animation:msgIn .15s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.msg-time{font-size:11px;opacity:.6;margin-top:3px;display:block;text-align:right;}
+.msg.sent{background:var(--green-dark);color:#e9edef;align-self:flex-end;border-bottom-right-radius:3px;}
+.msg.recv{background:var(--bg3);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px;}
+.chat-footer{background:var(--bg3);padding:8px 10px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);flex-shrink:0;padding-bottom:calc(8px + env(safe-area-inset-bottom));}
+.chat-footer input{flex:1;background:var(--panel);border:none;outline:none;color:var(--text);padding:11px 15px;border-radius:25px;font-size:15px;}
+.chat-footer input::placeholder{color:var(--text2);}
+.send-btn{background:var(--green);border:none;border-radius:50%;width:44px;height:44px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.send-btn:active{background:var(--green-dark);}
+.send-btn .ms{color:#fff;font-size:20px;}
+.send-btn.recording { background: var(--red); animation: pulse 1s infinite; }
+@keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
+
+/* FILE CHAT GRAPHICS */
+.file-link{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px;margin-top:4px;}
+.file-link .ms{font-size:28px;}
+.msg-img{max-width:100%;max-height:200px;border-radius:8px;margin-top:4px;display:block;cursor:pointer;}
+.msg-video{max-width:100%;max-height:240px;border-radius:8px;margin-top:4px;display:block;outline:none;background:#000;}
+.msg-audio{max-width:100%;margin-top:4px;outline:none;display:block;}
+
+/* PROFILE PAGE */
+.profile-banner{height:110px;background:linear-gradient(135deg,var(--green-dark),var(--green));flex-shrink:0;}
+.profile-body{padding:0 20px 40px;}
+.p-avatar-wrap{position:relative;width:86px;height:86px;margin:-43px auto 18px;}
+.p-avatar-wrap .avatar{width:86px;height:86px;font-size:36px;border:3px solid var(--bg3);}
+.p-cam{position:absolute;bottom:0;right:0;background:var(--green);border:2px solid var(--bg3);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.p-cam .ms{font-size:14px;color:#fff;}
+.field-label{color:var(--green);font-size:11px;font-weight:700;letter-spacing:.7px;margin-bottom:5px;margin-top:16px;display:block;}
+.field-row{background:var(--panel);border-radius:10px;padding:13px 15px;display:flex;align-items:center;gap:10px;}
+.field-row .ms{color:var(--text2);font-size:20px;}
+.field-row input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:15px;}
+.field-row input:disabled{color:var(--text2);}
+.save-btn{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:22px;transition:background .2s;}
+.save-btn:active{background:var(--green-dark);}
+.save-btn:disabled{opacity:.6;}
+
+/* SETTINGS PAGE */
+.config-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);cursor:pointer;}
+.config-item:active{background:var(--bg2);}
+.config-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.config-icon .ms{font-size:20px;}
+.config-label{color:var(--text);font-size:14px;flex:1;}
+.config-sub{color:var(--text2);font-size:12px;margin-top:1px;}
+
+/* BLOCKED PANEL */
+#blocked-panel{position:fixed;inset:0;z-index:99990;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
+#blocked-panel.open{display:flex;}
+.blocked-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.blocked-header .ms{color:var(--text2);cursor:pointer;padding:6px;border-radius:50%;}
+.blocked-header span{color:var(--text);font-size:16px;font-weight:600;}
+.blocked-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);}
+.unblock-btn{background:transparent;border:1.5px solid var(--green);border-radius:20px;padding:7px 14px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;}
+
+/* DROP MENUS */
+.drop-menu{position:absolute;background:var(--bg3);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.6);z-index:600;min-width:180px;overflow:hidden;display:none;}
+.drop-menu.open{display:block;}
+#drop-main{top:52px;right:10px;}
+#drop-chat{top:52px;right:10px;}
+.drop-menu .drop-item{padding:13px 18px;color:var(--text);font-size:14px;cursor:pointer;border-bottom:1px solid var(--border);}
+.drop-menu .drop-item:last-child{border-bottom:none;}
+.drop-menu .drop-item:active{background:var(--panel);}
+.drop-menu .drop-item.danger{color:var(--red);}
+
+/* NAV */
+nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text2);font-size:10px;}
+.nav-btn.active{color:var(--green);}
+.nav-btn .ms{font-size:22px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);color:var(--text);padding:10px 20px;border-radius:25px;font-size:13px;opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* SPINNER */
+.spin{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg3);border-radius:16px;padding:24px;width:100%;max-width:380px;}
+.modal-title{color:var(--text);font-size:17px;font-weight:700;margin-bottom:10px;}
+.modal-body{color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+.modal-btn{padding:10px 22px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+.modal-btn.cancel{background:var(--panel);color:var(--text2);}
+.modal-btn.danger{background:var(--red);color:#fff;}
+
+/* BLOCKED NOTICE */
+#blocked-notice{display:none;padding:14px;text-align:center;color:var(--text2);font-size:13px;border-top:1px solid var(--border);background:var(--bg3);}
+
+/* HEADS-UP NOTIFICATION */
+.push-banner{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  background:#1f2c34;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 6px 20px rgba(0,0,0,.6);
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  z-index:1000000;
+  transform:translateY(-100%);
+  transition:transform .3s cubic-bezier(0.1, 1, 0.1, 1);
+  cursor:pointer;
+}
+.push-banner.show{transform:translateY(0);}
+.push-body{flex:1;min-width:0;}
+.push-title{color:#00a884;font-size:14px;font-weight:700;margin-bottom:2px;}
+.push-text{color:#e9edef;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* CALL INTERFACE */
+#call-screen {
+  position: fixed; inset: 0; z-index: 1000005; background: #0b141a;
+  display: none; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 40px 20px; color: #fff; width: 100%; max-width: 480px; margin: 0 auto;
+}
+#call-screen.open { display: flex; }
+.call-profile { text-align: center; margin-top: 40px; }
+.call-name { font-size: 24px; font-weight: 600; margin-top: 15px; }
+.call-status { font-size: 14px; color: #8696a0; margin-top: 5px; }
+.video-container { position: absolute; inset: 0; width: 100%; height: 100%; background: #000; display: none; }
+#remote-video { width: 100%; height: 100%; object-fit: cover; }
+#local-video { position: absolute; top: 20px; right: 20px; width: 110px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #202c33; z-index: 2; transform: scaleX(-1); }
+.call-actions { display: flex; gap: 30px; margin-bottom: 30px; z-index: 10; }
+.call-btn { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; }
+.call-btn.hangup { background: var(--red); }
+.call-btn.accept { background: var(--green); }
+.call-btn.switch-cam { background: #2a3942; }
+
+/* AUDIO TIMER */
+.rec-timer{color:var(--red);font-size:13px;font-weight:700;min-width:36px;text-align:center;}
+</style>
 </head>
 <body>
 
-  <div id="lobby">
-    <h1>BOMBERMAN ONLINE</h1>
-    <input type="text" id="p-name" placeholder="Seu Nome" maxlength="10">
-    <input type="text" id="r-id" placeholder="ID da Sala (ex: sala1)">
-    <button id="join-btn">ENTRAR NO JOGO</button>
-    <p id="lobby-error"></p>
-    <p style="font-size: 12px; margin-top: 10px;">O jogo inicia de 2 a 4 jogadores.</p>
+<div class="push-banner" id="push-notif">
+  <div class="avatar" id="push-av" style="width:42px;height:42px;"></div>
+  <div class="push-body">
+    <div class="push-title" id="push-title">Nome do Contato</div>
+    <div class="push-text" id="push-msg">Mensagem recebida</div>
+  </div>
+</div>
 
-    <div id="ranking-box">
-      <h3>🏆 TOP 5 GLOBAIS 🏆</h3>
-      <div id="ranking-list">Carregando placar...</div>
+<div id="call-screen">
+  <div class="video-container" id="video-wrap">
+    <video id="remote-video" autoplay playsinline></video>
+    <video id="local-video" autoplay playsinline muted></video>
+  </div>
+  <div class="call-profile" id="call-info-wrap">
+    <div class="avatar" id="call-av" style="width:110px;height:110px;font-size:44px;margin:0 auto;"></div>
+    <div class="call-name" id="call-name-label">Nome do Contato</div>
+    <div class="call-status" id="call-status-label">Chamando...</div>
+  </div>
+  <div class="call-actions">
+    <button class="call-btn switch-cam" id="btn-call-switch" style="display:none;"><span class="ms">flip_camera_ios</span></button>
+    <button class="call-btn accept" id="btn-call-accept" style="display:none;"><span class="ms">call</span></button>
+    <button class="call-btn hangup" id="btn-call-hangup"><span class="ms">call_end</span></button>
+  </div>
+</div>
+
+<div id="auth">
+  <div class="auth-logo">💬</div>
+  <div class="auth-brand">Onix Messenger</div>
+  <div class="auth-sub">Conecte-se com quem importa.<br>Número virtual, sem SIM.</div>
+  <div class="auth-card">
+    <div id="view-login">
+      <h2>Entrar na conta</h2>
+      <div class="auth-err" id="login-err"></div>
+      <input class="field" id="login-phone" type="tel" placeholder="Seu número virtual" maxlength="20">
+      <input class="field" id="login-pass"  type="password" placeholder="Senha">
+      <button class="btn-main" id="btn-login">Entrar</button>
+      <div class="auth-switch" id="to-register">Não tem conta? <b>Cadastrar</b></div>
+    </div>
+    <div id="view-register" style="display:none;">
+      <h2>Criar conta</h2>
+      <div class="auth-err" id="reg-err"></div>
+      <input class="field" id="reg-name"  type="text"     placeholder="Seu nome" maxlength="40">
+      <input class="field" id="reg-phone" type="tel"      placeholder="Escolha um número (ex: 11987654321)" maxlength="20">
+      <input class="field" id="reg-pass"  type="password" placeholder="Senha (mínimo 6 caracteres)">
+      <button class="btn-main" id="btn-register">Criar conta</button>
+      <div class="auth-switch" id="to-login">Já tem conta? <b>Entrar</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <header>
+    <span class="brand">Onix</span>
+    <div class="hicons">
+      <span class="ms" id="icon-search">search</span>
+      <span class="ms" id="icon-menu">more_vert</span>
+    </div>
+    <div class="drop-menu" id="drop-main">
+      <div class="drop-item" id="dm-profile">Meu Perfil</div>
+      <div class="drop-item" id="dm-settings">Configurações</div>
+      <div class="drop-item danger" id="dm-logout">Sair</div>
+    </div>
+  </header>
+
+  <div id="search-bar">
+    <div class="sbar-inner">
+      <span class="ms">search</span>
+      <input id="search-input" type="tel" placeholder="Buscar número...">
+      <span class="ms" id="search-close" style="cursor:pointer;">close</span>
     </div>
   </div>
 
-  <div id="status">Conecte-se para jogar</div>
-  
-  <div id="scoreboard">
-    <div id="score-p1" class="score-side"></div>
-    <div id="score-p2" class="score-side" style="justify-content: flex-end;"></div>
-    <div id="score-p3" class="score-side"></div>
-    <div id="score-p4" class="score-side" style="justify-content: flex-end;"></div>
-  </div>
+  <div id="search-results"></div>
 
-  <div id="team-box"></div>
-
-  <div id="room-share"></div>
-  <div id="phase-banner"></div>
-  <div id="event-log"></div>
-  <div id="effects-status"></div>
-
-  <div id="canvas-container">
-    <canvas width="960" height="832" id="game"></canvas>
-  </div>
-
-  <div id="chat-box">
-    <div id="chat-log"></div>
-    <div id="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Mensagem para a sala..." maxlength="80">
-      <button id="chat-send">Enviar</button>
+  <main>
+    <div class="page active" id="page-chats">
+      <div id="convs-list"></div>
+      <div class="empty-state" id="convs-empty" style="display:none;">
+        <span class="ms">chat_bubble_outline</span>
+        <p>Nenhuma conversa ainda.<br>Busque um número para começar.</p>
+      </div>
     </div>
-  </div>
 
-  <div class="controls">
-    <div class="dpad">
-      <div style="grid-column: 2" class="btn" id="up">▲</div>
-      <div style="grid-column: 1; grid-row: 2" class="btn" id="left">◀</div>
-      <div style="grid-column: 3; grid-row: 2" class="btn" id="right">▶</div>
-      <div style="grid-column: 2; grid-row: 3" class="btn" id="down">▼</div>
+    <div class="page" id="page-calls">
+      <div id="calls-contacts-list"></div>
+      <div class="empty-state" id="calls-empty">
+        <span class="ms">call</span>
+        <p>Nenhum contato disponível para chamadas.</p>
+      </div>
     </div>
-    <div class="btn btn-bomb" id="bomb-btn">BOMBA</div>
-  </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAvDDcWaMa79_lPig78LCsHwdxqgMvf19I",
-      authDomain: "bomberman-cc1db.firebaseapp.com",
-      databaseURL: "https://bomberman-cc1db-default-rtdb.firebaseio.com",
-      projectId: "bomberman-cc1db",
-      storageBucket: "bomberman-cc1db.firebasestorage.app",
-      messagingSenderId: "1029411431019",
-      appId: "1:1029411431019:web:d07987a9abd4f33144072e"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const grid = 64, rows = 13, cols = 15;
-    
-    const BOMB_FUSE_MS = 2000; 
-    const EXPLOSION_VISIBLE_MS = 600;
-    const RESPAWN_DELAY_MS = 3000;
-    const BASE_BOMB_RANGE = 2; 
-    const POWERUP_SPAWN_CHANCE = 0.45;
-    const SHIELD_DURATION_MS = 30000;
-    const INVIS_DURATION_MS = 30000;
-
-    let serverTimeOffset = 0;
-    db.ref('.info/serverTimeOffset').on('value', snap => {
-      serverTimeOffset = snap.val() || 0;
-    });
-
-    function getServerTime() {
-      return Date.now() + serverTimeOffset;
-    }
-
-    let myId, myRoom, myName, roomRef;
-    let players = {}, map = [], bombs = {}, powerups = {};
-    let currentPhase = 1;
-    let gameActive = false;
-    let loopStarted = false;
-    let knownPlayerIds = new Set();
-    let eventLogTimeout = null;
-    let processedBombIds = new Set();
-    let localExplodedBombs = new Set(); 
-    let myRespawnScheduled = false;
-    let powerupAlternator = 'range';
-    let chatInitialized = false;
-
-    const SPAWNS = [
-      { r: 1, c: 1 },              
-      { r: rows - 2, c: cols - 2 }, 
-      { r: 1, c: cols - 2 },        
-      { r: rows - 2, c: 1 }         
-    ];
-    const COLORS = ['#2196f3', '#ff9800', '#9c27b0', '#4caf50']; 
-
-    // ---------- SPRITES PIXEL ART ORIGINAIS (criados do zero, sem copiar nenhuma arte existente) ----------
-    // Personagem com capacete colorido por slot, e tiles de cenário (parede de pedra / bloco de moita).
-    const SPRITE_DATA = {
-      p1_white_blue: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABcklEQVR4nO1WTUoDMRT+KmYpb5BxU4SidCOCx5huXHgOb+AJvIHncOFmeoyCuCkVQdw4yAQPMC40Jc3kJS9pi5v5YJgheXnf936SDDBgwD9jlLOIiDpuTmud5DPJ2BAv3z5Ym+lknCTkYJfk9nwoSzZEKomoixH7MJ2Mo5mIZkAaSe56UQlyopeuCwrITb0rIpQFcRPuC4OAQ27CrZs5YFJg9w8Rdb4tyQpw0b7UAICTq2sAwOfiaWPeN94I/HoFnD18b7X3XRzfv/++ge719mgjC72UcOSrm+dk4vPHS++4LUJcguJilizARB6CWIDEWQ5629Ct0a4R7QEbRNRxkX/dnfbGQrbcrSgugQ9t266/i6LI8hE8CbXWI1+kNql5OISiB2Q/JBUR1TlN+Ec+AzDnbER3gVLKW/MYuVIqaifuAVtEKBvGRkIuEVC5ImwSHxjiCkwZYgLmrgibpGma9fFYlmUd8eOFqAkFNjFs14T7xA/t7X4d6cKAqwAAAABJRU5ErkJggg==",
-      p2_red_black: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABb0lEQVR4nO1WvU7DMBC+IjxfhjBk61oJ6AswdUiFxMrOxjPxHkgonXmBAlLXbh7IEI+dzEKiq+Ozz6YVSz4pUmSf7/vuxz8AEyb8M2Y5ixDRcnPGmCSflznEVVWFzGyKkIsTkw/zoSxRiFQioo0R+6C1jmYimgFpJLnrRSXIiV66LiggN/WuiFAWxE14LkwC2IPIrZvWOtk57R9EtL4tKT4Ju10DAABXtw8AAPD98Xo07xtfrJ6ifr0CPpfLIfrHw0GqkcX7fN7/2pvt9igLo5RQcorrt5dk4q/7Z+84FSEuQbFYJwsgkbMQC5A4y8FoG7o1OjWiPUCBiJaL/G6/H42FbLlbMelB4qLruuG/KIosH8GT0Bgz80VKSfuPQyh6ANmDpEbEJqcJf8nXALDhbER3gVLKW/MYuVIqaifuASoilI3eRkIuEVC7IiiJDwxxDUwZYgI2rghK0rbtcDyWZdlE/HghakKBTQx/a8Jz4genVnLL75jYqwAAAABJRU5ErkJggg==",
-      p3_purple_yellow: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABf0lEQVR4nO1WMU7EMBCcQ7jeFEHKDxAND7gKmruGgh9QwA94BBU/ACF+QHFNruEqHkCD+MFJRCKuU4QCfDjJ2l6bO9FkpJMie70zO7txDhgx4p8xSTlERK1rT2sdlTMq2BDXLyfOmGy6ihKyt01ye9/nkg2RSiJqQ8Qcsukq6ETQAWklqedFLUipXnrOKyDV+r4InwviIdwVRgH7ro1+38wFEwN7foio5V5Jp4BBsrcSAHBwfAYA+HhddPbZ9c+bYF5WwN3hk1X9g1SjE7fF4/dDgfbq/bzjwsCSLvkvLp+LaOL70zW7bosQtyA7mkcL2FTugViAJFkKBq9hv0fbRnAGbBBR66r8en0xWPPFur6K4hZwqOt685xlWVIO702otZ5wldqk5ueCr3pA9odkRkRlyhD+kM8BLF0xom+BUorteYhcKRWME8+ALcLnhomRkAPhFswAIM/z0l5smsYr1EZVVeYGY9sQcmBpRHAkVvKBSCYPC9EQCmJC+NsQ7hJfSQ2BMKrM/eIAAAAASUVORK5CYII=",
-      p4_green_white: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABZElEQVR4nO2WPU7DQBCFXxBbjwtzCBpaKgqapAkS3IBjcASOwQ1AIo3TUFDR0nAIXHhrF6Zh0STe2ZndOKLxJ0WKdmd33vx4bGBm5p9ZlBwiokHa895n3ZllHBx3XSfaVFWVJeRkSud8P5WlbIhoKMEiQs3AoZFo500l0NI+9bk/SlOfUwpzEx6LWcCptLFftzBgcuBNSERDbDiJAkaXfTUAgLOLNQDg+3Ozsy+ta0QFrJ9vp5tiAK6ersPfYXP3spOFUUok56+XD9mObz4eo+tchLkE1fkqWwCLXMQswHJZCaPHcL9GU6P2AIeIBiny9/u30VrKVvo+MJcgBn/OS+YEoExC7/0iFil3Gn4SqegB2yfZkoiakib8db4CsJVsTO8C51y05ppz55xqZ+4BLiKVjWBjcQ7oJVgCQF3XDV/s+z4plNO2bZhg0TJoGdgGETEn7PKRyMg9UUxNaLDROKwJj8kP20bx/Ff51ZkAAAAASUVORK5CYII=",
-      wall: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAlklEQVR4nO2Xuw2AMAxED+Q5PARkBiQa9mEClgOG8CJQ0AQUPgoCN3ddolh+in35FE3bLXCUVHWAqvYeyc1sKD0Sx5J4YGbDccE8jajqkJ3gLt59BwjgDiDzNEJVAWwNk9LZ/FNdxe9ckNPtb13iXgICEMAdYGfDXL+/OSck9nDKz7wNCUCAr8X3gHsJCEAAAdJ/wr+0AgZVOj9xHN3wAAAAAElFTkSuQmCC",
-      block: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABmElEQVR4nMWXMW7DMAxFmaIHSLRkT4EOPoEHLz1H154gB/EJuvYcXTLkBBoKtLsX2TdIl0qhGFKk1KImYDiGFP9nkqKoDQBcYEW7W1McAOA+/ujHgZ2w3e9gmebqFwcfwHVOHD8fTzkAFZWeSzDBB/FZgrkJARW3jlNx63gGoInXzrNYdRIu08yGoRTvPwPQklGD4MKQADS3LtMM5+PpuThJgeDGEkDp67D4byFEAM36cXjDd84scM0AVvF4p14w1QEuDNYqyHnIdS5dkt14gApyySm5uuQhM0CEkNZ7TTI2AwBc1yyFkJKxFWgDP/1APw5sobAsKSxuDUPcDZMHpM0i+KB+XWmJbve77KKmLsOPV2+KORYvzaUQKsDjS6cWIGyWJMUQpkIUISQxbDgclm27uScsfWlNPTAD0CTV9gZr01LlgeBDBsKJBx+qOqbUlLrOqX0dFin97+v9Ew5PD3UA8WVYhD5rMNGs4gCFELT2eBbD5f3fT0Z0b2EPJpxZc8R1LhPRTlZVHtDCwo1rDU3aDdey1U/H35bf2Tr3H9cuAAAAAElFTkSuQmCC",
-    };
-
-    // Carrega as imagens dos sprites em memória (decodifica o base64 uma única vez)
-    const SPRITE_IMAGES = {};
-    let spritesLoadedCount = 0;
-    const SPRITE_KEYS = Object.keys(SPRITE_DATA);
-    SPRITE_KEYS.forEach(key => {
-      const img = new Image();
-      img.onload = () => { spritesLoadedCount++; };
-      img.src = SPRITE_DATA[key];
-      SPRITE_IMAGES[key] = img;
-    });
-    const PLAYER_SPRITE_BY_SLOT = ['p1_white_blue', 'p2_red_black', 'p3_purple_yellow', 'p4_green_white'];
-
-    // Canvas auxiliar (offscreen) usado para tingir a parede com a cor da fase atual,
-    // preservando a textura de pedra do sprite e a variação de cor por fase pedida anteriormente.
-    const tintCanvas = document.createElement('canvas');
-    tintCanvas.width = 32; tintCanvas.height = 32;
-    const tintCtx = tintCanvas.getContext('2d');
-    function getTintedWallTile(color) {
-      tintCtx.clearRect(0, 0, 32, 32);
-      tintCtx.drawImage(SPRITE_IMAGES.wall, 0, 0, 32, 32);
-      tintCtx.globalCompositeOperation = 'multiply';
-      tintCtx.fillStyle = color;
-      tintCtx.fillRect(0, 0, 32, 32);
-      tintCtx.globalCompositeOperation = 'destination-in';
-      tintCtx.drawImage(SPRITE_IMAGES.wall, 0, 0, 32, 32);
-      tintCtx.globalCompositeOperation = 'source-over';
-      return tintCanvas;
-    }
-
-    
-    // Paletas de cores das fases — o bloco destrutível ('S') é SEMPRE preto e nunca muda.
-    // Só variam o fundo e a parede indestrutível ('W'), sempre bem distintas entre si,
-    // bem contrastantes com o preto do bloco, e nunca se repetem entre fases.
-    const PHASE_VISUALS = [
-      { bg: '#2e7d32', wall: '#1b5e20' }, // 1: Floresta (Verde)
-      { bg: '#0277bd', wall: '#01579b' }, // 2: Gelo (Azul)
-      { bg: '#ad1457', wall: '#880e4f' }, // 3: Magma (Rosa-fogo)
-      { bg: '#6a1b9a', wall: '#4a148c' }, // 4: Sombrio (Roxo)
-      { bg: '#ef6c00', wall: '#bf360c' }, // 5: Deserto (Laranja-terra)
-      { bg: '#00838f', wall: '#006064' }, // 6: Caverna (Ciano)
-      { bg: '#558b2f', wall: '#33691e' }, // 7: Pântano (Verde-oliva)
-      { bg: '#5d4037', wall: '#3e2723' }  // 8: Terra (Marrom)
-    ];
-    const BLOCK_COLOR = '#000000'; // cor fixa do bloco destrutível — nunca muda
-    const FIRE_OUTER = 'rgba(255, 140, 0, 0.75)';  // laranja — fixo, nunca muda
-    const FIRE_INNER = 'rgba(255, 235, 59, 0.9)';  // amarelo claro — fixo, nunca muda
-
-    const joinBtn = document.getElementById('join-btn');
-    const lobbyError = document.getElementById('lobby-error');
-
-    // LISTENER DO RANKING - CORRIGIDO PARA 5 VITÓRIAS
-    db.ref('leaderboard').on('value', snap => {
-      const listEl = document.getElementById('ranking-list');
-      const data = snap.val() || {};
-      
-      const sorted = Object.entries(data)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5); 
-      
-      if (sorted.length === 0) {
-        listEl.innerHTML = '<div style="text-align:center;color:#777;">Nenhuma vitória ainda</div>';
-        return;
-      }
-
-      const medals = ['🥇', '🥈', '🥉'];
-
-      listEl.innerHTML = sorted.map(([name, score], idx) => {
-        const isChampion = score >= 5; // Apenas 5 vitórias para brilhar
-        const medal = medals[idx] || `${idx + 1}.`;
-        let displayName = `${medal} ${name}`;
-        
-        if (isChampion) {
-            displayName = `👑 ${name} (CAMPEÃO)`;
-        }
-
-        const rankClass = idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : ''));
-
-        return `
-        <div class="ranking-item ${rankClass} ${isChampion ? 'champion' : ''}">
-          <span>${displayName}</span>
-          <span>${score} vit.</span>
+    <div class="page" id="page-profile">
+      <div class="profile-banner"></div>
+      <div class="profile-body">
+        <div class="p-avatar-wrap">
+          <div class="avatar" id="profile-av">?</div>
+          <div class="p-cam" id="p-cam-btn">
+            <span class="ms">photo_camera</span>
+          </div>
         </div>
-        `;
-      }).join('');
-    });
+        <span class="field-label">NOME</span>
+        <div class="field-row">
+          <span class="ms">person</span>
+          <input id="p-name" type="text" placeholder="Seu nome" maxlength="40">
+        </div>
+        <span class="field-label">STATUS</span>
+        <div class="field-row">
+          <span class="ms">edit</span>
+          <input id="p-status" type="text" placeholder="Hey! Estou usando o Onix." maxlength="80">
+        </div>
+        <span class="field-label">NÚMERO VIRTUAL</span>
+        <div class="field-row">
+          <span class="ms">phone</span>
+          <input id="p-phone" type="text" disabled>
+        </div>
+        <button class="save-btn" id="btn-save-profile">Salvar</button>
+      </div>
+    </div>
 
-    function updateScoreboard() {
-      const pArr = Object.values(players).sort((a, b) => a.slot - b.slot);
-      
-      for(let i = 0; i < 4; i++) {
-        const el = document.getElementById(`score-p${i+1}`);
-        if(!el) continue;
-        
-        if(pArr[i]) {
-          const teamTag = pArr[i].team ? `<span class="team-tag team-${pArr[i].team}">${pArr[i].team}</span>` : '';
-          if(i % 2 === 0) {
-            el.innerHTML = `<span style="color:${pArr[i].color}">${pArr[i].name}</span>${teamTag}&nbsp; ${pArr[i].points || 0}`;
-          } else {
-            el.innerHTML = `${pArr[i].points || 0} &nbsp;<span style="color:${pArr[i].color}">${pArr[i].name}</span>${teamTag}`;
-          }
+    <div class="page" id="page-settings">
+      <div class="section-title">CONTA</div>
+      <div class="config-item" id="cfg-profile">
+        <div class="config-icon" style="background:rgba(0,168,132,.15)"><span class="ms" style="color:var(--green)">person</span></div>
+        <div style="flex:1"><div class="config-label">Meu Perfil</div><div class="config-sub">Nome, foto, status</div></div>
+        <span class="ms" style="color:var(--text2);font-size:18px">chevron_right</span>
+      </div>
+      <div class="section-title">PRIVACIDADE</div>
+      <div class="config-item" id="cfg-blocked">
+        <div class="config-icon" style="background:rgba(241,92,109,.15)"><span class="ms" style="color:var(--red)">block</span></div>
+        <div style="flex:1"><div class="config-label">Contatos Bloqueados</div><div class="config-sub" id="blocked-count-label">Nenhum contato bloqueado</div></div>
+        <span class="ms" style="color:var(--text2);font-size:18px">chevron_right</span>
+      </div>
+      <div class="section-title">SOBRE</div>
+      <div class="config-item" style="cursor:default;">
+        <div class="config-icon" style="background:rgba(0,168,132,.15)"><span class="ms" style="color:var(--green)">info</span></div>
+        <div style="flex:1"><div class="config-label">Onix Messenger</div><div class="config-sub">v1.0 — Mensagens em tempo real</div></div>
+      </div>
+      <div class="config-item" id="cfg-logout">
+        <div class="config-icon" style="background:rgba(241,92,109,.15)"><span class="ms" style="color:var(--red)">logout</span></div>
+        <div class="config-label" style="color:var(--red)">Sair da conta</div>
+      </div>
+    </div>
+  </main>
+
+  <nav>
+    <div class="nav-btn active" id="nav-chats">
+      <span class="ms">chat</span>Conversas
+    </div>
+    <div class="nav-btn" id="nav-calls">
+      <span class="ms">call</span>Chamadas
+    </div>
+    <div class="nav-btn" id="nav-profile">
+      <span class="ms">person</span>Perfil
+    </div>
+    <div class="nav-btn" id="nav-settings">
+      <span class="ms">settings</span>Config
+    </div>
+  </nav>
+</div>
+
+<div id="chat-screen">
+  <div class="chat-header">
+    <span class="ms" id="chat-back">arrow_back</span>
+    <div class="avatar" id="chat-av" style="width:38px;height:38px;font-size:16px;flex-shrink:0;"></div>
+    <div style="flex:1;min-width:0;margin-left:2px;">
+      <div class="chat-hname" id="chat-name"></div>
+      <div class="chat-hstatus" id="chat-sub"></div>
+    </div>
+    <span class="ms" id="chat-btn-voice" style="color:var(--text2);cursor:pointer;padding:6px;margin-right:4px;">call</span>
+    <span class="ms" id="chat-btn-video" style="color:var(--text2);cursor:pointer;padding:6px;margin-right:4px;">videocam</span>
+    <span class="ms" id="chat-menu-btn">more_vert</span>
+    <div class="drop-menu" id="drop-chat">
+      <div class="drop-item" id="dc-block">Bloquear contato</div>
+      <div class="drop-item danger" id="dc-delete">Apagar conversa</div>
+    </div>
+  </div>
+  <div class="chat-body" id="chat-body"></div>
+  <div class="chat-footer" id="chat-footer">
+    <span class="ms" id="chat-attach-btn" style="color:var(--text2);cursor:pointer;padding:6px;">attach_file</span>
+    <input id="msg-input" type="text" placeholder="Mensagem" maxlength="2000">
+    <span class="rec-timer" id="rec-timer" style="display:none;">0:00</span>
+    <button class="send-btn" id="btn-send"><span class="ms" id="send-icon">mic</span></button>
+  </div>
+  <div id="blocked-notice">
+    <span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px;">block</span>
+    <span id="blocked-text-notice">Você bloqueou este contato</span> —
+    <span id="btn-unblock-notice" style="color:var(--green);cursor:pointer;">Desbloquear</span>
+  </div>
+</div>
+
+<div id="blocked-panel">
+  <div class="blocked-header">
+    <span class="ms" id="blocked-back">arrow_back</span>
+    <span>Contatos Bloqueados</span>
+  </div>
+  <div id="blocked-list" style="flex:1;overflow-y:auto;"></div>
+</div>
+
+<!-- Foto de perfil: apenas imagens -->
+<input type="file" id="avatar-file" accept="image/*" style="display:none;">
+<!-- Anexo no chat: apenas imagens -->
+<input type="file" id="chat-file-input" accept="image/*" style="display:none;">
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body"  id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="modal-cancel">Cancelar</button>
+      <button class="modal-btn danger"  id="modal-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword,
+         signInWithEmailAndPassword, onAuthStateChanged,
+         signOut }                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc,
+         collection, query, where, orderBy,
+         onSnapshot, addDoc, updateDoc, deleteDoc,
+         getDocs, serverTimestamp, arrayUnion,
+         arrayRemove, writeBatch }                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ── init ── */
+const fbApp   = initializeApp({
+  apiKey:"AIzaSyANAPc3ZsaGt_3QCNh0M1KskoC67ggwLEA",
+  authDomain:"bairon-89014.firebaseapp.com",
+  projectId:"bairon-89014",
+  storageBucket:"bairon-89014.firebasestorage.app",
+  messagingSenderId:"263387553023",
+  appId:"1:263387553023:web:d5402f3106b5992879c0ca"
+});
+const auth    = getAuth(fbApp);
+const db      = getFirestore(fbApp);
+
+/* ── State ── */
+let ME           = null;
+let chatId       = null;
+let peerData     = null;
+let unsubMsgs    = null;
+let unsubConvs   = null;
+let unsubCall    = null;
+let searchTimer  = null;
+let knownPreviews = {}; 
+let isFirstLoad  = true;
+
+/* ── Audio Recording State ── */
+let mediaRecorder    = null;
+let audioChunks      = [];
+let isRecording      = false;
+let recTimerInterval = null;   // ← timer para exibir segundos
+let recSeconds       = 0;
+const MAX_REC_SECS   = 60;     // ← limite: 60 segundos
+
+/* ── WebRTC State ── */
+let localStream  = null;
+let pc           = null;
+let currentCallId = null;
+let callTimerInterval = null; 
+let currentFacingMode = 'user'; 
+const rtcConfig  = { iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }] };
+
+/* ── Firestore safe limit: ~700 KB em base64 (1 MB doc - overhead) ── */
+const MAX_BASE64_BYTES = 700 * 1024;
+
+/* ─────────────────────────────── HELPERS ─────────────────── */
+const $  = id => document.getElementById(id);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const phoneToEmail = p => 'u' + p.replace(/\D/g,'') + '@onix.app';
+const cleanPhone   = p => p.replace(/\D/g,'');
+
+function fmtTime(date){
+  if(!date) return '';
+  const diff = Date.now() - date.getTime();
+  if(diff < 86400000) return date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  return date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+}
+
+function toast(msg, dur=2800){
+  const t = $('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+function makeAvatar(container, name, photoURL, size=50){
+  if(!container) return;
+  container.style.width  = size+'px';
+  container.style.height = size+'px';
+  container.style.fontSize = Math.round(size*.38)+'px';
+  if(photoURL){
+    container.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    container.textContent = (name||'?')[0].toUpperCase();
+  }
+}
+
+/* ── Comprime imagem e retorna base64 dentro do limite seguro ── */
+function compressImage(file, cb) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+
+      // Tenta compressões progressivamente mais agressivas
+      const attempts = [
+        { maxPx: 640, q: 0.5 },
+        { maxPx: 480, q: 0.4 },
+        { maxPx: 360, q: 0.3 },
+        { maxPx: 280, q: 0.25 },
+        { maxPx: 200, q: 0.2 },
+      ];
+
+      function tryCompress(index) {
+        if (index >= attempts.length) {
+          cb(null, 'Foto muito pesada mesmo após compressão máxima. Tente uma foto menor.');
+          return;
+        }
+        const { maxPx, q } = attempts[index];
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > maxPx) { h = Math.round(h * maxPx / w); w = maxPx; } }
+        else        { if (h > maxPx) { w = Math.round(w * maxPx / h); h = maxPx; } }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const b64 = canvas.toDataURL('image/jpeg', q);
+
+        // Verifica tamanho real em bytes
+        const byteLen = Math.round((b64.length - b64.indexOf(',') - 1) * 0.75);
+        if (byteLen <= MAX_BASE64_BYTES) {
+          cb(b64, null);
         } else {
-          el.innerHTML = '';
+          tryCompress(index + 1);
         }
       }
+      tryCompress(0);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
 
-      updateTeamBox();
+/* ── System Top Notification ── */
+let bannerTimeout = null;
+function showWhatsAppNotification(peerName, photoURL, messageText, peerObj) {
+  const banner = $('push-notif');
+  const title = $('push-title');
+  const text = $('push-msg');
+  const avContainer = $('push-av');
+  if(!banner) return;
+  title.textContent = peerName;
+  text.textContent = messageText;
+  makeAvatar(avContainer, peerName, photoURL, 42);
+  banner.onclick = () => { banner.classList.remove('show'); openChat(peerObj); };
+  banner.classList.add('show');
+  clearTimeout(bannerTimeout);
+  bannerTimeout = setTimeout(() => { banner.classList.remove('show'); }, 3500);
+}
+
+/* ─────────────────────────────── AUTH UI ─────────────────── */
+$('to-register').onclick = ()=>{ $('view-login').style.display='none'; $('view-register').style.display=''; clearErr(); };
+$('to-login').onclick    = ()=>{ $('view-register').style.display='none'; $('view-login').style.display=''; clearErr(); };
+
+function clearErr(){ ['login-err','reg-err'].forEach(id=>{ const el=$(id); if(el){ el.textContent=''; el.classList.remove('show'); } }); }
+function showErr(id, msg){ const el=$(id); if(el){ el.textContent=msg; el.classList.add('show'); } }
+
+function setLoading(btnId, on){
+  const b=$(btnId); if(!b) return;
+  b.disabled=on;
+  const labels={'btn-login':'Entrar','btn-register':'Criar conta'};
+  b.innerHTML = on ? '<span class="spin"></span>' : labels[btnId];
+}
+
+function authErr(code){
+  const map={
+    'auth/user-not-found':'Número não cadastrado.',
+    'auth/wrong-password':'Senha incorreta.',
+    'auth/invalid-credential':'Número ou senha incorretos.',
+    'auth/email-already-in-use':'Número já cadastrado.',
+    'auth/too-many-requests':'Muitas tentativas. Aguarde.',
+    'auth/operation-not-allowed':'Erro nas credenciais do console.',
+    'auth/network-request-failed':'Sem conexão com a internet.'
+  };
+  return map[code]||'Erro: '+code;
+}
+
+/* ── Register ── */
+$('btn-register').onclick = async ()=>{
+  const name  = $('reg-name').value.trim();
+  const phone = cleanPhone($('reg-phone').value);
+  const pass  = $('reg-pass').value;
+  if(!name)           return showErr('reg-err','Digite seu nome.');
+  if(phone.length<8)  return showErr('reg-err','Número muito curto.');
+  if(pass.length<6)   return showErr('reg-err','Senha mínimo 6 caracteres.');
+  setLoading('btn-register',true);
+  try{
+    const existing = await getDoc(doc(db,'phones',phone));
+    if(existing.exists()){ setLoading('btn-register',false); return showErr('reg-err','Número já em uso.'); }
+    const cred = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+    const uid  = cred.user.uid;
+    await setDoc(doc(db,'users',uid),{ uid, name, phone, photoURL:'', status:'Hey! Estou usando o Onix.', blocked:[], savedChats:[], createdAt:serverTimestamp() });
+    await setDoc(doc(db,'phones',phone),{ uid });
+  }catch(e){ setLoading('btn-register',false); showErr('reg-err', authErr(e.code)); }
+};
+
+/* ── Login ── */
+$('btn-login').onclick = async ()=>{
+  const phone = cleanPhone($('login-phone').value);
+  const pass  = $('login-pass').value;
+  if(!phone) return showErr('login-err','Digite o número.');
+  if(!pass)  return showErr('login-err','Digite a senha.');
+  setLoading('btn-login',true);
+  try{
+    await signInWithEmailAndPassword(auth, phoneToEmail(phone), pass);
+  }catch(e){ setLoading('btn-login',false); showErr('login-err', authErr(e.code)); }
+};
+
+/* ─────────────────────────────── AUTH STATE ──────────────── */
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    isFirstLoad = true;
+    knownPreviews = {};
+    onSnapshot(doc(db,'users',user.uid), snap => {
+      if(!snap.exists()) return;
+      const wasNull = (ME === null);
+      ME = snap.data();
+      ME.blocked = ME.blocked || [];
+      ME.savedChats = ME.savedChats || [];
+      $('auth').classList.add('hidden');
+      setLoading('btn-login', false);
+      setLoading('btn-register', false);
+      loadProfilePage();
+      refreshBlockedLabel();
+      if(wasNull) { listenConvs(); listenIncomingCalls(); }
+    });
+  } else {
+    ME = null;
+    $('auth').classList.remove('hidden');
+    setLoading('btn-login', false);
+    setLoading('btn-register', false);
+    $('login-phone').value = '';
+    $('login-pass').value = '';
+    unsubConvs?.(); unsubConvs=null;
+    unsubMsgs?.();  unsubMsgs=null;
+    unsubCall?.();  unsubCall=null;
+  }
+});
+
+/* ─────────────────────────────── NAV ─────────────────────── */
+function navTo(page){
+  ['chats','calls','profile','settings'].forEach(p=>{
+    $('page-'+p).classList.remove('active');
+    $('nav-'+p)?.classList.remove('active');
+  });
+  $('page-'+page).classList.add('active');
+  $('nav-'+page)?.classList.add('active');
+  closeDrops(); closeSearch();
+}
+$('nav-chats').onclick    = ()=>navTo('chats');
+$('nav-calls').onclick    = ()=>navTo('calls');
+$('nav-profile').onclick  = ()=>navTo('profile');
+$('nav-settings').onclick = ()=>navTo('settings');
+
+/* ── DROPS ── */
+function closeDrops(){ document.querySelectorAll('.drop-menu').forEach(d=>d.classList.remove('open')); }
+$('icon-menu').onclick    = e=>{ e.stopPropagation(); toggleDrop('drop-main'); };
+$('chat-menu-btn').onclick= e=>{ e.stopPropagation(); toggleDrop('drop-chat'); };
+function toggleDrop(id){ const d=$(id); const was=d.classList.contains('open'); closeDrops(); if(!was) d.classList.add('open'); }
+document.addEventListener('click', ()=>closeDrops());
+
+$('dm-profile').onclick  = ()=>{ navTo('profile'); closeDrops(); };
+$('dm-settings').onclick = ()=>{ navTo('settings'); closeDrops(); };
+$('dm-logout').onclick   = ()=>{ closeDrops(); confirmLogout(); };
+$('cfg-profile').onclick = ()=>navTo('profile');
+$('cfg-blocked').onclick = ()=>openBlockedPanel();
+$('cfg-logout').onclick  = ()=>confirmLogout();
+
+/* ── SEARCH ── */
+$('icon-search').onclick = ()=>{
+  const bar = $('search-bar');
+  if(bar.classList.contains('show')){ closeSearch(); }
+  else { bar.classList.add('show'); $('search-input').value=''; $('search-input').focus(); }
+};
+$('search-close').onclick = ()=>closeSearch();
+
+function closeSearch(){
+  $('search-bar').classList.remove('show');
+  $('search-results').classList.remove('show');
+  $('search-input').value='';
+}
+
+$('search-input').oninput = ()=>{
+  clearTimeout(searchTimer);
+  const phone = cleanPhone($('search-input').value);
+  if(phone.length < 4){ $('search-results').classList.remove('show'); return; }
+  searchTimer = setTimeout(()=>doSearch(phone), 400);
+};
+
+async function doSearch(phone){
+  const res = $('search-results');
+  res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Buscando...</div>';
+  res.classList.add('show');
+  try{
+    const snap = await getDoc(doc(db,'phones',phone));
+    if(!snap.exists()){
+      res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Nenhum usuário encontrado.</div>';
+      return;
+    }
+    const uid = snap.data().uid;
+    if(uid===ME.uid){
+      res.innerHTML = '<div style="padding:14px 16px;color:var(--text2);font-size:14px;">Este é o seu próprio número.</div>';
+      return;
+    }
+    const usnap = await getDoc(doc(db,'users',uid));
+    if(!usnap.exists()){ res.innerHTML='<div style="padding:14px 16px;color:var(--text2);">Usuário não encontrado.</div>'; return; }
+    const u = { uid: usnap.id, ...usnap.data() };
+    res.innerHTML = '';
+    const row = document.createElement('div');
+    row.className = 'sr-item';
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    makeAvatar(av, u.name, u.photoURL, 42);
+    const info = document.createElement('div');
+    info.style.flex = '1';
+    info.innerHTML = `<div class="sr-name">${esc(u.name)}</div><div class="sr-tel">${u.phone}</div>`;
+    const btn = document.createElement('button');
+    btn.className = 'sr-btn';
+    btn.textContent = 'Mensagem';
+    btn.onclick = ()=>{ closeSearch(); openChat(u); };
+    row.appendChild(av); row.appendChild(info); row.appendChild(btn);
+    res.appendChild(row);
+  }catch(e){
+    res.innerHTML = `<div style="padding:14px 16px;color:var(--red);font-size:13px;">Erro ao buscar: ${e.message}</div>`;
+  }
+}
+
+/* ── CONVERSATIONS ── */
+function listenConvs(){
+  unsubConvs?.();
+  const q = query(collection(db,'conversations'), where('members','array-contains',ME.uid));
+  unsubConvs = onSnapshot(q, async snap=>{
+    const list  = $('convs-list');
+    const empty = $('convs-empty');
+    const activeConvs = snap.docs.map(d => { return { cid: d.id, ...d.data() }; });
+    const matchedPeerIds = new Set();
+    const finalConvsList = [];
+
+    for(const data of activeConvs) {
+      const peerId = data.members.find(m=>m!==ME.uid);
+      if(!peerId) continue;
+      const isSaved = ME?.savedChats?.includes(peerId);
+      const hasMessages = data.lastMsg !== undefined && data.lastMsg !== '' && !(data.deletedBy?.includes(ME.uid));
+      if (hasMessages || isSaved) {
+        matchedPeerIds.add(peerId);
+        finalConvsList.push({
+          peerId, lastAt: data.lastAt,
+          lastMsg: data.deletedBy?.includes(ME.uid) ? '' : (data.lastMsg || ''),
+          unread: data.unread?.[ME.uid] || 0,
+          isDeleted: data.deletedBy?.includes(ME.uid),
+          cid: data.cid
+        });
+      }
     }
 
-    // ---------- DUPLAS / TIMES ----------
-    // Só libera a formação de dupla quando a sala está com os 4 jogadores.
-    function updateTeamBox() {
-      const box = document.getElementById('team-box');
-      const ids = Object.keys(players);
-      if (ids.length < 4) {
-        box.style.display = 'none';
+    if(ME?.savedChats) {
+      for(const savedId of ME.savedChats) {
+        if(!matchedPeerIds.has(savedId)) {
+          finalConvsList.push({
+            peerId: savedId, lastAt: null, lastMsg: '', unread: 0, isDeleted: true,
+            cid: [ME.uid, savedId].sort().join('_')
+          });
+        }
+      }
+    }
+
+    if (!isFirstLoad) {
+      for(const activeItem of finalConvsList) {
+        if(activeItem.lastMsg && activeItem.cid !== chatId) {
+          const stringKey = activeItem.cid;
+          if(knownPreviews[stringKey] !== undefined && knownPreviews[stringKey] !== activeItem.lastMsg) {
+            const userLeaf = await getDoc(doc(db,'users',activeItem.peerId));
+            if(userLeaf.exists()) {
+              const parsedPeer = { uid: userLeaf.id, ...userLeaf.data() };
+              if(!ME.blocked?.includes(parsedPeer.uid)) {
+                showWhatsAppNotification(parsedPeer.name, parsedPeer.photoURL, activeItem.lastMsg, parsedPeer);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    finalConvsList.forEach(c => { if(c.lastMsg) knownPreviews[c.cid] = c.lastMsg; });
+    isFirstLoad = false;
+    renderCallsPage(finalConvsList);
+
+    list.innerHTML='';
+    if(finalConvsList.length === 0){ empty.style.display=''; return; }
+    empty.style.display='none';
+
+    finalConvsList.sort((a, b) => {
+      const timeA = a.lastAt ? (a.lastAt.toMillis ? a.lastAt.toMillis() : 0) : 0;
+      const timeB = b.lastAt ? (b.lastAt.toMillis ? b.lastAt.toMillis() : 0) : 0;
+      return timeB - timeA;
+    });
+
+    for(const itemData of finalConvsList){
+      const pSnap  = await getDoc(doc(db,'users',itemData.peerId));
+      if(!pSnap.exists()) continue;
+      const peer   = { uid: pSnap.id, ...pSnap.data() };
+      const lastTime = itemData.lastAt && itemData.lastAt.toDate ? fmtTime(itemData.lastAt.toDate()) : '';
+      const item = document.createElement('div');
+      item.className = 'conv-item';
+      const av = document.createElement('div');
+      av.className = 'avatar';
+      makeAvatar(av, peer.name, peer.photoURL, 50);
+      const info = document.createElement('div');
+      info.className = 'conv-info';
+      info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
+        <div class="conv-preview">${esc(itemData.lastMsg || 'Nenhuma mensagem')}</div>`;
+      const right = document.createElement('div');
+      right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
+      right.innerHTML = (lastTime && itemData.lastMsg ? `<div class="conv-time">${lastTime}</div>` : '')
+        + (itemData.unread>0 && !itemData.isDeleted ? `<div class="unread-badge">${itemData.unread}</div>` : '');
+      item.appendChild(av); item.appendChild(info); item.appendChild(right);
+      item.onclick = ()=>openChat(peer);
+      list.appendChild(item);
+    }
+  }, err => { console.error(err); });
+}
+
+/* ── Render Contacts in Calls Page ── */
+async function renderCallsPage(finalConvsList) {
+  const list = $('calls-contacts-list');
+  const empty = $('calls-empty');
+  if(!list) return;
+  list.innerHTML = '';
+  if (!finalConvsList || finalConvsList.length === 0) {
+    if(empty) empty.style.display = 'flex'; return;
+  }
+  if(empty) empty.style.display = 'none';
+  for (const itemData of finalConvsList) {
+    const pSnap = await getDoc(doc(db, 'users', itemData.peerId));
+    if (!pSnap.exists()) continue;
+    const peer = { uid: pSnap.id, ...pSnap.data() };
+    const item = document.createElement('div');
+    item.className = 'conv-item'; item.style.cursor = 'default';
+    const av = document.createElement('div');
+    av.className = 'avatar'; makeAvatar(av, peer.name, peer.photoURL, 50);
+    const info = document.createElement('div');
+    info.className = 'conv-info';
+    info.innerHTML = `<div class="conv-name">${esc(peer.name)}</div>
+      <div class="conv-preview">${esc(peer.phone || 'Sem número')}</div>`;
+    const rightActions = document.createElement('div');
+    rightActions.className = 'call-list-actions';
+    const voiceBtn = document.createElement('span');
+    voiceBtn.className = 'ms'; voiceBtn.textContent = 'call'; voiceBtn.style.cursor = 'pointer';
+    voiceBtn.onclick = (e) => { e.stopPropagation(); peerData = peer; startCall('voice'); };
+    const videoBtn = document.createElement('span');
+    videoBtn.className = 'ms'; videoBtn.textContent = 'videocam'; videoBtn.style.cursor = 'pointer';
+    videoBtn.onclick = (e) => { e.stopPropagation(); peerData = peer; startCall('video'); };
+    rightActions.appendChild(voiceBtn); rightActions.appendChild(videoBtn);
+    item.appendChild(av); item.appendChild(info); item.appendChild(rightActions);
+    list.appendChild(item);
+  }
+}
+
+/* ─────────────────────────────── OPEN CHAT ───────────────── */
+async function openChat(peer){
+  try {
+    if (!peer || !peer.uid || !ME || !ME.uid) return;
+    peerData = peer;
+    const ids = [ME.uid, peer.uid].sort();
+    chatId    = ids.join('_');
+    $('chat-name').textContent = peer.name || "Usuário";
+    $('chat-sub').textContent  = peer.phone || "";
+    makeAvatar($('chat-av'), peer.name, peer.photoURL, 38);
+    if(!ME.savedChats?.includes(peer.uid)){
+      await updateDoc(doc(db,'users',ME.uid), { savedChats: arrayUnion(peer.uid) });
+    }
+    onSnapshot(doc(db,'users',peer.uid), snapshot => {
+      if(snapshot.exists()) {
+        peerData = { uid: snapshot.id, ...snapshot.data() };
+        $('chat-name').textContent = peerData.name || "Usuário";
+        makeAvatar($('chat-av'), peerData.name, peerData.photoURL, 38);
+        updateBlockUI();
+      }
+    });
+    $('chat-screen').classList.add('open');
+    $('chat-body').innerHTML = '<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando mensagens...</div>';
+    $('msg-input').value = '';
+    updateSendIcon();
+    const convRef = doc(db,'conversations',chatId);
+    try{
+      const convSnap = await getDoc(convRef);
+      if(!convSnap.exists()){
+        await setDoc(convRef,{ members:[ME.uid, peer.uid], lastMsg:'', lastAt: serverTimestamp(), unread:{ [ME.uid]:0, [peer.uid]:0 }, deletedBy: [] });
+      } else {
+        await updateDoc(convRef,{ [`unread.${ME.uid}`]:0 });
+      }
+    } catch(dbErr) { console.warn(dbErr); }
+
+    unsubMsgs?.();
+    const mq = query(collection(db,'conversations',chatId,'messages'), orderBy('ts','asc'));
+    unsubMsgs = onSnapshot(mq, snap=>{
+      const body  = $('chat-body');
+      const atBot = body.scrollHeight - body.clientHeight - body.scrollTop < 100 || body.innerHTML.includes("Carregando");
+      body.innerHTML='';
+      const visibleMsgs = [];
+      snap.forEach(d => { const m = d.data(); if (!(m.hideFrom?.includes(ME.uid))) { visibleMsgs.push(m); } });
+      if(visibleMsgs.length === 0){
+        body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Envie uma mensagem para começar!</div>';
         return;
       }
-      box.style.display = 'flex';
+      visibleMsgs.forEach(m=>{
+        const div = document.createElement('div');
+        div.className = 'msg '+(m.sender===ME.uid ? 'sent':'recv');
+        const time = m.ts && m.ts.toDate ? fmtTime(m.ts.toDate()) : '';
+        if(m.fileUrl) {
+          if(m.fileType?.startsWith('image/')) {
+            let cap = m.text !== "📁 Foto enviada" ? `<p style="margin-bottom:5px;">${esc(m.text)}</p>` : '';
+            div.innerHTML = cap + `<img src="${m.fileUrl}" class="msg-img" onclick="window.open('${m.fileUrl}', '_blank')"><span class="msg-time">${time}</span>`;
+          } else if(m.fileType?.startsWith('audio/')) {
+            div.innerHTML = `<audio src="${m.fileUrl}" class="msg-audio" controls></audio><span class="msg-time">${time}</span>`;
+          } else {
+            div.innerHTML = `<span class="msg-time">${time}</span>`;
+          }
+        } else {
+          div.innerHTML = esc(m.text)+`<span class="msg-time">${time}</span>`;
+        }
+        body.appendChild(div);
+      });
+      if(atBot) body.scrollTop = body.scrollHeight;
+    }, err=>{ console.error(err); });
+  } catch (error) { console.error(error); }
+}
 
-      const me = players[myId];
-      if (!me) { box.style.display = 'none'; return; }
+$('chat-back').onclick = closeChat;
+function closeChat(){
+  $('chat-screen').classList.remove('open');
+  unsubMsgs?.(); unsubMsgs=null;
+  chatId=null; peerData=null;
+}
 
-      if (me.team) {
-        const teammateId = ids.find(pid => pid !== myId && players[pid].team === me.team);
-        const teammateName = teammateId ? players[teammateId].name : '...';
-        box.innerHTML = `Você está no <span class="team-tag team-${me.team}">Time ${me.team}</span> com <b>${teammateName}</b> ` +
-                         `<button id="leave-team-btn">Sair da Dupla</button>`;
-        document.getElementById('leave-team-btn').onclick = () => {
-          db.ref(`rooms/${myRoom}/players/${myId}`).update({ team: null });
+/* ─────────────────────────────── AUDIO RECORDING ─────────────────── */
+function updateSendIcon() {
+  const icon = $('send-icon'); if(!icon) return;
+  icon.textContent = ($('msg-input').value.trim() !== '') ? 'send' : (isRecording ? 'stop' : 'mic');
+}
+$('msg-input').oninput = updateSendIcon;
+
+$('btn-send').onclick = async () => {
+  const text = $('msg-input').value.trim();
+  if (text !== '') { sendMessage(); } else { toggleAudioRecording(); }
+};
+
+function startRecTimer() {
+  recSeconds = 0;
+  const timerEl = $('rec-timer');
+  timerEl.style.display = 'inline';
+  timerEl.textContent = '0:00';
+  recTimerInterval = setInterval(() => {
+    recSeconds++;
+    const m = Math.floor(recSeconds / 60);
+    const s = recSeconds % 60;
+    timerEl.textContent = m + ':' + (s < 10 ? '0' + s : s);
+    // Para automaticamente no limite
+    if (recSeconds >= MAX_REC_SECS) { stopRecording(); }
+  }, 1000);
+}
+
+function stopRecTimer() {
+  clearInterval(recTimerInterval);
+  recTimerInterval = null;
+  $('rec-timer').style.display = 'none';
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); }
+  isRecording = false;
+  $('btn-send').classList.remove('recording');
+  $('msg-input').placeholder = 'Mensagem';
+  $('msg-input').disabled = false;
+  stopRecTimer();
+  updateSendIcon();
+}
+
+async function toggleAudioRecording() {
+  if (!isRecording) {
+    if (!navigator.mediaDevices?.getUserMedia) { toast('Seu navegador não suporta gravação de áudio.'); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+
+        // Verifica tamanho antes de enviar
+        const approxBase64 = audioBlob.size * 1.37; // estimativa base64
+        if (approxBase64 > MAX_BASE64_BYTES) {
+          toast('Áudio muito longo. Máximo ' + MAX_REC_SECS + ' segundos.');
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+
+        toast('Enviando áudio...');
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          sendMessage({ url: e.target.result, type: 'audio/mp3', name: 'Audio_' + Date.now() + '.mp3' });
         };
-      } else {
-        const others = ids.filter(pid => pid !== myId);
-        const buttons = others.map(pid => {
-          const p = players[pid];
-          const label = p.team ? `${p.name} (ocupado)` : p.name;
-          const disabled = p.team ? 'disabled style="opacity:0.4;"' : '';
-          return `<button class="form-team-btn" data-pid="${pid}" ${disabled}>Formar dupla c/ ${label}</button>`;
-        }).join('');
-        box.innerHTML = `Formar dupla: ${buttons}`;
-        box.querySelectorAll('.form-team-btn').forEach(btn => {
-          btn.onclick = () => formTeamWith(btn.getAttribute('data-pid'));
-        });
-      }
-    }
+        reader.readAsDataURL(audioBlob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
+      isRecording = true;
+      $('btn-send').classList.add('recording');
+      $('msg-input').placeholder = 'Gravando... (máx ' + MAX_REC_SECS + 's)';
+      $('msg-input').disabled = true;
+      startRecTimer();
+      updateSendIcon();
+    } catch (err) { toast('Permissão de microfone negada.'); }
+  } else {
+    stopRecording();
+  }
+}
 
-    function formTeamWith(otherId) {
-      const other = players[otherId];
-      if (!other || other.team) return;
-      const usedTeams = new Set(Object.values(players).map(p => p.team).filter(Boolean));
-      const teamName = usedTeams.has('A') ? 'B' : 'A';
-      db.ref(`rooms/${myRoom}/players/${myId}`).update({ team: teamName });
-      db.ref(`rooms/${myRoom}/players/${otherId}`).update({ team: teamName });
-    }
+$('msg-input').onkeydown  = e=>{ if(e.key==='Enter' && !isRecording) sendMessage(); };
 
-    // ---------- CHAT (visível para a sala toda, colorido por time/jogador) ----------
-    // Mensagens aparecem como num chat de jogo normal: ficam visíveis por um tempo e depois somem (fade out),
-    // em vez de se acumularem fixas na tela.
-    const CHAT_MESSAGE_LIFETIME_MS = 6000;
-    const CHAT_FADE_MS = 600;
-    const CHAT_MAX_VISIBLE = 5;
+/* ─────────────────────────────── ANEXO (APENAS FOTOS) ──────── */
+$('chat-attach-btn').onclick = ()=>$('chat-file-input').click();
 
-    function initChatListener() {
-      if (chatInitialized) return;
-      chatInitialized = true;
-      const chatLog = document.getElementById('chat-log');
+$('chat-file-input').onchange = async function() {
+  const file = this.files[0];
+  if (!file || !chatId) { this.value = ''; return; }
 
-      roomRef.child('chat').limitToLast(30).on('child_added', snap => {
-        const msg = snap.val();
-        if (!msg) return;
-        const line = document.createElement('div');
-        line.style.color = msg.color || '#fff';
-        const teamLabel = msg.team ? ` [Time ${msg.team}]` : '';
-        line.textContent = `${msg.name}${teamLabel}: ${msg.text}`;
-        chatLog.appendChild(line);
+  // Só aceita imagens
+  if (!file.type.startsWith('image/')) {
+    toast('Apenas fotos são suportadas no momento.');
+    this.value = '';
+    return;
+  }
 
-        // Mantém só as últimas CHAT_MAX_VISIBLE mensagens na tela
-        while (chatLog.children.length > CHAT_MAX_VISIBLE) {
-          chatLog.removeChild(chatLog.firstChild);
-        }
+  toast('Compactando foto...');
+  compressImage(file, (b64, err) => {
+    if (err) { toast(err); return; }
+    sendMessage({ url: b64, type: 'image/jpeg', name: file.name.replace(/\.[^/.]+$/, '') + '.jpg' });
+  });
 
-        // Depois de um tempo, a mensagem some com fade e é removida
-        setTimeout(() => {
-          line.style.opacity = '0';
-          setTimeout(() => { if (line.parentNode) line.parentNode.removeChild(line); }, CHAT_FADE_MS);
-        }, CHAT_MESSAGE_LIFETIME_MS);
-      });
-    }
+  this.value = '';
+};
 
-    function sendChatMessage() {
-      const input = document.getElementById('chat-input');
-      const text = input.value.trim();
-      if (!text || !roomRef) return;
-      const me = players[myId] || {};
-      roomRef.child('chat').push({
-        name: myName,
-        text: text.slice(0, 80),
-        color: me.color || '#fff',
-        team: me.team || null,
-        ts: firebase.database.ServerValue.TIMESTAMP
-      });
-      input.value = '';
-    }
+/* ── SEND MESSAGE ── */
+async function sendMessage(fileData = null){
+  if(!chatId||!peerData) return;
+  const input = $('msg-input');
+  let text  = input.value.trim();
+  if(!text && !fileData) return;
+  if(fileData && !text) {
+    if(fileData.type.startsWith('image/'))      text = '📁 Foto enviada';
+    else if(fileData.type.startsWith('audio/')) text = '🎙️ Áudio enviado';
+    else                                         text = '📁 Arquivo enviado';
+  }
+  input.value='';
+  updateSendIcon();
+  const convRef = doc(db,'conversations',chatId);
+  const payload = { text, sender: ME.uid, ts: serverTimestamp(), hideFrom: [] };
+  if(fileData) { payload.fileUrl = fileData.url; payload.fileType = fileData.type; payload.fileName = fileData.name; }
+  try{
+    await addDoc(collection(db,'conversations',chatId,'messages'), payload);
+    const snapCount = await getDoc(convRef);
+    let currentUnread = 0;
+    if(snapCount.exists()){ currentUnread = snapCount.data().unread?.[peerData.uid] || 0; }
+    await setDoc(convRef, { lastMsg: text, lastAt: serverTimestamp(), deletedBy: [], unread: { [peerData.uid]: currentUnread + 1 } }, { merge: true });
+  }catch(e){
+    toast('Erro ao enviar. Foto ainda muito pesada?');
+    console.error(e);
+    if(!fileData) input.value=text;
+  }
+}
 
-    document.getElementById('chat-send').onclick = sendChatMessage;
-    document.getElementById('chat-input').addEventListener('keydown', e => {
-      e.stopPropagation();
-      if (e.key === 'Enter') { e.preventDefault(); sendChatMessage(); }
-    });
+/* ── BLOCK ── */
+$('dc-block').onclick = ()=>{ closeDrops(); toggleBlock(); };
+$('btn-unblock-notice').onclick = ()=>toggleBlock();
 
-    joinBtn.onclick = async () => {
-      const nameInput = document.getElementById('p-name').value.trim();
-      const roomVal = document.getElementById('r-id').value.trim();
+async function toggleBlock(){
+  if(!peerData) return;
+  const isBlocked = ME.blocked?.includes(peerData.uid);
+  if(isBlocked){
+    await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayRemove(peerData.uid) });
+    ME.blocked = ME.blocked.filter(x=>x!==peerData.uid);
+    toast('Contato desbloqueado.');
+  } else {
+    await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayUnion(peerData.uid) });
+    ME.blocked = [...(ME.blocked||[]), peerData.uid];
+    toast('Contato bloqueado.');
+  }
+  updateBlockUI(); refreshBlockedLabel();
+}
 
-      if (!roomVal) { lobbyError.innerText = 'Digite um ID da sala.'; return; }
+function updateBlockUI(){
+  if(!peerData) return;
+  const amIBlocked = peerData.blocked?.includes(ME.uid);
+  const didIBlock  = ME.blocked?.includes(peerData.uid);
+  if (didIBlock) {
+    $('dc-block').textContent = 'Desbloquear contato';
+    $('chat-footer').style.visibility = 'hidden';
+    $('blocked-text-notice').textContent = 'Você bloqueou este contato';
+    $('btn-unblock-notice').style.display = 'inline';
+    $('blocked-notice').style.display = 'block';
+  } else if (amIBlocked) {
+    $('dc-block').textContent = 'Bloquear contato';
+    $('chat-footer').style.visibility = 'hidden';
+    $('blocked-text-notice').textContent = 'Você foi bloqueado por este contato';
+    $('btn-unblock-notice').style.display = 'none';
+    $('blocked-notice').style.display = 'block';
+  } else {
+    $('dc-block').textContent = 'Bloquear contato';
+    $('chat-footer').style.visibility = 'visible';
+    $('blocked-notice').style.display = 'none';
+  }
+}
 
-      joinBtn.disabled = true;
-      lobbyError.innerText = '';
+/* ── DELETE CHAT ── */
+$('dc-delete').onclick = ()=>{ closeDrops(); confirmDeleteChat(); };
+function confirmDeleteChat(){
+  openModal('Apagar conversa','Deseja apagar toda esta conversa?', async()=>{
+    if(!chatId) return;
+    try{
+      const msgs = await getDocs(collection(db,'conversations',chatId,'messages'));
+      const batch = writeBatch(db);
+      msgs.forEach(d => { batch.update(d.ref, { hideFrom: arrayUnion(ME.uid) }); });
+      batch.update(doc(db,'conversations',chatId), { deletedBy: arrayUnion(ME.uid), [`unread.${ME.uid}`]: 0 });
+      await batch.commit();
+      closeModal(); closeChat();
+      toast('Conversa apagada.');
+    }catch(e){ closeModal(); toast('Erro: '+e.message); }
+  });
+}
 
-      myName = nameInput || 'Bomber_' + Math.floor(Math.random() * 900 + 100);
-      myRoom = roomVal;
-      myId = 'p_' + Math.random().toString(36).substring(2, 9);
+/* ─────────────────────────────── PROFILE ─────────────────── */
+function loadProfilePage(){
+  if(!ME) return;
+  $('p-name').value   = ME.name||'';
+  $('p-status').value = ME.status||'';
+  $('p-phone').value  = ME.phone||'';
+  makeAvatar($('profile-av'), ME.name, ME.photoURL, 86);
+}
 
-      try {
-        roomRef = db.ref('rooms/' + myRoom);
-        const snap = await roomRef.once('value');
-        const existingData = snap.val() || {};
-        const existingPlayers = existingData.players || {};
-        const existingCount = Object.keys(existingPlayers).length;
+$('btn-save-profile').onclick = async()=>{
+  const name   = $('p-name').value.trim();
+  const status = $('p-status').value.trim();
+  if(!name){ toast('Nome não pode ser vazio.'); return; }
+  const btn = $('btn-save-profile');
+  btn.disabled=true; btn.textContent='Salvando...';
+  await updateDoc(doc(db,'users',ME.uid),{ name, status });
+  toast('Perfil salvo!');
+  btn.disabled=false; btn.textContent='Salvar';
+};
 
-        if (existingCount >= 4) {
-          lobbyError.innerText = 'Sala cheia (Máximo 4 jogadores).';
-          joinBtn.disabled = false;
-          return;
-        }
+$('p-cam-btn').onclick = ()=>$('avatar-file').click();
+$('avatar-file').onchange = function(){
+  const file = this.files[0];
+  if(!file) return;
+  toast('Processando foto de perfil...');
+  compressImage(file, async (b64, err) => {
+    if(err){ toast(err); return; }
+    try {
+      await updateDoc(doc(db,'users', ME.uid), { photoURL: b64 });
+      toast('Foto de perfil salva!');
+    } catch(e) { toast('Erro ao salvar foto.'); }
+  });
+  this.value = '';
+};
 
-        if (!existingData.map) generateHardMap(roomRef, 1);
+/* ─────────────────────────────── BLOCKED PANEL ───────────── */
+function openBlockedPanel(){ $('blocked-panel').classList.add('open'); renderBlockedList(); }
+$('blocked-back').onclick = ()=>$('blocked-panel').classList.remove('open');
 
-        const usedSlots = new Set(Object.values(existingPlayers).map(p => p.slot).filter(s => typeof s === 'number'));
-        let slot = 0;
-        while (usedSlots.has(slot) && slot < 4) slot++;
-        if (slot >= 4) slot = existingCount % 4; 
-
-        const spawn = SPAWNS[slot];
-        const color = COLORS[slot];
-
-        const myPlayerRef = roomRef.child('players/' + myId);
-        await myPlayerRef.set({
-          name: myName, r: spawn.r, c: spawn.c, alive: true, color: color, slot: slot, 
-          bombRange: BASE_BOMB_RANGE, maxBombs: 1, points: 0, team: null,
-          shieldUntil: 0, invisUntil: 0
-        });
-        myPlayerRef.onDisconnect().remove();
-
-        roomRef.child('players').on('value', s => {
-          const newPlayers = s.val() || {};
-          detectPlayerEvents(newPlayers);
-          players = newPlayers;
-          updateScoreboard(); 
-          
-          const count = Object.keys(players).length;
-          gameActive = count >= 2;
-          
-          if (count < 2) {
-            document.getElementById('status').innerText = `Aguardando jogadores... (${count}/4)`;
-          } else {
-            document.getElementById('status').innerText = 'BATALHA!';
-            checkRoundEnd();
-          }
-        });
-
-        roomRef.child('map').on('value', s => { map = s.val() || []; });
-        
-        roomRef.child('phase').on('value', s => {
-          const p = s.val();
-          if (p && p !== currentPhase) {
-            currentPhase = p;
-            let leaderName = "Empate";
-            let maxPoints = -1;
-            Object.values(players).forEach(pl => {
-                const pts = pl.points || 0;
-                if (pts > maxPoints) { maxPoints = pts; leaderName = pl.name; }
-                else if (pts === maxPoints) { leaderName = "Empate"; }
-            });
-            showPhaseBanner(`FASE ${currentPhase} - Ganhando: ${leaderName} 🏆`);
-          } else if (p) { currentPhase = p; }
-        });
-        
-        roomRef.child('bombs').on('value', s => {
-          const newBombs = s.val() || {};
-          handleBombSync(newBombs);
-          bombs = newBombs;
-        });
-
-        roomRef.child('powerups').on('value', s => { powerups = s.val() || {}; });
-
-        initChatListener();
-
-        document.getElementById('lobby').style.display = 'none';
-        document.getElementById('room-share').innerText = `Sala: ${myRoom} — compartilhe o ID`;
-
-        if (!loopStarted) {
-          loopStarted = true;
-          requestAnimationFrame(loop);
-          setInterval(tickBombs, 50); 
-          setInterval(updateEffectsStatus, 200);
-        }
-      } catch (err) {
-        lobbyError.innerText = 'Erro ao conectar.';
-        joinBtn.disabled = false;
-      }
+async function renderBlockedList(){
+  const list = $('blocked-list');
+  if(!ME.blocked?.length){
+    list.innerHTML='<div class="empty-state"><span class="ms">block</span><p>Nenhum contato bloqueado.</p></div>'; return;
+  }
+  list.innerHTML='';
+  for(const uid of ME.blocked){
+    const s = await getDoc(doc(db,'users',uid));
+    if(!s.exists()) continue;
+    const u = { uid: s.id, ...s.data() };
+    const row = document.createElement('div'); row.className='blocked-item';
+    const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,u.name,u.photoURL,44);
+    const info=document.createElement('div'); info.style.flex='1';
+    info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div><div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
+    const btn=document.createElement('button'); btn.className='unblock-btn'; btn.textContent='Desbloquear';
+    btn.onclick=async()=>{
+      await updateDoc(doc(db,'users',ME.uid),{ blocked:arrayRemove(uid) });
+      ME.blocked=ME.blocked.filter(x=>x!==uid);
+      refreshBlockedLabel(); renderBlockedList();
     };
+    row.append(av,info,btn); list.appendChild(row);
+  }
+}
 
-    function showEventMessage(msg) {
-      const el = document.getElementById('event-log');
-      el.innerText = msg;
-      el.style.opacity = '1';
-      if (eventLogTimeout) clearTimeout(eventLogTimeout);
-      eventLogTimeout = setTimeout(() => { el.style.opacity = '0'; }, 3000);
-    }
+async function refreshBlockedLabel(){
+  const snap = await getDoc(doc(db,'users',ME.uid));
+  ME.blocked = snap.data()?.blocked||[];
+  const n = ME.blocked.length;
+  $('blocked-count-label').textContent = n===0 ? 'Nenhum contato bloqueado' : `${n} contato(s) bloqueado(s)`;
+}
 
-    function showPhaseBanner(msg) {
-      const el = document.getElementById('phase-banner');
-      el.innerText = msg;
-      setTimeout(() => { if (el.innerText === msg) el.innerText = ''; }, 2500);
-    }
+/* ── LOGOUT ── */
+function confirmLogout(){ openModal('Sair','Deseja sair da conta?', async()=>{ await signOut(auth); closeModal(); }); }
 
-    // Mostra o tempo restante dos efeitos ativos do jogador local (escudo / invisibilidade)
-    function updateEffectsStatus() {
-      const el = document.getElementById('effects-status');
-      const me = players[myId];
-      if (!me) { el.innerHTML = ''; return; }
-      const now = getServerTime();
-      const parts = [];
-      if (me.shieldUntil && me.shieldUntil > now) {
-        const secs = Math.ceil((me.shieldUntil - now) / 1000);
-        parts.push(`<span class="effect-shield">🛡️ Colete: ${secs}s</span>`);
-      }
-      if (me.invisUntil && me.invisUntil > now) {
-        const secs = Math.ceil((me.invisUntil - now) / 1000);
-        parts.push(`<span class="effect-invis">👻 Invisível: ${secs}s</span>`);
-      }
-      el.innerHTML = parts.join(' &nbsp; ');
-    }
+/* ── MODAL ── */
+let _modalCb=null;
+function openModal(title,body,cb){ $('modal-title').textContent=title; $('modal-body').textContent=body; _modalCb=cb; $('modal').classList.add('open'); }
+function closeModal(){ $('modal').classList.remove('open'); _modalCb=null; }
+$('modal-ok').onclick     = ()=>{ _modalCb?.(); };
+$('modal-cancel').onclick = ()=>closeModal();
 
-    function detectPlayerEvents(newPlayers) {
-      const newIds = new Set(Object.keys(newPlayers));
-      newIds.forEach(pid => {
-        if (!knownPlayerIds.has(pid) && knownPlayerIds.size > 0 && pid !== myId) {
-          showEventMessage(`${newPlayers[pid].name} entrou na sala`);
-        }
-      });
-      knownPlayerIds.forEach(pid => {
-        if (!newIds.has(pid)) {
-          const leftName = (players[pid] && players[pid].name) || 'Jogador';
-          showEventMessage(`${leftName} saiu da sala`);
-        }
-      });
-      knownPlayerIds = newIds;
-    }
+/* ─────────────────────────────── CALL LOGIC (WebRTC) ─────── */
+function startCallTimer() {
+  if (callTimerInterval) clearInterval(callTimerInterval);
+  let totalSeconds = 0;
+  callTimerInterval = setInterval(() => {
+    totalSeconds++;
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    $('call-status-label').textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+  }, 1000);
+}
 
-    // AUMENTO PROGRESSIVO DA QUANTIDADE DE BLOCOS POR FASE
-    function generateHardMap(ref, phaseNum) {
-      let newMap = [];
-      // A chance começa em 65% na fase 1 e aumenta até no máximo 95%
-      const blockChance = Math.min(0.60 + (phaseNum * 0.05), 0.95);
+$('chat-btn-voice').onclick = () => startCall('voice');
+$('chat-btn-video').onclick = () => startCall('video');
+$('btn-call-hangup').onclick = () => hangupCall();
+$('btn-call-accept').onclick = () => acceptCall();
+$('btn-call-switch').onclick = () => switchCamera();
 
-      for (let r = 0; r < rows; r++) {
-        newMap[r] = [];
-        for (let c = 0; c < cols; c++) {
-          if (r === 0 || r === rows - 1 || c === 0 || c === cols - 1 || (r % 2 === 0 && c % 2 === 0)) {
-            newMap[r][c] = 'W';
-          } else if ((r < 4 && c < 4) || (r > rows - 5 && c > cols - 5) || (r < 4 && c > cols - 5) || (r > rows - 5 && c < 4)) {
-            newMap[r][c] = ' ';
-          } else {
-            newMap[r][c] = Math.random() < blockChance ? 'S' : ' ';
-          }
-        }
-      }
-      ref.child('map').set(newMap);
-      ref.child('phase').set(phaseNum);
-      ref.child('bombs').remove();
-      ref.child('powerups').remove();
-      localExplodedBombs.clear(); 
-    }
-
-    function startNextPhase() {
-      const ids = Object.keys(players).sort();
-      if (ids[0] !== myId) return;
-
-      const nextPhase = currentPhase + 1;
-      generateHardMap(roomRef, nextPhase);
-
-      const shuffledSpawns = [...SPAWNS].sort(() => Math.random() - 0.5);
-
-      ids.forEach((pid, index) => {
-        const spawn = shuffledSpawns[index % 4];
-        roomRef.child('players/' + pid).update({ 
-            r: spawn.r, 
-            c: spawn.c, 
-            alive: true, 
-            bombRange: BASE_BOMB_RANGE, 
-            maxBombs: 1,
-            shieldUntil: 0,
-            invisUntil: 0
-        });
-      });
-    }
-
-    function checkRoundEnd() {
-      const ids = Object.keys(players);
-      if (ids.length < 2) return;
-      const aliveCount = ids.filter(pid => players[pid].alive).length;
-      
-      if (aliveCount <= 1 && !myRespawnScheduled) {
-        myRespawnScheduled = true;
-        let roundWinnerName = null;
-        
-        if (aliveCount === 1) {
-          const winnerId = ids.find(pid => players[pid].alive);
-          roundWinnerName = players[winnerId].name;
-          
-          if (winnerId === myId) {
-            const myCurrentPoints = players[myId].points || 0;
-            db.ref(`rooms/${myRoom}/players/${myId}`).update({ points: myCurrentPoints + 1 });
-            
-            const safeName = myName.replace(/[\.\#\$\[\]]/g, "_");
-            db.ref(`leaderboard/${safeName}`).transaction((currentWins) => {
-              return (currentWins || 0) + 1;
-            });
-          }
-        }
-        showPhaseBanner(aliveCount === 1 ? `${roundWinnerName} venceu a rodada! Próxima fase...` : 'Empate! Próxima fase...');
-        setTimeout(() => {
-          startNextPhase();
-          myRespawnScheduled = false;
-        }, RESPAWN_DELAY_MS);
-      }
-    }
-
-    function isBombAt(r, c) {
-      return Object.values(bombs).some(b => b.r === r && b.c === c && b.state !== 'exploding');
-    }
-
-    function move(dr, dc) {
-      const me = players[myId];
-      if (!gameActive || !me || !me.alive) return;
-      const nr = me.r + dr, nc = me.c + dc;
-      if (!map || !map[nr] || map[nr][nc] !== ' ') return;
-      if (isBombAt(nr, nc)) return; 
-
-      db.ref(`rooms/${myRoom}/players/${myId}`).update({ r: nr, c: nc });
-
-      const pid = `pu_${nr}_${nc}`;
-      const pu = powerups[pid];
-      if (pu) {
-        if (pu.type === 'amount') {
-          const currentMax = me.maxBombs || 1;
-          db.ref(`rooms/${myRoom}/players/${myId}`).update({ maxBombs: currentMax + 1 });
-          showEventMessage('+1 Bomba Extra! 💣');
-        } else if (pu.type === 'shield') {
-          db.ref(`rooms/${myRoom}/players/${myId}`).update({ shieldUntil: getServerTime() + SHIELD_DURATION_MS });
-          showEventMessage('Colete à prova de bomba! 🛡️ (30s)');
-        } else if (pu.type === 'invis') {
-          db.ref(`rooms/${myRoom}/players/${myId}`).update({ invisUntil: getServerTime() + INVIS_DURATION_MS });
-          showEventMessage('Você ficou invisível! 👻 (30s)');
-        } else {
-          // LÓGICA DE ALCANCE: Quanto mais pega, maior o range da explosão de forma infinita
-          const currentRange = me.bombRange || BASE_BOMB_RANGE;
-          db.ref(`rooms/${myRoom}/players/${myId}`).update({ bombRange: currentRange + 1 });
-          showEventMessage('Poder de fogo aumentado! 🔥');
-        }
-        db.ref(`rooms/${myRoom}/powerups/${pid}`).remove();
-      }
-    }
-
-    function placeBomb() {
-      const me = players[myId];
-      if (!gameActive || !me || !me.alive) return;
-      const { r, c } = me;
-      const bid = `b_${myId}_${Date.now()}`;
-      
-      if (isBombAt(r, c)) return; 
-
-      const myActiveBombs = Object.values(bombs).filter(b => b.owner === myId && b.state === 'ticking');
-      const myMaxBombs = me.maxBombs || 1; 
-
-      if (myActiveBombs.length >= myMaxBombs) return;
-
-      db.ref(`rooms/${myRoom}/bombs/${bid}`).set({
-        r, c, owner: myId, range: me.bombRange || BASE_BOMB_RANGE, plantedAt: firebase.database.ServerValue.TIMESTAMP, state: 'ticking'
-      });
-    }
-
-    function tickBombs() {
-      const serverNow = getServerTime(); 
-      const me = players[myId];
-      if (!me) return;
-
-      Object.entries(bombs).forEach(([bid, b]) => {
-        if (!b.plantedAt) return; 
-        
-        const ids = Object.keys(players).sort();
-        const responsible = players[b.owner] ? b.owner : ids[0];
-        const iAmResponsible = (responsible === myId);
-
-        if (b.state === 'ticking' && serverNow - b.plantedAt >= BOMB_FUSE_MS) {
-          if (iAmResponsible && !processedBombIds.has(bid)) {
-            processedBombIds.add(bid);
-            triggerExplosion(bid, b);
-          }
-        } 
-        else if (b.state === 'exploding' && b.explodedAt && serverNow - b.explodedAt >= EXPLOSION_VISIBLE_MS) {
-          if (iAmResponsible) {
-            db.ref(`rooms/${myRoom}/bombs/${bid}`).remove();
-          }
-        }
-      });
-    }
-
-    function triggerExplosion(bid, b) {
-      const r = b.r, c = b.c, bombRange = b.range || BASE_BOMB_RANGE;
-      const directions = [{ dr: 0, dc: 0 }, { dr: 1, dc: 0 }, { dr: -1, dc: 0 }, { dr: 0, dc: 1 }, { dr: 0, dc: -1 }];
-      const hitCells = [];
-      const blocksToDestroy = [];
-
-      directions.forEach(({ dr, dc }) => {
-        if (dr === 0 && dc === 0) {
-          hitCells.push({ r, c });
-          return;
-        }
-        for (let step = 1; step <= bombRange; step++) {
-          const nr = r + dr * step, nc = c + dc * step;
-          if (!map[nr] || map[nr][nc] === undefined) break; 
-          if (map[nr][nc] === 'W') break; 
-
-          hitCells.push({ r: nr, c: nc });
-
-          if (map[nr][nc] === 'S') {
-            blocksToDestroy.push({ r: nr, c: nc });
-            break; 
-          }
-        }
-      });
-
-      db.ref(`rooms/${myRoom}/bombs/${bid}`).update({
-         state: 'exploding',
-         hitCells: hitCells,
-         explodedAt: firebase.database.ServerValue.TIMESTAMP
-      });
-
-      blocksToDestroy.forEach(block => {
-        db.ref(`rooms/${myRoom}/map/${block.r}/${block.c}`).set(' ');
-        if (Math.random() < POWERUP_SPAWN_CHANCE) {
-          const puType = pickPowerupType();
-          db.ref(`rooms/${myRoom}/powerups/pu_${block.r}_${block.c}`).set({ r: block.r, c: block.c, type: puType });
-        }
-      });
-    }
-
-    // Sorteia o tipo de power-up: mantém a alternância original entre poder de fogo / bomba extra,
-    // e adiciona uma chance menor para os itens especiais (colete e invisibilidade).
-    function pickPowerupType() {
-      const roll = Math.random();
-      if (roll < 0.15) return 'shield';
-      if (roll < 0.25) return 'invis';
-      powerupAlternator = powerupAlternator === 'range' ? 'amount' : 'range';
-      return powerupAlternator;
-    }
-
-    function handleBombSync(newBombs) {
-      Object.keys(bombs).forEach(bid => {
-        if (!newBombs[bid]) {
-            processedBombIds.delete(bid);
-            localExplodedBombs.delete(bid);
-        }
-      });
-    }
-
-    function loop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // APLICAÇÃO DINÂMICA DA PALETA DE CORES DA FASE
-      // O bloco destrutível ('S') usa sempre BLOCK_COLOR (preto fixo); só fundo/parede mudam por fase.
-      const visual = PHASE_VISUALS[(currentPhase - 1) % PHASE_VISUALS.length];
-      canvas.style.backgroundColor = visual.bg;
-
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (map[r] && map[r][c] === 'W') { 
-              if (spritesLoadedCount >= SPRITE_KEYS.length) {
-                const tinted = getTintedWallTile(visual.wall);
-                ctx.drawImage(tinted, c * grid, r * grid, grid, grid);
-              } else {
-                ctx.fillStyle = visual.wall; 
-                ctx.fillRect(c * grid, r * grid, grid, grid); 
-              }
-          }
-          else if (map[r] && map[r][c] === 'S') { 
-              if (spritesLoadedCount >= SPRITE_KEYS.length) {
-                ctx.drawImage(SPRITE_IMAGES.block, c * grid + 2, r * grid + 2, grid - 4, grid - 4);
-              } else {
-                ctx.fillStyle = BLOCK_COLOR; 
-                ctx.fillRect(c * grid + 2, r * grid + 2, grid - 4, grid - 4); 
-              }
-          }
-        }
-      }
-
-      const pulse = 0.85 + 0.15 * Math.sin(Date.now() / 200);
-      
-      Object.values(powerups).forEach(p => {
-        let color = '#ffca28';
-        let icon = '🔥';
-        if (p.type === 'amount') { color = '#29b6f6'; icon = '💣'; }
-        else if (p.type === 'shield') { color = '#00e5ff'; icon = '🛡️'; }
-        else if (p.type === 'invis') { color = '#ab47bc'; icon = '👻'; }
-
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc((p.c + 0.5) * grid, (p.r + 0.5) * grid, grid * 0.28 * pulse, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 22px Courier New';
-        ctx.textAlign = 'center';
-        ctx.fillText(icon, (p.c + 0.5) * grid, (p.r + 0.65) * grid);
-        ctx.textAlign = 'left';
-      });
-
-      const serverNow = getServerTime(); 
-      
-      Object.entries(bombs).forEach(([bid, b]) => {
-        if (b.state === 'exploding' && b.hitCells) {
-            b.hitCells.forEach(cell => {
-                ctx.fillStyle = FIRE_OUTER;
-                ctx.fillRect(cell.c * grid, cell.r * grid, grid, grid);
-                ctx.fillStyle = FIRE_INNER;
-                ctx.fillRect(cell.c * grid + 10, cell.r * grid + 10, grid - 20, grid - 20);
-            });
-
-            if (!localExplodedBombs.has(bid)) {
-                localExplodedBombs.add(bid);
-                const me = players[myId];
-                if (me && me.alive) {
-                    const hit = b.hitCells.some(c => c.r === me.r && c.c === me.c);
-                    const shielded = me.shieldUntil && me.shieldUntil > serverNow;
-                    if (hit && !shielded) { db.ref(`rooms/${myRoom}/players/${myId}`).update({ alive: false }); }
-                }
-            }
-        } else if (b.state === 'ticking') {
-            const elapsed = b.plantedAt ? serverNow - b.plantedAt : 0;
-            const pulsing = elapsed > (BOMB_FUSE_MS - 800);
-            ctx.fillStyle = pulsing ? '#ff5252' : '#000';
-            ctx.beginPath();
-            ctx.arc((b.c + 0.5) * grid, (b.r + 0.5) * grid, grid * 0.4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-      });
-
-      ctx.font = '16px Courier New';
-      Object.values(players).forEach(p => {
-        if (!p.alive) return;
-
-        const isMe = (p === players[myId]);
-        const invisActive = p.invisUntil && p.invisUntil > serverNow;
-        // Jogador invisível só permanece visível para si mesmo (semi-transparente); para os demais, desaparece.
-        if (invisActive && !isMe) return;
-
-        const shielded = p.shieldUntil && p.shieldUntil > serverNow;
-
-        ctx.save();
-        if (invisActive && isMe) ctx.globalAlpha = 0.45;
-
-        if (shielded) {
-          ctx.strokeStyle = '#00e5ff';
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.arc((p.c + 0.5) * grid, (p.r + 0.5) * grid, grid * 0.42, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        const spriteKey = PLAYER_SPRITE_BY_SLOT[p.slot] || PLAYER_SPRITE_BY_SLOT[0];
-        const sprite = SPRITE_IMAGES[spriteKey];
-        if (sprite && spritesLoadedCount >= SPRITE_KEYS.length) {
-          ctx.drawImage(sprite, p.c * grid + 4, p.r * grid + 2, grid - 8, grid - 8);
-        } else {
-          // Fallback enquanto o sprite carrega: círculo de cor sólida (comportamento antigo)
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc((p.c + 0.5) * grid, (p.r + 0.5) * grid, grid * 0.35, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        ctx.fillStyle = '#fff';
-        ctx.fillText(p.name, p.c * grid + 10, p.r * grid);
-        ctx.restore();
-      });
-
-      requestAnimationFrame(loop);
-    }
-
-    const bind = (id, f) => {
-      const el = document.getElementById(id);
-      el.addEventListener('touchstart', e => { e.preventDefault(); f(); });
-      el.addEventListener('mousedown', f);
-    };
-    bind('up', () => move(-1, 0));
-    bind('down', () => move(1, 0));
-    bind('left', () => move(0, -1));
-    bind('right', () => move(0, 1));
-    bind('bomb-btn', placeBomb);
-
-    document.addEventListener('keydown', e => {
-      if (document.activeElement && document.activeElement.id === 'chat-input') return;
-      if (e.key === 'ArrowUp') move(-1, 0);
-      if (e.key === 'ArrowDown') move(1, 0);
-      if (e.key === 'ArrowLeft') move(0, -1);
-      if (e.key === 'ArrowRight') move(0, 1);
-      if (e.key === ' ') placeBomb();
+async function startCall(type) {
+  if (!peerData) return;
+  currentCallId = ME.uid + '_' + Date.now();
+  currentFacingMode = 'user';
+  updateLocalVideoMirror();
+  $('call-name-label').textContent = peerData.name;
+  makeAvatar($('call-av'), peerData.name, peerData.photoURL, 110);
+  $('call-status-label').textContent = "Chamando...";
+  $('btn-call-accept').style.display = 'none';
+  if(type === 'video') {
+    $('btn-call-switch').style.display = 'flex'; $('video-wrap').style.display = 'block'; $('call-info-wrap').style.visibility = 'hidden';
+  } else {
+    $('btn-call-switch').style.display = 'none'; $('video-wrap').style.display = 'none'; $('call-info-wrap').style.visibility = 'visible';
+  }
+  $('call-screen').classList.add('open');
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: type === 'video' ? { facingMode: currentFacingMode } : false, audio: true });
+    $('local-video').srcObject = localStream;
+    pc = new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    pc.ontrack = event => { $('remote-video').srcObject = event.streams[0]; };
+    pc.onicecandidate = event => { if (event.candidate) { addDoc(collection(db, 'calls', currentCallId, 'candidates'), event.candidate.toJSON()); } };
+    const offerDescription = await pc.createOffer();
+    await pc.setLocalDescription(offerDescription);
+    await setDoc(doc(db, 'calls', currentCallId), {
+      offer: { type: offerDescription.type, sdp: offerDescription.sdp },
+      caller: ME.uid, callerName: ME.name, callerPhoto: ME.photoURL || '',
+      receiver: peerData.uid, type: type, status: 'ringing'
     });
-  </script>
+    onSnapshot(doc(db, 'calls', currentCallId), snap => {
+      const data = snap.data(); if (!data) return;
+      if (data.status === 'answered' && data.answer && !pc.currentRemoteDescription) {
+        pc.setRemoteDescription(new RTCSessionDescription(data.answer)); startCallTimer();
+      }
+      if (data.status === 'ended') { cleanCallState(); }
+    });
+    onSnapshot(collection(db, 'calls', currentCallId, 'answerCandidates'), snap => {
+      snap.docChanges().forEach(change => { if (change.type === 'added') { pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); } });
+    });
+  } catch (err) { toast("Sem permissão de câmera/microfone."); hangupCall(); }
+}
+
+function listenIncomingCalls() {
+  const q = query(collection(db, 'calls'), where('receiver', '==', ME.uid), where('status', '==', 'ringing'));
+  unsubCall = onSnapshot(q, snap => {
+    snap.docChanges().forEach(async change => {
+      if (change.type === 'added') {
+        const callData = change.doc.data();
+        currentCallId = change.doc.id;
+        currentFacingMode = 'user'; updateLocalVideoMirror();
+        $('call-name-label').textContent = callData.callerName;
+        makeAvatar($('call-av'), callData.callerName, callData.callerPhoto, 110);
+        $('call-status-label').textContent = `Chamada de ${callData.type === 'video' ? 'vídeo' : 'voz'} recebida...`;
+        $('btn-call-accept').style.display = 'flex';
+        if(callData.type === 'video') {
+          $('btn-call-switch').style.display = 'flex'; $('video-wrap').style.display = 'block'; $('call-info-wrap').style.visibility = 'hidden';
+        } else {
+          $('btn-call-switch').style.display = 'none'; $('video-wrap').style.display = 'none'; $('call-info-wrap').style.visibility = 'visible';
+        }
+        $('call-screen').classList.add('open');
+        onSnapshot(doc(db, 'calls', currentCallId), s => { if (s.data()?.status === 'ended') { cleanCallState(); } });
+      }
+    });
+  });
+}
+
+async function acceptCall() {
+  const callSnap = await getDoc(doc(db, 'calls', currentCallId));
+  if (!callSnap.exists()) return;
+  const callData = callSnap.data();
+  $('btn-call-accept').style.display = 'none';
+  $('call-status-label').textContent = "Conectando...";
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: callData.type === 'video' ? { facingMode: currentFacingMode } : false, audio: true });
+    $('local-video').srcObject = localStream;
+    pc = new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    pc.ontrack = event => { $('remote-video').srcObject = event.streams[0]; };
+    pc.onicecandidate = event => { if (event.candidate) { addDoc(collection(db, 'calls', currentCallId, 'answerCandidates'), event.candidate.toJSON()); } };
+    await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+    const answerDescription = await pc.createAnswer();
+    await pc.setLocalDescription(answerDescription);
+    await updateDoc(doc(db, 'calls', currentCallId), { answer: { type: answerDescription.type, sdp: answerDescription.sdp }, status: 'answered' });
+    startCallTimer();
+    onSnapshot(collection(db, 'calls', currentCallId, 'candidates'), snap => {
+      snap.docChanges().forEach(change => { if (change.type === 'added') { pc.addIceCandidate(new RTCIceCandidate(change.doc.data())); } });
+    });
+  } catch (err) { console.error(err); hangupCall(); }
+}
+
+async function switchCamera() {
+  if (!localStream) return;
+  const videoTrack = localStream.getVideoTracks()[0]; if (!videoTrack) return;
+  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+  try {
+    videoTrack.stop(); localStream.removeTrack(videoTrack);
+    const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
+    const newVideoTrack = newStream.getVideoTracks()[0];
+    if (pc) { const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video'); if (sender) { await sender.replaceTrack(newVideoTrack); } }
+    localStream.addTrack(newVideoTrack);
+    updateLocalVideoMirror();
+    $('local-video').srcObject = localStream;
+  } catch (err) { toast("Não foi possível alternar a câmera."); }
+}
+
+function updateLocalVideoMirror() {
+  $('local-video').style.transform = currentFacingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+}
+
+async function hangupCall() {
+  if (currentCallId) { try { await updateDoc(doc(db, 'calls', currentCallId), { status: 'ended' }); } catch(e){} }
+  cleanCallState();
+}
+
+function cleanCallState() {
+  $('call-screen').classList.remove('open');
+  if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
+  if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+  if (pc) { pc.close(); pc = null; }
+  currentCallId = null;
+}
+</script>
 </body>
 </html>
