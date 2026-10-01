@@ -559,7 +559,7 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 import { initializeApp }                         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword,
          signInWithEmailAndPassword, onAuthStateChanged,
-         signOut, deleteUser }                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+         signOut, deleteUser, sendPasswordResetEmail }                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc,
          collection, query, where, orderBy,
          onSnapshot, addDoc, updateDoc,
@@ -798,7 +798,8 @@ $('btn-register').onclick=async()=>{
       setLoading('btn-register',false);
       return showErr('reg-err','Número já em uso. Escolha outro.');
     }
-    await setDoc(doc(db,'users',uid),{uid,name,phone,photoURL:'',status:'Hey! Estou usando o Onix.',blocked:[],savedChats:[],online:false,createdAt:serverTimestamp()});
+    const recoveryEmail=($('reg-email')?.value||'').trim();
+    await setDoc(doc(db,'users',uid),{uid,name,phone,photoURL:'',status:'Hey! Estou usando o Onix.',blocked:[],savedChats:[],online:false,recoveryEmail,createdAt:serverTimestamp()});
     await setDoc(doc(db,'phones',phone),{uid});
   }catch(e){
     if(cred){try{await deleteUser(cred.user);await signOut(auth);}catch(_){}}
@@ -882,6 +883,7 @@ document.addEventListener('click',()=>closeDrops());
 $('dm-profile').onclick=()=>{navTo('profile');closeDrops();};
 $('dm-settings').onclick=()=>{navTo('settings');closeDrops();};
 $('dm-logout').onclick=()=>{closeDrops();confirmLogout();};
+$('dm-new-group').onclick=()=>{closeDrops();openGroupCreateModal();};
 $('cfg-profile').onclick=()=>navTo('profile');
 $('cfg-blocked').onclick=()=>openBlockedPanel();
 $('cfg-logout').onclick=()=>confirmLogout();
@@ -935,6 +937,15 @@ function listenConvs(){
 
     for(const d of snap.docs){
       const data={cid:d.id,...d.data()};
+      // ── GRUPO ──
+      if(data.type==='group'){
+        if(!(data.deletedBy?.includes(ME.uid))){
+          finalList.push({isGroup:true,cid:d.id,groupName:data.groupName,groupIcon:data.groupIcon||'👥',
+            members:data.members,lastAt:data.lastAt,
+            lastMsg:data.lastMsg||'',unread:data.unread?.[ME.uid]||0});
+        }
+        continue;
+      }
       const peerId=data.members.find(m=>m!==ME.uid); if(!peerId) continue;
       const isSaved=ME.savedChats?.includes(peerId);
       const hasMsg=data.lastMsg&&!(data.deletedBy?.includes(ME.uid));
@@ -977,13 +988,31 @@ function listenConvs(){
     finalList.sort((a,b)=>(b.lastAt?.toMillis?.()??0)-(a.lastAt?.toMillis?.()??0));
 
     for(const item of finalList){
-      const ps=await getDoc(doc(db,'users',item.peerId)); if(!ps.exists()) continue;
-      const peer={uid:ps.id,...ps.data()};
       const t=item.lastAt?.toDate?fmtTime(item.lastAt.toDate()):'';
-
       const el=document.createElement('div'); el.className='conv-item';
 
-      // Avatar com indicador online
+      if(item.isGroup){
+        // ── GRUPO ──
+        const avWrap=document.createElement('div'); avWrap.className='av-wrap';
+        const av=document.createElement('div'); av.className='avatar';
+        av.textContent=item.groupIcon||'👥'; av.style.fontSize='24px';
+        avWrap.appendChild(av);
+        const info=document.createElement('div'); info.className='conv-info';
+        info.innerHTML=`<div class="conv-name">${esc(item.groupName)}</div><div class="conv-preview">${esc(item.lastMsg||'Grupo criado')}</div>`;
+        const right=document.createElement('div');
+        right.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
+        right.innerHTML=(t&&item.lastMsg?`<div class="conv-time">${t}</div>`:'')+
+          (item.unread>0?`<div class="unread-badge">${item.unread}</div>`:'');
+        el.append(avWrap,info,right);
+        el.onclick=()=>openGroupChat(item);
+        list.appendChild(el);
+        continue;
+      }
+
+      // ── CONVERSA DIRETA ──
+      const ps=await getDoc(doc(db,'users',item.peerId)); if(!ps.exists()) continue;
+      const peer={uid:ps.id,...ps.data()};
+
       const avWrap=document.createElement('div'); avWrap.className='av-wrap';
       const av=document.createElement('div'); av.className='avatar';
       makeAvatar(av,peer.name,peer.photoURL,50);
@@ -1067,6 +1096,8 @@ async function openChat(peer){
     });
 
     $('chat-screen').classList.add('open');
+    $('chat-btn-voice').style.display='';
+    $('chat-btn-video').style.display='';
     $('chat-body').innerHTML='<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando...</div>';
     $('msg-input').value=''; updateSendIcon();
 
@@ -1165,6 +1196,9 @@ function updateChatSub(peer){
 
 $('chat-back').onclick=closeChat;
 function closeChat(){
+  setTypingStatus(false);
+  clearTimeout(typingDebounce);
+  unsubConvTyping?.(); unsubConvTyping=null;
   $('chat-screen').classList.remove('open');
   unsubMsgs?.(); unsubMsgs=null; chatId=null; peerData=null;
 }
@@ -1188,13 +1222,14 @@ $('btn-send').onclick=async()=>{ $('msg-input').value.trim()!==''?sendMessage():
 $('msg-input').onkeydown=e=>{if(e.key==='Enter'&&!isRecording) sendMessage();};
 
 async function sendMessage(fileData=null){
-  if(!chatId||!peerData) return;
+  if(!chatId) return;
+  const isGroupMsg=!peerData; // grupo: peerData é null
   const input=$('msg-input');
   let text=input.value.trim();
   if(!text&&!fileData) return;
 
-  // Bloqueio silencioso: se fui bloqueado pelo peer, mensagem fica oculta para ele
-  const blockedByPeer=peerData.blocked?.includes(ME.uid);
+  // Bloqueio silencioso: só em chats diretos
+  const blockedByPeer=isGroupMsg?false:peerData.blocked?.includes(ME.uid);
 
   if(fileData&&!text){
     if(fileData.type.startsWith('image/'))      text='📁 Foto enviada';
@@ -1202,13 +1237,14 @@ async function sendMessage(fileData=null){
     else                                         text='📁 Arquivo enviado';
   }
   input.value=''; updateSendIcon();
+  clearTimeout(typingDebounce); setTypingStatus(false);
 
   const convRef=doc(db,'conversations',chatId);
   const hideFrom=blockedByPeer?[peerData.uid]:[];
   const payload={sender:ME.uid,ts:serverTimestamp(),hideFrom};
 
-  // Tenta E2EE
-  const canEncrypt=myPrivKey&&peerData.pubKey&&ME?.pubKey;
+  // E2EE apenas em chats diretos (não grupos)
+  const canEncrypt=!isGroupMsg&&myPrivKey&&peerData.pubKey&&ME?.pubKey;
   if(canEncrypt){
     const content=fileData
       ?JSON.stringify({text,fileUrl:fileData.url,fileType:fileData.type,fileName:fileData.name})
@@ -1228,11 +1264,23 @@ async function sendMessage(fileData=null){
 
   try{
     await addDoc(collection(db,'conversations',chatId,'messages'),payload);
-    // Só notifica peer se não bloqueado
     if(!blockedByPeer){
-      const cs=await getDoc(convRef);
-      const cur=cs.exists()?(cs.data().unread?.[peerData.uid]||0):0;
-      await setDoc(convRef,{lastMsg:payload.text,lastAt:serverTimestamp(),deletedBy:[],unread:{[peerData.uid]:cur+1}},{merge:true});
+      if(isGroupMsg){
+        // Grupo: incrementa unread de todos os membros exceto eu
+        const cs=await getDoc(convRef);
+        if(cs.exists()){
+          const members=cs.data().members||[];
+          const unreadUpd={};
+          members.filter(u=>u!==ME.uid).forEach(u=>{
+            const cur=cs.data().unread?.[u]||0; unreadUpd[`unread.${u}`]=cur+1;
+          });
+          await updateDoc(convRef,{lastMsg:payload.text,lastAt:serverTimestamp(),...unreadUpd});
+        }
+      } else {
+        const cs=await getDoc(convRef);
+        const cur=cs.exists()?(cs.data().unread?.[peerData.uid]||0):0;
+        await setDoc(convRef,{lastMsg:payload.text,lastAt:serverTimestamp(),deletedBy:[],unread:{[peerData.uid]:cur+1}},{merge:true});
+      }
     }
   }catch(e){
     toast('Erro ao enviar.');
@@ -1432,15 +1480,32 @@ $('avatar-file').onchange=function(){
 function isStatusActive(ts){
   if(!ts) return false;
   const d=ts.toDate?ts.toDate():new Date(ts);
-  return Date.now()-d.getTime()<86400000; // 24h
+/* ═══════════════════════════════════════════
+   📍 STATUS / STORIES — múltiplos posts por usuário
+═══════════════════════════════════════════ */
+let svPosts=[], svIndex=0, svUid=null, svUser=null;
+
+function isStatusActive(ts){
+  if(!ts) return false;
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  return Date.now()-d.getTime()<86400000;
+}
+
+/* Busca todos os posts ativos de um usuário */
+async function getUserStatusPosts(uid){
+  const q=query(collection(db,'statusPosts'),where('uid','==',uid));
+  const snap=await getDocs(q);
+  return snap.docs
+    .map(d=>({id:d.id,...d.data()}))
+    .filter(p=>isStatusActive(p.createdAt))
+    .sort((a,b)=>(a.createdAt?.toMillis?.()??0)-(b.createdAt?.toMillis?.()??0));
 }
 
 async function renderStatusPage(){
-  /* --- MEU STATUS --- */
+  /* ── MEU STATUS ── */
   const myRow=$('my-status-row'); myRow.innerHTML='';
-  const mySnap=await getDoc(doc(db,'userStatuses',ME.uid));
-  const myStatus=mySnap.exists()?mySnap.data():null;
-  const myActive=myStatus&&isStatusActive(myStatus.createdAt);
+  const myPosts=await getUserStatusPosts(ME.uid);
+  const myActive=myPosts.length>0;
 
   const myItem=document.createElement('div'); myItem.className='conv-item';
   const avW=document.createElement('div'); avW.className='av-wrap';
@@ -1451,86 +1516,114 @@ async function renderStatusPage(){
   addMark.style.cssText='position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--green);border-radius:50%;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:900;';
   addMark.textContent='+'; avW.appendChild(addMark);
   const myInfo=document.createElement('div'); myInfo.className='conv-info';
-  const myTime=myActive?fmtTime(myStatus.createdAt?.toDate?.()):'';
-  myInfo.innerHTML=`<div class="conv-name">Meu Status</div><div class="conv-preview">${myActive?myTime:'Toque para adicionar status'}</div>`;
+  const myCount=myActive?`${myPosts.length} atualização(ões) · ${fmtTime(myPosts[myPosts.length-1].createdAt?.toDate?.()??new Date())}`:'Toque para adicionar status';
+  myInfo.innerHTML=`<div class="conv-name">Meu Status</div><div class="conv-preview">${myCount}</div>`;
   myItem.append(avW,myInfo);
-  myItem.onclick=()=>myActive?openStatusViewer(ME.uid,{name:ME.name,photoURL:ME.photoURL||''},myStatus):openStatusPost();
+  myItem.onclick=()=>myActive?openStatusViewer(ME.uid,{name:ME.name,photoURL:ME.photoURL||''},myPosts):openStatusPost();
   myRow.appendChild(myItem);
 
-  /* --- CONTATOS COM STATUS --- */
+  /* ── CONTATOS COM STATUS ── */
   const contactList=$('contacts-status-list'); contactList.innerHTML='';
-  const title=$('contacts-status-title');
-  const emptyEl=$('status-empty');
+  const title=$('contacts-status-title'),emptyEl=$('status-empty');
   let hasAny=false;
 
   for(const peerId of (ME.savedChats||[])){
-    const sSnap=await getDoc(doc(db,'userStatuses',peerId));
-    if(!sSnap.exists()) continue;
-    const st=sSnap.data();
-    if(!isStatusActive(st.createdAt)) continue;
+    const posts=await getUserStatusPosts(peerId);
+    if(!posts.length) continue;
     const pSnap=await getDoc(doc(db,'users',peerId)); if(!pSnap.exists()) continue;
     const peer={uid:pSnap.id,...pSnap.data()};
     hasAny=true;
-    const viewed=st.viewedBy?.includes(ME.uid);
+    const allViewed=posts.every(p=>p.viewedBy?.includes(ME.uid));
+    const lastPost=posts[posts.length-1];
 
     const item=document.createElement('div'); item.className='conv-item';
     const avW2=document.createElement('div'); avW2.className='av-wrap';
     const av2=document.createElement('div'); av2.className='avatar';
-    av2.style.cssText=viewed?'box-shadow:0 0 0 2.5px var(--text2);':'box-shadow:0 0 0 2.5px var(--green);';
+    av2.style.cssText=allViewed?'box-shadow:0 0 0 2.5px var(--text2);':'box-shadow:0 0 0 2.5px var(--green);';
     makeAvatar(av2,peer.name,peer.photoURL,50); avW2.appendChild(av2);
     const inf=document.createElement('div'); inf.className='conv-info';
-    inf.innerHTML=`<div class="conv-name">${esc(peer.name)}</div><div class="conv-preview">${fmtTime(st.createdAt?.toDate?.())}</div>`;
+    inf.innerHTML=`<div class="conv-name">${esc(peer.name)}</div><div class="conv-preview">${posts.length} atualização(ões) · ${fmtTime(lastPost.createdAt?.toDate?.()??new Date())}</div>`;
     item.append(avW2,inf);
-    item.onclick=()=>openStatusViewer(peerId,peer,st);
+    item.onclick=()=>openStatusViewer(peerId,peer,posts);
     contactList.appendChild(item);
   }
 
   title.style.display=hasAny?'':'none';
-  emptyEl.style.display=(!hasAny)?'flex':'none';
-  if(hasAny) emptyEl.style.display='none';
+  emptyEl.style.display=hasAny?'none':'flex';
 }
 
-function openStatusViewer(uid,user,status){
-  const viewer=$('status-viewer'); viewer.classList.add('open');
-  makeAvatar($('sv-av'),user.name,user.photoURL||'',36);
-  $('sv-name').textContent=uid===ME.uid?'Seu status':user.name;
-  $('sv-time').textContent=fmtTime(status.createdAt?.toDate?.()??new Date());
+/* ── VIEWER MULTI-POST ── */
+function openStatusViewer(uid,user,posts){
+  if(!posts?.length) return;
+  svUid=uid; svUser=user; svPosts=posts; svIndex=0;
+  $('status-viewer').classList.add('open');
+  renderStatusPost(0);
+}
 
+function renderStatusPost(index){
+  if(index>=svPosts.length){closeStatusViewer();return;}
+  if(index<0) index=0;
+  svIndex=index;
+  clearTimeout(statusAutoClose);
+  const post=svPosts[index];
+
+  /* header */
+  makeAvatar($('sv-av'),svUser.name,svUser.photoURL||'',36);
+  $('sv-name').textContent=svUid===ME.uid?'Seu status':svUser.name;
+  $('sv-time').textContent=fmtTime(post.createdAt?.toDate?.()??new Date());
+
+  /* barras de progresso — uma por post */
+  const wrap=$('sv-prog-wrap'); wrap.innerHTML='';
+  svPosts.forEach((_,i)=>{
+    const bar=document.createElement('div'); bar.className='sv-prog-bar';
+    const fill=document.createElement('div'); fill.className='sv-prog-fill';
+    if(i<index) fill.style.width='100%';
+    bar.appendChild(fill); wrap.appendChild(bar);
+  });
+  const fills=wrap.querySelectorAll('.sv-prog-fill');
+  if(fills[index]){
+    const f=fills[index];
+    f.style.transition='none'; f.style.width='0%';
+    requestAnimationFrame(()=>{f.style.transition='width 5s linear';f.style.width='100%';});
+  }
+
+  /* conteúdo */
   const content=$('sv-content'); content.innerHTML='';
-  if(status.type==='image'&&status.imageData){
-    const wrap=document.createElement('div');
-    wrap.style.cssText='width:100%;height:100%;position:relative;';
-    const img=document.createElement('img');
-    img.src=status.imageData;img.style.cssText='width:100%;height:100%;object-fit:contain;';
-    wrap.appendChild(img);
-    if(status.text){
+  if(post.type==='image'&&post.imageData){
+    const w=document.createElement('div'); w.style.cssText='width:100%;height:100%;position:relative;';
+    const img=document.createElement('img'); img.src=post.imageData;
+    img.style.cssText='width:100%;height:100%;object-fit:contain;'; w.appendChild(img);
+    if(post.text){
       const cap=document.createElement('div');
       cap.style.cssText='position:absolute;bottom:0;left:0;right:0;text-align:center;color:#fff;font-size:16px;text-shadow:0 1px 4px rgba(0,0,0,.8);padding:12px 20px 20px;background:linear-gradient(transparent,rgba(0,0,0,.5));';
-      cap.textContent=status.text; wrap.appendChild(cap);
+      cap.textContent=post.text; w.appendChild(cap);
     }
-    content.appendChild(wrap);
+    content.appendChild(w);
   } else {
     const card=document.createElement('div'); card.className='sv-text-card';
-    card.style.background=status.bgColor||'#075E54';
+    card.style.background=post.bgColor||'#075E54';
     const msg=document.createElement('div'); msg.className='sv-text-msg';
-    msg.textContent=status.text||''; card.appendChild(msg); content.appendChild(card);
+    msg.textContent=post.text||''; card.appendChild(msg); content.appendChild(card);
   }
 
-  // Barra de progresso (5 segundos)
-  const fill=$('sv-prog-fill');
-  fill.style.transition='none'; fill.style.width='0%';
-  requestAnimationFrame(()=>{fill.style.transition='width 5s linear';fill.style.width='100%';});
-
-  // Marcar como visto
-  if(uid!==ME.uid){
-    updateDoc(doc(db,'userStatuses',uid),{viewedBy:arrayUnion(ME.uid)}).catch(()=>{});
+  /* marcar como visto */
+  if(svUid!==ME.uid&&post.id&&!post.viewedBy?.includes(ME.uid)){
+    updateDoc(doc(db,'statusPosts',post.id),{viewedBy:arrayUnion(ME.uid)}).catch(()=>{});
   }
-  clearTimeout(statusAutoClose);
-  statusAutoClose=setTimeout(closeStatusViewer,5000);
+  statusAutoClose=setTimeout(()=>renderStatusPost(index+1),5000);
 }
+
 function closeStatusViewer(){$('status-viewer').classList.remove('open');clearTimeout(statusAutoClose);}
 $('sv-close').onclick=closeStatusViewer;
-$('status-viewer').addEventListener('click',e=>{if(e.target===$('status-viewer'))closeStatusViewer();});
+
+/* toque: metade esquerda = anterior, metade direita = próximo */
+$('status-viewer').addEventListener('click',e=>{
+  if($('sv-close').contains(e.target)||$('sv-head').contains(e.target)) return;
+  const rect=$('status-viewer').getBoundingClientRect();
+  const goNext=e.clientX-rect.left>rect.width/2;
+  clearTimeout(statusAutoClose);
+  renderStatusPost(goNext?svIndex+1:svIndex-1);
+});
 
 /* ── STATUS POST ── */
 function openStatusPost(){
@@ -1541,7 +1634,6 @@ function openStatusPost(){
 }
 function closeStatusPost(){$('status-post-modal').classList.remove('open');statusPhotoData=null;}
 $('sp-close').onclick=closeStatusPost;
-
 function renderStatusColors(){
   const c=$('sp-colors'); c.innerHTML='';
   STATUS_COLORS.forEach(col=>{
@@ -1552,16 +1644,15 @@ function renderStatusColors(){
   });
 }
 function updateStatusPreview(){
-  const prev=$('sp-preview'),txt=$('sp-preview-text');
+  const prev=$('sp-preview');
   if(statusPhotoData){
-    if(!prev.querySelector('img')){prev.innerHTML='';}
-    let img=prev.querySelector('img');
-    if(!img){img=document.createElement('img');img.style.cssText='width:100%;height:100%;object-fit:cover;';prev.appendChild(img);}
-    img.src=statusPhotoData; txt.textContent='';
-  }else{
-    prev.style.background=selStatusColor;
-    prev.innerHTML=''; const sp=document.createElement('span');sp.className='spm-preview-text';
-    sp.id='sp-preview-text';sp.textContent=$('sp-text-input')?.value||'';prev.appendChild(sp);
+    prev.innerHTML='';
+    const img=document.createElement('img'); img.src=statusPhotoData;
+    img.style.cssText='width:100%;height:100%;object-fit:cover;'; prev.appendChild(img);
+  } else {
+    prev.style.background=selStatusColor; prev.innerHTML='';
+    const sp=document.createElement('span'); sp.className='spm-preview-text'; sp.id='sp-preview-text';
+    sp.textContent=$('sp-text-input')?.value||''; prev.appendChild(sp);
   }
 }
 $('sp-text-input').oninput=updateStatusPreview;
@@ -1571,20 +1662,199 @@ $('status-photo-input').onchange=function(){
   compressImage(file,MAX_PROFILE_BYTES*3,(b64,err)=>{if(err){toast(err);return;}statusPhotoData=b64;updateStatusPreview();});
   this.value='';
 };
+/* PUBLICA: addDoc → múltiplos posts */
 $('sp-post-btn').onclick=async()=>{
   const text=($('sp-text-input')?.value||'').trim();
   if(!text&&!statusPhotoData){toast('Escreva algo ou adicione uma foto.');return;}
-  const btn=$('sp-post-btn');btn.disabled=true;btn.textContent='Publicando...';
+  const btn=$('sp-post-btn'); btn.disabled=true; btn.textContent='Publicando...';
   try{
-    const data={uid:ME.uid,text,bgColor:selStatusColor,createdAt:serverTimestamp(),viewedBy:[],type:statusPhotoData?'image':'text'};
+    const data={uid:ME.uid,text,bgColor:selStatusColor,createdAt:serverTimestamp(),viewedBy:[],
+      type:statusPhotoData?'image':'text'};
     if(statusPhotoData) data.imageData=statusPhotoData;
-    await setDoc(doc(db,'userStatuses',ME.uid),data);
+    await addDoc(collection(db,'statusPosts'),data); /* ← addDoc: não substitui, acumula */
     closeStatusPost(); toast('Status publicado! ✓');
     renderStatusPage();
   }catch(e){toast('Erro ao publicar: '+e.message);}
-  btn.disabled=false;btn.textContent='Publicar Status';
+  btn.disabled=false; btn.textContent='Publicar Status';
 };
 
+/* ═══════════════════════════════════════════
+   👥 GRUPOS
+═══════════════════════════════════════════ */
+let selectedGroupMembers=new Set();
+
+function openGroupCreateModal(){
+  selectedGroupMembers.clear();
+  $('gc-name').value=''; $('gc-selected-label').textContent='';
+  renderGroupContacts();
+  $('group-create-modal').classList.add('open');
+}
+$('gc-close').onclick=()=>$('group-create-modal').classList.remove('open');
+
+async function renderGroupContacts(){
+  const list=$('gc-contacts'); list.innerHTML='';
+  for(const uid of (ME.savedChats||[])){
+    const s=await getDoc(doc(db,'users',uid)); if(!s.exists()) continue;
+    const u={uid:s.id,...s.data()};
+    const row=document.createElement('div'); row.className='gc-contact-item';
+    const check=document.createElement('div'); check.className='gc-check'+(selectedGroupMembers.has(uid)?' sel':'');
+    const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,u.name,u.photoURL,40);
+    const info=document.createElement('div'); info.style.flex='1';
+    info.innerHTML=`<div style="color:var(--text);font-size:14px;font-weight:600;">${esc(u.name)}</div>`;
+    row.append(check,av,info);
+    row.onclick=()=>{
+      selectedGroupMembers.has(uid)?selectedGroupMembers.delete(uid):selectedGroupMembers.add(uid);
+      check.className='gc-check'+(selectedGroupMembers.has(uid)?' sel':'');
+      const n=selectedGroupMembers.size;
+      $('gc-selected-label').textContent=n?`${n} participante(s) selecionado(s)`:'';
+    };
+    list.appendChild(row);
+  }
+}
+
+$('gc-create-btn').onclick=async()=>{
+  const name=$('gc-name').value.trim();
+  if(!name){toast('Digite o nome do grupo.');return;}
+  if(selectedGroupMembers.size===0){toast('Selecione ao menos um participante.');return;}
+  const btn=$('gc-create-btn'); btn.disabled=true; btn.textContent='Criando...';
+  try{
+    const members=[ME.uid,...selectedGroupMembers];
+    const unread={}; members.forEach(u=>{unread[u]=0;});
+    const groupRef=doc(collection(db,'conversations'));
+    await setDoc(groupRef,{
+      type:'group',groupName:name,groupIcon:'👥',members,admin:ME.uid,
+      lastMsg:`${ME.name} criou o grupo`,lastAt:serverTimestamp(),
+      unread,deletedBy:[],createdAt:serverTimestamp()
+    });
+    await addDoc(collection(db,'conversations',groupRef.id,'messages'),{
+      text:`${ME.name} criou o grupo "${name}"`,sender:'system',
+      ts:serverTimestamp(),hideFrom:[],system:true
+    });
+    $('group-create-modal').classList.remove('open');
+    toast(`Grupo "${name}" criado!`);
+  }catch(e){toast('Erro: '+e.message);}
+  btn.disabled=false; btn.textContent='Criar Grupo';
+};
+
+async function openGroupChat(groupData){
+  chatId=groupData.cid;
+  peerData=null;
+  $('chat-name').textContent=groupData.groupName||'Grupo';
+  $('chat-sub').textContent=`${groupData.members?.length||0} participantes`;
+  $('chat-sub').style.color='';
+  const avEl=$('chat-av'); avEl.textContent=groupData.groupIcon||'👥'; avEl.style.fontSize='24px';
+  const existDot=$('chat-av-wrap').querySelector('.online-dot');
+  if(existDot) existDot.remove();
+  $('chat-btn-voice').style.display='none'; $('chat-btn-video').style.display='none';
+  $('chat-screen').classList.add('open');
+  $('chat-body').innerHTML='<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando...</div>';
+  $('msg-input').value=''; updateSendIcon();
+  const convRef=doc(db,'conversations',chatId);
+  try{await updateDoc(convRef,{[`unread.${ME.uid}`]:0});}catch(_){}
+  unsubMsgs?.();
+  const mq=query(collection(db,'conversations',chatId,'messages'),orderBy('ts','asc'));
+  /* cache de nomes para não buscar repetido */
+  const nameCache={[ME.uid]:ME.name};
+  unsubMsgs=onSnapshot(mq,async snap=>{
+    const body=$('chat-body');
+    const atBot=body.scrollHeight-body.clientHeight-body.scrollTop<100||body.innerHTML.includes('Carregando');
+    const msgs=[]; snap.forEach(d=>{const m=d.data();if(!m.hideFrom?.includes(ME.uid)) msgs.push(m);});
+    if(!msgs.length){body.innerHTML='<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Nenhuma mensagem ainda.</div>';return;}
+    /* busca nomes faltantes */
+    for(const m of msgs){
+      if(m.sender&&m.sender!=='system'&&!nameCache[m.sender]){
+        const s=await getDoc(doc(db,'users',m.sender));
+        nameCache[m.sender]=s.exists()?s.data().name:m.sender.slice(0,8);
+      }
+    }
+    body.innerHTML='';
+    msgs.forEach(m=>{
+      const t=m.ts?.toDate?fmtTime(m.ts.toDate()):'';
+      if(m.system){
+        const sys=document.createElement('div');
+        sys.style.cssText='text-align:center;color:var(--text2);font-size:12px;padding:6px 12px;';
+        sys.textContent=m.text; body.appendChild(sys); return;
+      }
+      const div=document.createElement('div');
+      div.className='msg '+(m.sender===ME.uid?'sent':'recv');
+      if(m.sender!==ME.uid){
+        const senderLabel=document.createElement('span');
+        senderLabel.className='msg-sender';
+        senderLabel.textContent=nameCache[m.sender]||'';
+        div.appendChild(senderLabel);
+      }
+      if(m.fileUrl){
+        if(m.fileType?.startsWith('image/')){
+          const img=document.createElement('img'); img.src=m.fileUrl; img.className='msg-img';
+          img.onclick=()=>window.open(m.fileUrl,'_blank'); div.appendChild(img);
+        } else if(m.fileType?.startsWith('audio/')){
+          const aud=document.createElement('audio'); aud.src=m.fileUrl; aud.controls=true; aud.className='msg-audio'; div.appendChild(aud);
+        }
+      } else {
+        const txt=document.createElement('span'); txt.textContent=m.text; div.appendChild(txt);
+      }
+      const ts=document.createElement('span'); ts.className='msg-time'; ts.textContent=t; div.appendChild(ts);
+      body.appendChild(div);
+    });
+    if(atBot) body.scrollTop=body.scrollHeight;
+  });
+}
+
+/* ═══════════════════════════════════════════
+   🔑 RECUPERAÇÃO DE CONTA
+═══════════════════════════════════════════ */
+$('to-recover').onclick=()=>{$('view-login').style.display='none';$('view-recover').style.display='';clearErr();};
+$('to-login-from-recover').onclick=()=>{$('view-recover').style.display='none';$('view-login').style.display='';clearErr();};
+$('btn-recover').onclick=async()=>{
+  const phone=cleanPhone($('recover-phone').value);
+  const email=($('recover-email').value||'').trim();
+  if(!phone){showErr('recover-err','Digite seu número virtual.');return;}
+  const btn=$('btn-recover'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try{
+    /* Tenta enviar reset para o e-mail de recuperação informado */
+    if(email){
+      await sendPasswordResetEmail(auth,email);
+      showErr('recover-err','✅ Instruções enviadas para '+email+' (se cadastrado).');
+      $('recover-err').style.color='var(--green)';
+    } else {
+      /* Fallback: reset via e-mail interno (pode não chegar se @onix.app não tiver caixa) */
+      await sendPasswordResetEmail(auth,phoneToEmail(phone));
+      showErr('recover-err','✅ Verificado. Caso tenha e-mail de recuperação cadastrado, verifique sua caixa de entrada.');
+      $('recover-err').style.color='var(--green)';
+    }
+  }catch(e){
+    if(e.code==='auth/user-not-found'||e.code==='auth/invalid-email'){
+      showErr('recover-err','Número não encontrado ou e-mail inválido.');
+    } else {
+      showErr('recover-err','Para redefinir a senha, entre em contato com o suporte informando seu número virtual.');
+    }
+  }
+  btn.disabled=false; btn.textContent='Enviar instruções';
+};
+
+/* ═══════════════════════════════════════════
+   BLOCKED PANEL
+═══════════════════════════════════════════ */
+function openBlockedPanel(){$('blocked-panel').classList.add('open');renderBlockedList();}
+$('blocked-back').onclick=()=>$('blocked-panel').classList.remove('open');
+async function renderBlockedList(){
+  const list=$('blocked-list');
+  if(!ME.blocked?.length){list.innerHTML='<div class="empty-state"><span class="ms">block</span><p>Nenhum contato bloqueado.</p></div>';return;}
+  list.innerHTML='';
+  for(const uid of ME.blocked){
+    const s=await getDoc(doc(db,'users',uid)); if(!s.exists()) continue;
+    const u={uid:s.id,...s.data()};
+    const row=document.createElement('div');row.className='blocked-item';
+    const av=document.createElement('div');av.className='avatar';makeAvatar(av,u.name,u.photoURL,44);
+    const info=document.createElement('div');info.style.flex='1';
+    info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div><div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
+    const btn=document.createElement('button');btn.className='unblock-btn';btn.textContent='Desbloquear';
+    btn.onclick=async()=>{
+      await updateDoc(doc(db,'users',ME.uid),{blocked:arrayRemove(uid)});
+      ME.blocked=ME.blocked.filter(x=>x!==uid);
+      refreshBlockedLabel();renderBlockedList();
+    };
+    row.append(av,info,btn);list.appendChild(row);
 /* ═══════════════════════════════════════════
    BLOCKED PANEL
 ═══════════════════════════════════════════ */
