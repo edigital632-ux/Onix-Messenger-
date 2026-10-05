@@ -1475,12 +1475,6 @@ $('avatar-file').onchange=function(){
 };
 
 /* ═══════════════════════════════════════════
-   📍 STATUS / STORIES
-═══════════════════════════════════════════ */
-function isStatusActive(ts){
-  if(!ts) return false;
-  const d=ts.toDate?ts.toDate():new Date(ts);
-/* ═══════════════════════════════════════════
    📍 STATUS / STORIES — múltiplos posts por usuário
 ═══════════════════════════════════════════ */
 let svPosts=[], svIndex=0, svUid=null, svUser=null;
@@ -1832,29 +1826,6 @@ $('btn-recover').onclick=async()=>{
   btn.disabled=false; btn.textContent='Enviar instruções';
 };
 
-/* ═══════════════════════════════════════════
-   BLOCKED PANEL
-═══════════════════════════════════════════ */
-function openBlockedPanel(){$('blocked-panel').classList.add('open');renderBlockedList();}
-$('blocked-back').onclick=()=>$('blocked-panel').classList.remove('open');
-async function renderBlockedList(){
-  const list=$('blocked-list');
-  if(!ME.blocked?.length){list.innerHTML='<div class="empty-state"><span class="ms">block</span><p>Nenhum contato bloqueado.</p></div>';return;}
-  list.innerHTML='';
-  for(const uid of ME.blocked){
-    const s=await getDoc(doc(db,'users',uid)); if(!s.exists()) continue;
-    const u={uid:s.id,...s.data()};
-    const row=document.createElement('div');row.className='blocked-item';
-    const av=document.createElement('div');av.className='avatar';makeAvatar(av,u.name,u.photoURL,44);
-    const info=document.createElement('div');info.style.flex='1';
-    info.innerHTML=`<div style="color:var(--text);font-size:15px;font-weight:600;">${esc(u.name)}</div><div style="color:var(--text2);font-size:13px;">${u.phone}</div>`;
-    const btn=document.createElement('button');btn.className='unblock-btn';btn.textContent='Desbloquear';
-    btn.onclick=async()=>{
-      await updateDoc(doc(db,'users',ME.uid),{blocked:arrayRemove(uid)});
-      ME.blocked=ME.blocked.filter(x=>x!==uid);
-      refreshBlockedLabel();renderBlockedList();
-    };
-    row.append(av,info,btn);list.appendChild(row);
 /* ═══════════════════════════════════════════
    BLOCKED PANEL
 ═══════════════════════════════════════════ */
