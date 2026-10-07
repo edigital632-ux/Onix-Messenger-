@@ -262,6 +262,21 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 .gc-check.sel::after{content:'✓';color:#fff;font-size:13px;font-weight:700;}
 /* Group message sender label */
 .msg-sender{font-size:11px;font-weight:700;color:var(--green);margin-bottom:2px;display:block;}
+/* Group info panel */
+#group-info-panel{position:fixed;inset:0;z-index:99994;background:var(--bg);display:none;flex-direction:column;width:100%;max-width:480px;margin:0 auto;}
+#group-info-panel.open{display:flex;}
+.gi-header{height:56px;background:var(--bg3);display:flex;align-items:center;gap:10px;padding:0 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.gi-header span.gi-title{color:var(--text);font-size:16px;font-weight:600;flex:1;}
+.gi-banner{padding:28px 16px 20px;text-align:center;background:var(--bg3);border-bottom:1px solid var(--border);}
+.gi-icon{width:80px;height:80px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;}
+.gi-group-name{color:var(--text);font-size:18px;font-weight:700;}
+.gi-member-count{color:var(--text2);font-size:13px;margin-top:4px;}
+.gi-member-item{padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.gi-admin-badge{background:rgba(0,168,132,.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid rgba(0,168,132,.4);white-space:nowrap;}
+.gi-action-item{padding:14px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);cursor:pointer;}
+.gi-action-item:active{background:var(--bg2);}
+.gi-action-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.gi-action-icon .ms{font-size:20px;}
 </style>
 </head>
 <body>
@@ -492,6 +507,9 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
     <span class="ms" id="chat-btn-video" style="color:var(--text2);cursor:pointer;padding:6px;margin-right:4px;">videocam</span>
     <span class="ms" id="chat-menu-btn">more_vert</span>
     <div class="drop-menu" id="drop-chat">
+      <div class="drop-item" id="dc-group-info" style="display:none;">Informações do grupo</div>
+      <div class="drop-item danger" id="dc-leave-group" style="display:none;">Sair do grupo</div>
+      <div class="drop-item danger" id="dc-delete-group" style="display:none;">Excluir grupo</div>
       <div class="drop-item" id="dc-block">Bloquear contato</div>
       <div class="drop-item danger" id="dc-remove">Remover contato</div>
       <div class="drop-item danger" id="dc-delete">Apagar conversa</div>
@@ -514,6 +532,24 @@ nav{height:65px;background:var(--bg3);border-top:1px solid var(--border);display
 <!-- STATUS FAB (visible on status page) -->
 <div class="status-add-fab" id="status-add-fab" style="display:none;">
   <span class="ms">add</span>
+</div>
+
+<!-- GROUP INFO PANEL -->
+<div id="group-info-panel">
+  <div class="gi-header">
+    <span class="ms" id="gi-back" style="color:var(--text2);cursor:pointer;padding:6px;">arrow_back</span>
+    <span class="gi-title">Informações do grupo</span>
+  </div>
+  <div style="flex:1;overflow-y:auto;">
+    <div class="gi-banner">
+      <div class="gi-icon" id="gi-icon">👥</div>
+      <div class="gi-group-name" id="gi-name"></div>
+      <div class="gi-member-count" id="gi-count"></div>
+    </div>
+    <div class="section-title">PARTICIPANTES</div>
+    <div id="gi-members-list"></div>
+    <div id="gi-actions"></div>
+  </div>
 </div>
 
 <!-- GROUP CREATION MODAL -->
@@ -1094,6 +1130,19 @@ async function openChat(peer){
         else if(!peerData.online&&dotEl) dotEl.remove();
       }
     });
+
+    // Menu: mostra opções de chat direto, esconde opções de grupo
+    $('dc-group-info').style.display='none';
+    $('dc-leave-group').style.display='none';
+    $('dc-delete-group').style.display='none';
+    $('dc-block').style.display='';
+    $('dc-remove').style.display='';
+    $('dc-delete').style.display='';
+    // Remove click do header (era de grupo)
+    $('chat-av-wrap').style.cursor='';
+    $('chat-av-wrap').onclick=null;
+    $('chat-name').style.cursor='';
+    $('chat-name').onclick=null;
 
     $('chat-screen').classList.add('open');
     $('chat-btn-voice').style.display='';
@@ -1676,6 +1725,7 @@ $('sp-post-btn').onclick=async()=>{
    👥 GRUPOS
 ═══════════════════════════════════════════ */
 let selectedGroupMembers=new Set();
+let currentGroupData=null;
 
 function openGroupCreateModal(){
   selectedGroupMembers.clear();
@@ -1733,18 +1783,52 @@ $('gc-create-btn').onclick=async()=>{
 async function openGroupChat(groupData){
   chatId=groupData.cid;
   peerData=null;
+  currentGroupData=groupData; // salva referência global
+
   $('chat-name').textContent=groupData.groupName||'Grupo';
   $('chat-sub').textContent=`${groupData.members?.length||0} participantes`;
   $('chat-sub').style.color='';
+
   const avEl=$('chat-av'); avEl.textContent=groupData.groupIcon||'👥'; avEl.style.fontSize='24px';
   const existDot=$('chat-av-wrap').querySelector('.online-dot');
   if(existDot) existDot.remove();
+
+  // Clique no header abre info do grupo
+  $('chat-av-wrap').style.cursor='pointer';
+  $('chat-av-wrap').onclick=()=>openGroupInfo(currentGroupData);
+  $('chat-name').style.cursor='pointer';
+  $('chat-name').onclick=()=>openGroupInfo(currentGroupData);
+
+  // Menu: mostra opções de grupo, esconde opções de chat direto
+  $('dc-group-info').style.display='';
+  $('dc-leave-group').style.display='';
+  $('dc-delete-group').style.display= groupData.admin===ME.uid ? '' : 'none';
+  $('dc-block').style.display='none';
+  $('dc-remove').style.display='none';
+  $('dc-delete').style.display='none';
+
   $('chat-btn-voice').style.display='none'; $('chat-btn-video').style.display='none';
   $('chat-screen').classList.add('open');
   $('chat-body').innerHTML='<div style="padding:16px;text-align:center;color:var(--text2);font-size:13px;">Carregando...</div>';
   $('msg-input').value=''; updateSendIcon();
   const convRef=doc(db,'conversations',chatId);
   try{await updateDoc(convRef,{[`unread.${ME.uid}`]:0});}catch(_){}
+
+  // Listener em tempo real para dados do grupo (admin, membros, nome)
+  onSnapshot(convRef,snap=>{
+    if(!snap.exists()) return;
+    const fresh={cid:snap.id,...snap.data()};
+    currentGroupData=fresh;
+    $('chat-name').textContent=fresh.groupName||'Grupo';
+    $('chat-sub').textContent=`${fresh.members?.length||0} participantes`;
+    // Verifica se fui removido do grupo
+    if(fresh.members&&!fresh.members.includes(ME.uid)){
+      closeChat(); toast('Você foi removido deste grupo.');
+    }
+    // Atualiza visibilidade do "Excluir grupo" no menu
+    $('dc-delete-group').style.display=fresh.admin===ME.uid?'':'none';
+  });
+
   unsubMsgs?.();
   const mq=query(collection(db,'conversations',chatId,'messages'),orderBy('ts','asc'));
   /* cache de nomes para não buscar repetido */
@@ -1793,6 +1877,165 @@ async function openGroupChat(groupData){
     if(atBot) body.scrollTop=body.scrollHeight;
   });
 }
+
+/* ═══════════════════════════════════════════
+   👥 GERENCIAMENTO DE GRUPO (info, sair, remover, excluir)
+═══════════════════════════════════════════ */
+
+// ── Abre painel de info do grupo ──
+function openGroupInfo(gData){
+  if(!gData) return;
+  currentGroupData=gData;
+  $('group-info-panel').classList.add('open');
+  renderGroupInfo(gData);
+}
+$('gi-back').onclick=()=>$('group-info-panel').classList.remove('open');
+
+async function renderGroupInfo(gData){
+  $('gi-icon').textContent=gData.groupIcon||'👥';
+  $('gi-name').textContent=gData.groupName||'Grupo';
+  $('gi-count').textContent=`${gData.members?.length||0} participantes`;
+
+  // Recarrega dado fresco do Firestore
+  let freshData=gData;
+  try{
+    const snap=await getDoc(doc(db,'conversations',gData.cid));
+    if(snap.exists()) freshData={cid:snap.id,...snap.data()};
+  }catch(_){}
+  currentGroupData=freshData;
+
+  const isAdmin=freshData.admin===ME.uid;
+  const list=$('gi-members-list'); list.innerHTML='';
+
+  for(const uid of (freshData.members||[])){
+    const s=await getDoc(doc(db,'users',uid)); if(!s.exists()) continue;
+    const u={uid:s.id,...s.data()};
+
+    const row=document.createElement('div'); row.className='gi-member-item';
+    const av=document.createElement('div'); av.className='avatar'; makeAvatar(av,u.name,u.photoURL,46);
+
+    const info=document.createElement('div'); info.style.flex='1';
+    info.innerHTML=`<div style="color:var(--text);font-size:14px;font-weight:600;">${esc(u.name)}</div>
+      <div style="color:var(--text2);font-size:12px;">${esc(u.phone||'')}</div>`;
+
+    const right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:8px;flex-shrink:0;';
+
+    if(uid===freshData.admin){
+      const badge=document.createElement('span'); badge.className='gi-admin-badge';
+      badge.textContent='Admin'; right.appendChild(badge);
+    }
+    // Admin pode remover outros membros (não a si mesmo)
+    if(isAdmin&&uid!==ME.uid){
+      const rmBtn=document.createElement('span'); rmBtn.className='ms';
+      rmBtn.textContent='person_remove'; rmBtn.title='Remover do grupo';
+      rmBtn.style.cssText='color:var(--red);cursor:pointer;font-size:20px;padding:4px;';
+      rmBtn.onclick=()=>confirmRemoveFromGroup(uid,u.name);
+      right.appendChild(rmBtn);
+    }
+
+    row.append(av,info,right); list.appendChild(row);
+  }
+
+  // ── Ações ──
+  const actions=$('gi-actions'); actions.innerHTML='';
+
+  // Sair do grupo (todos os membros)
+  const leaveRow=document.createElement('div'); leaveRow.className='gi-action-item';
+  leaveRow.innerHTML=`<div class="gi-action-icon" style="background:rgba(241,92,109,.15)"><span class="ms" style="color:var(--red)">exit_to_app</span></div>
+    <span class="config-label" style="color:var(--red)">Sair do grupo</span>`;
+  leaveRow.onclick=()=>confirmLeaveGroup();
+  actions.appendChild(leaveRow);
+
+  // Excluir grupo (só admin)
+  if(isAdmin){
+    const delRow=document.createElement('div'); delRow.className='gi-action-item';
+    delRow.innerHTML=`<div class="gi-action-icon" style="background:rgba(241,92,109,.15)"><span class="ms" style="color:var(--red)">delete_forever</span></div>
+      <span class="config-label" style="color:var(--red)">Excluir grupo para todos</span>`;
+    delRow.onclick=()=>confirmDeleteGroup();
+    actions.appendChild(delRow);
+  }
+}
+
+// ── Remover membro (admin) ──
+function confirmRemoveFromGroup(uid,name){
+  openModal(`Remover ${name}`,`Remover ${name} do grupo?`,async()=>{
+    try{
+      await updateDoc(doc(db,'conversations',currentGroupData.cid),{members:arrayRemove(uid)});
+      await addDoc(collection(db,'conversations',currentGroupData.cid,'messages'),{
+        text:`${ME.name} removeu ${name} do grupo`,sender:'system',
+        ts:serverTimestamp(),hideFrom:[],system:true
+      });
+      closeModal(); toast(`${name} removido(a).`);
+      // Atualiza painel
+      const snap=await getDoc(doc(db,'conversations',currentGroupData.cid));
+      if(snap.exists()){ currentGroupData={cid:snap.id,...snap.data()}; renderGroupInfo(currentGroupData); }
+    }catch(e){closeModal();toast('Erro: '+e.message);}
+  });
+}
+
+// ── Sair do grupo ──
+function confirmLeaveGroup(){
+  openModal('Sair do grupo',`Deseja sair de "${currentGroupData.groupName}"?`,async()=>{
+    try{
+      const snap=await getDoc(doc(db,'conversations',currentGroupData.cid));
+      const fresh=snap.exists()?snap.data():{};
+      const members=fresh.members||[];
+      const isAdmin=fresh.admin===ME.uid;
+
+      if(isAdmin&&members.length>1){
+        // Passa admin para o próximo membro
+        const newAdmin=members.find(u=>u!==ME.uid);
+        await updateDoc(doc(db,'conversations',currentGroupData.cid),{
+          members:arrayRemove(ME.uid), admin:newAdmin
+        });
+        toast('Admin transferido. Você saiu do grupo.');
+      } else if(isAdmin&&members.length<=1){
+        // Último membro e admin — apaga o grupo
+        await deleteGroupFull(currentGroupData.cid);
+        toast('Grupo excluído (último membro).');
+        closeModal(); $('group-info-panel').classList.remove('open'); closeChat(); return;
+      } else {
+        await updateDoc(doc(db,'conversations',currentGroupData.cid),{members:arrayRemove(ME.uid)});
+        toast('Você saiu do grupo.');
+      }
+      // Mensagem de sistema
+      await addDoc(collection(db,'conversations',currentGroupData.cid,'messages'),{
+        text:`${ME.name} saiu do grupo`,sender:'system',
+        ts:serverTimestamp(),hideFrom:[],system:true
+      }).catch(()=>{});
+      closeModal(); $('group-info-panel').classList.remove('open'); closeChat();
+    }catch(e){closeModal();toast('Erro: '+e.message);}
+  });
+}
+
+// ── Excluir grupo (admin) ──
+function confirmDeleteGroup(){
+  openModal('Excluir grupo',`Excluir "${currentGroupData.groupName}" para todos? Esta ação não pode ser desfeita.`,async()=>{
+    try{
+      await deleteGroupFull(currentGroupData.cid);
+      closeModal(); $('group-info-panel').classList.remove('open'); closeChat();
+      toast('Grupo excluído.');
+    }catch(e){closeModal();toast('Erro: '+e.message);}
+  });
+}
+
+async function deleteGroupFull(groupId){
+  try{
+    const msgs=await getDocs(collection(db,'conversations',groupId,'messages'));
+    const batch=writeBatch(db);
+    msgs.forEach(d=>batch.delete(d.ref));
+    batch.delete(doc(db,'conversations',groupId));
+    await batch.commit();
+  }catch(e){
+    // Fallback: apenas marca como deletado se não conseguir apagar
+    await updateDoc(doc(db,'conversations',groupId),{deletedBy:arrayUnion(ME.uid)}).catch(()=>{});
+  }
+}
+
+// ── Handlers do menu do chat para grupos ──
+$('dc-group-info').onclick=()=>{closeDrops();if(currentGroupData)openGroupInfo(currentGroupData);};
+$('dc-leave-group').onclick=()=>{closeDrops();confirmLeaveGroup();};
+$('dc-delete-group').onclick=()=>{closeDrops();confirmDeleteGroup();};
 
 /* ═══════════════════════════════════════════
    🔑 RECUPERAÇÃO DE CONTA
